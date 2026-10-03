@@ -111,6 +111,7 @@ app.server.on('upgrade', (req, socket, head) => {
 });
 
 await app.listen({ port: cfg.port, host: '0.0.0.0' });
+poller.setControl(scenes.getSettings().pollMode, scenes.getSettings().pollSeconds);
 poller.start();
 const selected = scenes.getSettings().selectedMatchId;
 if (selected) poller.select(selected);

@@ -154,6 +154,10 @@ export interface AppSettings {
   /** animation speed multiplier, 0.5 – 2 */
   speed: number;
   obsBridge: boolean;
+  /** auto = poll on a timer; manual = only when "Update now" is pressed */
+  pollMode: 'auto' | 'manual';
+  /** auto interval in seconds; null = .env POLL_SECONDS, 0 = spread the budget over a match */
+  pollSeconds: number | null;
 }
 
 export const DEFAULT_SETTINGS: AppSettings = {
@@ -162,6 +166,8 @@ export const DEFAULT_SETTINGS: AppSettings = {
   reduceMotion: false,
   speed: 1,
   obsBridge: false,
+  pollMode: 'auto',
+  pollSeconds: null,
 };
 
 export function newId(): string {
