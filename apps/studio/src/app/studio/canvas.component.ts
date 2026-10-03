@@ -64,12 +64,12 @@ export const WIDGET_DND_TYPE = 'application/x-cos-widget';
                   [style.left.px]="w.x"
                   [style.top.px]="w.y"
                   [style.width.px]="w.w"
-                  [style.height.px]="w.props['minimized'] && minimizedH()[w.id] ? minimizedH()[w.id] : w.h"
+                  [style.height.px]="isWindow(w) && w.props['minimized'] && minimizedH()[w.id] ? minimizedH()[w.id] : w.h"
                   [style.z-index]="w.z"
                   (pointerdown)="select($event, w.id)"
                 >
-                  @if (isCard(w)) {
-                    <!-- window title bar for cards: Studio only, never on /output -->
+                  @if (isWindow(w)) {
+                    <!-- window title bar for floating cards: Studio only, never on /output -->
                     <div class="win-bar" [class.sel]="w.id === editor.selectedId()">
                       <span class="win-title">{{ registry[w.type].icon }} {{ cardTitle(w) }}</span>
                       <button
@@ -102,7 +102,7 @@ export const WIDGET_DND_TYPE = 'application/x-cos-widget';
                     </div>
                   }
                   @if (w.id === editor.selectedId()) {
-                    @if (!isCard(w)) {
+                    @if (!isWindow(w)) {
                       <span class="tag">{{ w.name }}{{ w.locked ? ' · locked' : '' }}</span>
                     }
                     @if (!w.locked) {
@@ -399,6 +399,11 @@ export class CanvasComponent {
 
   protected toggleMinimized(w: WidgetInstance): void {
     this.editor.updateWidget(w.id, { props: { ...w.props, minimized: !w.props['minimized'] } });
+  }
+
+  /** a card shown as a floating window (title bar, minimise, close); 'widget' display is a plain widget */
+  protected isWindow(w: WidgetInstance): boolean {
+    return this.isCard(w) && w.props['display'] !== 'widget';
   }
 
   protected isCard(w: WidgetInstance): boolean {

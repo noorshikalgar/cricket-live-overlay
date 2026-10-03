@@ -141,6 +141,7 @@ export const WIDGET_DEFAULTS: Record<WidgetType, WidgetDefaults> = {
       showYetToBat: true,
       showFow: true,
       minimized: false,
+      display: 'window',
     },
     animation: { enter: 'slideUp', exit: 'fade' },
   },
@@ -149,7 +150,7 @@ export const WIDGET_DEFAULTS: Record<WidgetType, WidgetDefaults> = {
     icon: '⛨',
     w: 560,
     h: 760,
-    props: { side: 'batting', showRoles: true, showScores: true, minimized: false },
+    props: { side: 'batting', showRoles: true, showScores: true, minimized: false, display: 'window' },
     animation: { enter: 'slideRight', exit: 'fade' },
   },
   playerCard: {
@@ -157,7 +158,7 @@ export const WIDGET_DEFAULTS: Record<WidgetType, WidgetDefaults> = {
     icon: '☺',
     w: 620,
     h: 330,
-    props: { playerId: '', playerName: '', showPhoto: false, minimized: false },
+    props: { playerId: '', playerName: '', showPhoto: false, minimized: false, display: 'window' },
     animation: { enter: 'slideUp', exit: 'fade' },
   },
   clock: {

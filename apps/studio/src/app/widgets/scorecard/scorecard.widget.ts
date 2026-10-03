@@ -11,6 +11,8 @@ export interface ScorecardProps {
   showYetToBat: boolean;
   showFow: boolean;
   minimized: boolean;
+  /** 'window' = floating card with a title bar in the Studio; 'widget' = plain fixed widget */
+  display: 'window' | 'widget';
 }
 
 const ORDINAL = ['1st', '2nd', '3rd', '4th'];
@@ -20,7 +22,7 @@ const ORDINAL = ['1st', '2nd', '3rd', '4th'];
   selector: 'cos-scorecard',
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <div class="panel card" [class.minimized]="p().minimized" [style.--team]="teamColor()">
+    <div class="panel card" [class.minimized]="min()" [style.--team]="teamColor()">
       <div class="card-head">
         <span class="card-title">{{ inn()?.teamName || 'Scorecard' }}</span>
         @if (inn()) {
@@ -28,7 +30,7 @@ const ORDINAL = ['1st', '2nd', '3rd', '4th'];
           <span class="card-score">{{ inn()!.runs }}/{{ inn()!.wickets }} <span class="muted">({{ inn()!.overs }})</span></span>
         }
       </div>
-      @if (!p().minimized) {
+      @if (!min()) {
         @if (inn(); as i) {
           <div class="card-body sc">
             <div class="cols" [class.single]="!p().showBatting || !p().showBowling">
@@ -183,7 +185,10 @@ export class ScorecardWidget extends WidgetBase<ScorecardProps> {
     showYetToBat: true,
     showFow: true,
     minimized: false,
+    display: 'window',
   };
+  /** minimising only applies to floating windows */
+  protected readonly min = computed(() => this.p().minimized && this.p().display !== 'widget');
   private readonly store = inject(LiveStore);
 
   private readonly index = computed(() => {
