@@ -10,6 +10,8 @@ export abstract class WidgetBase<P extends object> {
   readonly match = input<MatchState | null>(null);
   readonly style = input.required<ResolvedStyle>();
   readonly props = input.required<Record<string, PropValue>>();
+  /** widget size in canvas px, for layout decisions CSS can't make */
+  readonly box = input<{ w: number; h: number }>({ w: 0, h: 0 });
   /** true inside the Studio canvas: show placeholders for things that are invisible on air */
   readonly editing = input(false);
 

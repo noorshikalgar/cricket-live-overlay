@@ -74,9 +74,26 @@ const MAX_QUEUE = 3;
     .fill {
       position: absolute;
       inset: 0;
-      background: var(--ev, var(--accent));
+      background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.14), rgba(0, 0, 0, 0.16)),
+        var(--ev, var(--accent));
       border-radius: var(--radius);
       box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+    /* darker edge bar on the side the wipe comes from */
+    .fill::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 0;
+      width: calc(var(--wh) * 0.06);
+      background: rgba(0, 0, 0, 0.28);
+    }
+    .banner.from-right .fill::before {
+      left: auto;
+      right: 0;
     }
     .content {
       position: relative;
@@ -167,6 +184,7 @@ export class BannerWidget extends WidgetBase<BannerProps> {
     this.tl?.kill();
 
     banner.style.setProperty('--ev', EVENT_COLOR[e.type] ?? 'var(--accent)');
+    banner.classList.toggle('from-right', this.p().direction === 'right');
     title.textContent = e.title;
     sub.textContent = this.p().showSubtitle ? e.subtitle : '';
 

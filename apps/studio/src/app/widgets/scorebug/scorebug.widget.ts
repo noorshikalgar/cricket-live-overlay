@@ -92,7 +92,7 @@ export interface ScorebugProps {
       white-space: nowrap;
     }
     .seg + .seg {
-      box-shadow: inset 1px 0 0 rgba(255, 255, 255, 0.1);
+      box-shadow: inset 1px 0 0 var(--chip);
     }
     .team .code {
       font-weight: 700;

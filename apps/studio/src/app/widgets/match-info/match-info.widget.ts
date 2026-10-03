@@ -16,10 +16,10 @@ export interface MatchInfoProps {
       @if (match(); as m) {
         <div class="teams">
           <span class="dot" [style.background]="m.teams[0].primaryColor"></span>
-          <span class="ellipsis">{{ m.teams[0].name }}</span>
+          <span class="ellipsis">{{ teamLabels()[0] }}</span>
           <span class="vs label">vs</span>
           <span class="dot" [style.background]="m.teams[1].primaryColor"></span>
-          <span class="ellipsis">{{ m.teams[1].name }}</span>
+          <span class="ellipsis">{{ teamLabels()[1] }}</span>
         </div>
         @for (l of lines(); track l.key) {
           <div class="line" [class.status]="l.key === 'status'">
@@ -81,7 +81,18 @@ export interface MatchInfoProps {
   `,
 })
 export class MatchInfoWidget extends WidgetBase<MatchInfoProps> {
+  private readonly fontPx = computed(() => this.box().h * 0.13 * 1.15 * this.style().fontScale);
+
   protected readonly defaults: MatchInfoProps = { lines: { series: true, venue: true, toss: true, status: true } };
+
+  /** full names when they fit the box, short codes when they would be cut off */
+  protected readonly teamLabels = computed(() => {
+    const m = this.match();
+    if (!m) return ['', ''];
+    const [a, b] = m.teams;
+    const charsThatFit = this.box().w / (this.fontPx() * 0.62);
+    return a.name.length + b.name.length + 6 > charsThatFit ? [a.shortCode, b.shortCode] : [a.name, b.name];
+  });
 
   protected readonly lines = computed(() => {
     const m = this.match();

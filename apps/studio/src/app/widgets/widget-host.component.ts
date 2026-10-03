@@ -39,10 +39,16 @@ export class WidgetHostComponent {
   protected readonly component = computed(() => WIDGET_REGISTRY[this.widget().type].component);
   protected readonly resolved = computed(() => resolveStyle(this.widget().style, this.theme(), this.teamColor()));
 
+  private readonly box = computed(
+    () => ({ w: this.widget().w, h: this.widget().h }),
+    { equal: (a, b) => a.w === b.w && a.h === b.h },
+  );
+
   protected readonly inputs = computed(() => ({
     match: this.match(),
     style: this.resolved(),
     props: this.widget().props,
+    box: this.box(),
     editing: this.mode() === 'editor',
   }));
 

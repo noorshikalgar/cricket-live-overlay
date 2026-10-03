@@ -95,7 +95,11 @@ export class TickerWidget extends WidgetBase<TickerProps> {
       .split(/\s*·\s*|\n/)
       .map((s) => s.trim())
       .filter(Boolean);
-    const scores = this.store.matches().map((m) => `${m.scoreLine}  ${m.statusText}`.trim());
+    const current = this.store.settings().selectedMatchId;
+    const scores = this.store
+      .matches()
+      .filter((m) => m.id !== current)
+      .map((m) => `${m.scoreLine}  ${m.statusText}`.trim());
     if (source === 'custom') return custom.length ? custom : ['Add ticker text in settings'];
     if (source === 'both') return [...scores, ...custom];
     return scores.length ? scores : custom.length ? custom : ['No other live matches'];
