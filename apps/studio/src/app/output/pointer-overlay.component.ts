@@ -7,6 +7,7 @@ import {
   computed,
   inject,
   input,
+  signal,
   viewChild,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -36,7 +37,7 @@ interface TrailPoint {
   template: `
     <canvas #trail width="1920" height="1080"></canvas>
     <div class="ripples" #ripples></div>
-    <div class="cursor" #cursor [style.--c]="cfg().color" [style.--s.px]="cfg().size">
+    <div class="cursor" #cursor [class.on]="shown()" [style.--c]="cfg().color" [style.--s.px]="cfg().size">
       @switch (cfg().style) {
         @case ('ring') {
           <div class="ring"></div>
@@ -95,7 +96,12 @@ interface TrailPoint {
       height: var(--s);
       margin: calc(var(--s) / -2) 0 0 calc(var(--s) / -2);
       opacity: 0;
+      /* CSS, not GSAP: shows even when the browser throttles animation frames */
+      transition: opacity 0.2s ease-out;
       will-change: transform, opacity;
+    }
+    .cursor.on {
+      opacity: 1;
     }
     .dot {
       width: 100%;
@@ -138,7 +144,10 @@ export class PointerOverlayComponent {
   private readonly cursorEl = viewChild.required<ElementRef<HTMLElement>>('cursor');
   private readonly ripplesEl = viewChild.required<ElementRef<HTMLElement>>('ripples');
 
+  protected readonly shown = signal(false);
   private target = { x: 960, y: 540 };
+  /** last time the ticker ran; if frames stall (hidden/occluded window) positions are applied directly */
+  private lastFrameAt = 0;
   private pos = { x: 960, y: 540 };
   private visible = false;
   private trail: TrailPoint[] = [];
@@ -158,6 +167,10 @@ export class PointerOverlayComponent {
         }
         this.target = { x: p.x, y: p.y };
         this.setVisible(p.visible);
+        if (performance.now() - this.lastFrameAt > 100) {
+          this.pos = { x: p.x, y: p.y };
+          this.cursorEl().nativeElement.style.transform = `translate(${p.x}px, ${p.y}px)`;
+        }
         if (p.click) this.ripple(p.x, p.y);
       });
     afterNextRender(() => gsap.ticker.add(this.tick));
@@ -167,11 +180,12 @@ export class PointerOverlayComponent {
   private setVisible(v: boolean): void {
     if (v === this.visible) return;
     this.visible = v;
-    gsap.to(this.cursorEl().nativeElement, { opacity: v ? 1 : 0, duration: v ? 0.15 : 0.35, ease: 'power2.out' });
+    this.shown.set(v);
   }
 
   private frame(): void {
     const now = performance.now();
+    this.lastFrameAt = now;
     const dt = Math.min(64, now - this.lastTick);
     this.lastTick = now;
     if (!this.visible && this.trail.length === 0) return;

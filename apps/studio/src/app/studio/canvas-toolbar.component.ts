@@ -50,7 +50,7 @@ import { EditorStore } from './editor.store';
       class="ptr"
       [class.on]="editor.pointerMode()"
       [attr.aria-pressed]="editor.pointerMode()"
-      (click)="editor.pointerMode.set(!editor.pointerMode())"
+      (click)="togglePointer()"
       title="Pointer mode: your mouse over the canvas drives the on-air pointer (Esc to exit)"
     >
       ◎ Pointer
@@ -155,6 +155,14 @@ export class CanvasToolbarComponent {
   }
 
   protected readonly onAirPointer = computed(() => this.live.activeScene()?.pointer?.enabled === true);
+
+  /** turning pointer mode on also switches the pointer on for the on-air scene */
+  protected togglePointer(): void {
+    const on = !this.editor.pointerMode();
+    this.editor.pointerMode.set(on);
+    if (on && !this.onAirPointer()) this.enableOnAirPointer();
+    if (!on) this.live.send({ type: 'pointer', x: 0, y: 0, visible: false });
+  }
 
   protected enableOnAirPointer(): void {
     const s = this.live.activeScene();
