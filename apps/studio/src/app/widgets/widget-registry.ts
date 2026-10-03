@@ -154,7 +154,8 @@ export const WIDGET_REGISTRY: Record<WidgetType, WidgetDef> = {
     { kind: 'toggle', key: 'showBowling', label: 'Bowling' },
     { kind: 'toggle', key: 'showYetToBat', label: 'Yet to bat' },
     { kind: 'toggle', key: 'showFow', label: 'Fall of wickets' },
-    { kind: 'toggle', key: 'minimized', label: 'Minimized' },
+    { kind: 'select', key: 'display', label: 'Display', options: opts(['window', 'Floating window'], ['widget', 'Widget']) },
+    { kind: 'toggle', key: 'minimized', label: 'Minimized (floating window only)' },
   ]),
   teamCard: def('teamCard', TeamCardWidget, 'Playing XI with who batted, who is in and who is yet to bat', [
     {
@@ -165,12 +166,14 @@ export const WIDGET_REGISTRY: Record<WidgetType, WidgetDef> = {
     },
     { kind: 'toggle', key: 'showRoles', label: 'Roles' },
     { kind: 'toggle', key: 'showScores', label: 'Team score' },
-    { kind: 'toggle', key: 'minimized', label: 'Minimized' },
+    { kind: 'select', key: 'display', label: 'Display', options: opts(['window', 'Floating window'], ['widget', 'Widget']) },
+    { kind: 'toggle', key: 'minimized', label: 'Minimized (floating window only)' },
   ]),
   playerCard: def('playerCard', PlayerCardWidget, 'One player: role, styles and this match’s figures', [
     { kind: 'text', key: 'playerName', label: 'Player (pick from the Cards panel)' },
     { kind: 'toggle', key: 'showPhoto', label: 'Show photo (check rights for public streams)' },
-    { kind: 'toggle', key: 'minimized', label: 'Minimized' },
+    { kind: 'select', key: 'display', label: 'Display', options: opts(['window', 'Floating window'], ['widget', 'Widget']) },
+    { kind: 'toggle', key: 'minimized', label: 'Minimized (floating window only)' },
   ]),
   clock: def('clock', ClockWidget, 'Local time or countdown', [
     { kind: 'select', key: 'mode', label: 'Mode', options: opts(['time', 'Local time'], ['countdown', 'Countdown']) },

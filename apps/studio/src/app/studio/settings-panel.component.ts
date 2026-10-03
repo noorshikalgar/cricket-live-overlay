@@ -97,6 +97,11 @@ const ANIM_LABELS: Record<AnimPreset, string> = {
       @if (def.settingsSchema.length) {
         <section>
           <h3>{{ def.label }}</h3>
+          @if (w.type === 'scorecard' || w.type === 'teamCard' || w.type === 'playerCard') {
+            <div class="row-btns top">
+              <button type="button" (click)="reloadCards(w.type)" title="Fetch fresh card data (1 API call)">⟳ Reload card data</button>
+            </div>
+          }
           @for (f of def.settingsSchema; track f.key) {
             <cos-field [def]="f" [value]="w.props[f.key]" (changed)="setProp(w, f, $event)" />
           }
@@ -293,6 +298,9 @@ const ANIM_LABELS: Record<AnimPreset, string> = {
       width: 100%;
       font-variant-numeric: tabular-nums;
     }
+    .row-btns.top {
+      margin: 0 0 12px;
+    }
     .row-btns {
       display: flex;
       flex-wrap: wrap;
@@ -401,6 +409,11 @@ export class SettingsPanelComponent {
     if (!w || !s) return resolveStyle({ showTitle: false }, 'night', null);
     return resolveStyle(w.style, s.theme, this.live.teamColor());
   });
+
+  protected reloadCards(type: string): void {
+    this.live.send({ type: 'cards:fetch', kind: 'scorecard', force: true });
+    if (type !== 'scorecard' && !this.live.squads()) this.live.send({ type: 'cards:fetch', kind: 'squads', force: true });
+  }
 
   protected asStyleKey(k: string): StyleKey {
     return k as StyleKey;

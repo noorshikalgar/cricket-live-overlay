@@ -10,6 +10,8 @@ export interface TeamCardProps {
   showRoles: boolean;
   showScores: boolean;
   minimized: boolean;
+  /** 'window' = floating card with a title bar in the Studio; 'widget' = plain fixed widget */
+  display: 'window' | 'widget';
 }
 
 interface Row {
@@ -28,7 +30,7 @@ interface Row {
   selector: 'cos-team-card',
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <div class="panel card" [class.minimized]="p().minimized" [style.--team]="team()?.primaryColor ?? null">
+    <div class="panel card" [class.minimized]="min()" [style.--team]="team()?.primaryColor ?? null">
       <div class="card-head">
         <span class="card-title">{{ team()?.name ?? 'Team' }}</span>
         <span class="card-sub">Playing XI</span>
@@ -36,7 +38,7 @@ interface Row {
           <span class="card-score">{{ scoreLine() }}</span>
         }
       </div>
-      @if (!p().minimized) {
+      @if (!min()) {
         <div class="card-body">
           @if (rows().length) {
             <table class="tbl">
@@ -92,7 +94,9 @@ interface Row {
   `,
 })
 export class TeamCardWidget extends WidgetBase<TeamCardProps> {
-  protected readonly defaults: TeamCardProps = { side: 'batting', showRoles: true, showScores: true, minimized: false };
+  protected readonly defaults: TeamCardProps = { side: 'batting', showRoles: true, showScores: true, minimized: false, display: 'window' };
+  /** minimising only applies to floating windows */
+  protected readonly min = computed(() => this.p().minimized && this.p().display !== 'widget');
   private readonly store = inject(LiveStore);
 
   /** "Batting Allrounder" → "BAT AR", short enough for a narrow column */

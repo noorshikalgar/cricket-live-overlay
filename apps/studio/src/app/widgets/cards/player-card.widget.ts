@@ -9,6 +9,8 @@ export interface PlayerCardProps {
   /** remote headshot from the provider; off by default (rights on a public stream) */
   showPhoto: boolean;
   minimized: boolean;
+  /** 'window' = floating card with a title bar in the Studio; 'widget' = plain fixed widget */
+  display: 'window' | 'widget';
 }
 
 /** One player: role and styles from the squads, this match's batting and bowling from the scorecard and live state. */
@@ -16,17 +18,17 @@ export interface PlayerCardProps {
   selector: 'cos-player-card',
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <div class="panel card" [class.minimized]="p().minimized" [style.--team]="color()">
+    <div class="panel card" [class.minimized]="min()" [style.--team]="color()">
       <div class="card-head">
         <span class="card-title">{{ name() || 'Player' }}</span>
         @if (info()?.player?.captain) {<span class="tag-mini">C</span>}
         @if (info()?.player?.keeper) {<span class="tag-mini">WK</span>}
         <span class="card-sub">{{ info()?.team?.name ?? '' }}</span>
-        @if (p().minimized && headline()) {
+        @if (min() && headline()) {
           <span class="card-score">{{ headline() }}</span>
         }
       </div>
-      @if (!p().minimized) {
+      @if (!min()) {
         <div class="card-body pc">
           @if (p().showPhoto && info()?.player?.imageUrl) {
             <img class="photo" [src]="info()!.player.imageUrl" alt="" referrerpolicy="no-referrer" />
@@ -144,7 +146,9 @@ export interface PlayerCardProps {
   `,
 })
 export class PlayerCardWidget extends WidgetBase<PlayerCardProps> {
-  protected readonly defaults: PlayerCardProps = { playerId: '', playerName: '', showPhoto: false, minimized: false };
+  protected readonly defaults: PlayerCardProps = { playerId: '', playerName: '', showPhoto: false, minimized: false, display: 'window' };
+  /** minimising only applies to floating windows */
+  protected readonly min = computed(() => this.p().minimized && this.p().display !== 'widget');
   private readonly store = inject(LiveStore);
 
   protected readonly info = computed(() => findPlayer(this.store.squads(), this.p().playerId, this.p().playerName));

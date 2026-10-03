@@ -3,6 +3,7 @@ import {
   CANVAS_H,
   CANVAS_W,
   createWidget,
+  newId,
   type CardKind,
   type PropValue,
   type Scene,
@@ -47,6 +48,13 @@ const ORDINAL = ['1st', '2nd', '3rd', '4th'];
           <em>{{ live.squads() ? 'loaded' : 'not loaded' }}</em>
         </span>
         <button type="button" (click)="fetch('squads', true)" title="Fetch both playing XIs (1 API call)">⟳</button>
+      </div>
+
+      <h3>Open as</h3>
+      <div class="seg" role="radiogroup" aria-label="Open cards as">
+        <button type="button" role="radio" [attr.aria-checked]="openAs() === 'window'" [class.on]="openAs() === 'window'" (click)="openAs.set('window')" title="Floating card with a title bar (minimise, close, reload) on the on-air scene">Floating window</button>
+        <button type="button" role="radio" [attr.aria-checked]="openAs() === 'widget'" [class.on]="openAs() === 'widget'" (click)="openAs.set('widget')" title="Plain fixed widget on the on-air scene">Widget</button>
+        <button type="button" role="radio" [attr.aria-checked]="openAs() === 'scene'" [class.on]="openAs() === 'scene'" (click)="openAs.set('scene')" title="A dedicated scene built around the card, put on air">New scene</button>
       </div>
 
       <h3>Scorecard</h3>
@@ -112,7 +120,12 @@ const ORDINAL = ['1st', '2nd', '3rd', '4th'];
             <li [class.off]="!w.visible">
               <span class="ic">{{ registry[w.type].icon }}</span>
               <span class="nm">{{ label(w) }}</span>
-              <button type="button" [title]="w.props['minimized'] ? 'Restore' : 'Minimize'" (click)="toggleMin(w)" [disabled]="!w.visible">
+              <button
+                type="button"
+                [title]="w.props['minimized'] ? 'Restore' : 'Minimize'"
+                (click)="toggleMin(w)"
+                [disabled]="!w.visible || w.props['display'] === 'widget'"
+              >
                 {{ w.props['minimized'] ? '▢' : '–' }}
               </button>
               <button type="button" [title]="w.visible ? 'Close' : 'Show again'" (click)="toggleVisible(w)">{{ w.visible ? '✕' : '↺' }}</button>
@@ -161,6 +174,26 @@ const ORDINAL = ['1st', '2nd', '3rd', '4th'];
       height: 24px;
       padding: 0;
       justify-content: center;
+    }
+    .seg {
+      display: flex;
+      border: 1px solid var(--ui-border);
+      border-radius: 6px;
+      overflow: hidden;
+    }
+    .seg button {
+      flex: 1;
+      border: 0;
+      border-radius: 0;
+      justify-content: center;
+      padding: 6px 4px;
+      background: transparent;
+      font-size: 11px;
+    }
+    .seg button.on {
+      background: var(--ui-accent-soft);
+      color: var(--ui-accent);
+      font-weight: 600;
     }
     .grid {
       display: grid;
@@ -312,6 +345,7 @@ export class CardsPanelComponent {
   );
 
   protected readonly teamTab = signal(0);
+  protected readonly openAs = signal<'window' | 'widget' | 'scene'>('window');
 
   /**
    * The chosen team's players: the cached playing XI when loaded, otherwise built from
@@ -389,12 +423,18 @@ export class CardsPanelComponent {
     this.open('playerCard', { playerId: id, playerName: name });
   }
 
-  /** Show a card on the on-air scene: reuse the scene's card of that type, or add one. */
+  /** Show a card: on the on-air scene (window / widget) or as its own scene, per "Open as". */
   protected open(type: CardType, props: Record<string, PropValue>): void {
     const scene = this.onAirScene();
     if (!scene) return;
     this.fetch('scorecard');
     if (type !== 'scorecard' && !this.live.squads()) this.fetch('squads');
+    const mode = this.openAs();
+    if (mode === 'scene') {
+      this.openAsScene(type, props, scene);
+      return;
+    }
+    props = { ...props, display: mode };
 
     const next = structuredClone(scene);
     const top = next.widgets.reduce((m, w) => Math.max(m, w.z), 0) + 1;
@@ -418,6 +458,70 @@ export class CardsPanelComponent {
       this.editor.selectedId.set(this.editor.sceneId() === scene.id ? w.id : this.editor.selectedId());
     }
     this.live.pushScene({ ...next, updatedAt: Date.now() });
+  }
+
+  /**
+   * A dedicated scene around the card (camera frame + score bug), put on air with
+   * that scene's transition. Re-opening the same card reuses its scene.
+   */
+  private openAsScene(type: CardType, props: Record<string, PropValue>, from: Scene): void {
+    const name = this.sceneName(type, props);
+    const existing = this.live.sceneList().find((s) => s.name === name);
+    let scene: Scene;
+    if (existing) {
+      scene = structuredClone(existing);
+      const card = scene.widgets.find((w) => w.type === type);
+      if (card) {
+        card.props = { ...card.props, ...props, display: 'widget', minimized: false };
+        card.visible = true;
+      }
+    } else {
+      const card = createWidget(type, { name: WIDGET_REGISTRY[type].label });
+      card.props = { ...card.props, ...props, display: 'widget', minimized: false };
+      const camera = createWidget('camera');
+      const bug = createWidget('scorebug', { x: 120, y: 950, w: 760, h: 96 });
+      if (type === 'scorecard') {
+        Object.assign(card, { x: 120, y: 80, w: 1680, h: 840 });
+        Object.assign(camera, { visible: false, x: 1500, y: 700, w: 300, h: 300 });
+      } else if (type === 'teamCard') {
+        Object.assign(card, { x: 120, y: 80, w: 760, h: 840 });
+        Object.assign(camera, { x: 960, y: 140, w: 840, h: 680 });
+        bug.x = 960;
+        bug.w = 840;
+      } else {
+        Object.assign(camera, { x: 120, y: 120, w: 980, h: 760 });
+        Object.assign(card, { x: 1160, y: 300, w: 640, h: 380 });
+      }
+      scene = {
+        id: newId(),
+        name,
+        canvas: { w: CANVAS_W, h: CANVAS_H },
+        theme: from.theme,
+        background: from.background,
+        transition: from.transition,
+        widgets: [camera, card, bug].map((w, i) => ({ ...w, z: i + 1 })),
+        updatedAt: Date.now(),
+      };
+    }
+    this.live.pushScene({ ...scene, updatedAt: Date.now() });
+    this.live.flushScenes();
+    // the server has the scene before we switch to it
+    setTimeout(() => this.live.send({ type: 'scene:switch', sceneId: scene.id }), 150);
+    this.editor.editScene(scene.id);
+  }
+
+  private sceneName(type: CardType, props: Record<string, PropValue>): string {
+    const m = this.live.match();
+    if (type === 'playerCard') return `Player · ${String(props['playerName'] || 'card')}`;
+    if (type === 'teamCard') {
+      const side = String(props['side'] ?? 'batting');
+      const t = side === '0' || side === '1' ? m?.teams[Number(side)] : null;
+      return `Team · ${t?.shortCode ?? side}`;
+    }
+    const inn = String(props['innings'] ?? 'current');
+    if (inn === 'current') return 'Scorecard · current';
+    const i = m?.innings[Number(inn) - 1];
+    return `Scorecard · ${i ? `${i.battingTeam} ${ORDINAL[Number(inn) - 1]}` : inn}`;
   }
 
   private patch(w: WidgetInstance, patch: Partial<WidgetInstance>): void {
