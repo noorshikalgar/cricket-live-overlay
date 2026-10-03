@@ -73,6 +73,7 @@ export class EditBoxDirective {
     this.it = interact(this.el)
       .draggable({
         enabled: !locked,
+        ignoreFrom: '.card-reload',
         listeners: {
           start: () => this.begin(),
           move: (e: { dx: number; dy: number; altKey: boolean }) => {

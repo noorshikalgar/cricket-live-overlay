@@ -1,9 +1,9 @@
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import path from 'node:path';
 import type { CardKind, Scorecard, Squads } from '@cos/shared';
 import type { CricketProvider } from './providers';
 
-/** How long each kind stays fresh. Squads barely change; the scorecard follows the game. */
-const TTL_MS: Record<CardKind, number> = { scorecard: 60_000, squads: 30 * 60_000 };
-/** a forced refresh still waits this long (their scorecard cache is 30 s) */
+/** a forced reload still waits this long (their scorecard cache is 30 s) */
 const FORCE_COOLDOWN_MS = 15_000;
 
 export interface CardHooks {
@@ -12,45 +12,70 @@ export interface CardHooks {
   onError(message: string): void;
 }
 
+interface CardCacheFile {
+  scorecard: Scorecard | null;
+  squads: Squads | null;
+}
+
 /**
- * Detail data for the on-air cards, fetched on demand and cached. The scorecard
- * only refreshes while a card is visible on air, so idle cards cost no calls.
+ * Detail data for the on-air cards. Responses are cached per match on disk, so
+ * restarts cost nothing. Nothing refreshes on its own: data is fetched once when a
+ * card first needs it, then only when the commentator presses ⟳ (reload).
  */
 export class CardService {
   private matchId: string | null = null;
-  private scorecard: { at: number; value: Scorecard } | null = null;
-  private squads: { at: number; value: Squads } | null = null;
+  private scorecard: Scorecard | null = null;
+  private squads: Squads | null = null;
   private readonly inFlight = new Set<CardKind>();
 
   constructor(
     private readonly provider: CricketProvider,
+    private readonly dir: string,
     private readonly hooks: CardHooks,
-  ) {}
-
-  get current(): { scorecard: Scorecard | null; squads: Squads | null } {
-    return { scorecard: this.scorecard?.value ?? null, squads: this.squads?.value ?? null };
+  ) {
+    mkdirSync(dir, { recursive: true });
   }
 
-  /** New match selected: drop everything cached for the old one. */
+  get current(): { scorecard: Scorecard | null; squads: Squads | null } {
+    return { scorecard: this.scorecard, squads: this.squads };
+  }
+
+  private file(id: string): string {
+    return path.join(this.dir, `${id.replace(/[^\w-]/g, '_')}.json`);
+  }
+
+  /** Switch match: load whatever was cached for it before. */
   reset(matchId: string | null): void {
     if (matchId === this.matchId) return;
     this.matchId = matchId;
     this.scorecard = null;
     this.squads = null;
-    this.hooks.onScorecard(null);
-    this.hooks.onSquads(null);
+    if (matchId && existsSync(this.file(matchId))) {
+      try {
+        const c = JSON.parse(readFileSync(this.file(matchId), 'utf8')) as Partial<CardCacheFile>;
+        this.scorecard = c.scorecard ?? null;
+        this.squads = c.squads ?? null;
+      } catch {
+        // unreadable cache: start empty
+      }
+    }
+    this.hooks.onScorecard(this.scorecard);
+    this.hooks.onSquads(this.squads);
   }
 
   supports(kind: CardKind): boolean {
     return kind === 'scorecard' ? !!this.provider.getScorecard : !!this.provider.getSquads;
   }
 
+  /**
+   * `force` = the ⟳ button: fetch fresh data (1 call). Without it, cached data is
+   * served and a call is only made when there is nothing cached yet.
+   */
   async fetch(kind: CardKind, force = false): Promise<void> {
     const id = this.matchId;
     if (!id || !this.supports(kind) || this.inFlight.has(kind)) return;
     const cached = kind === 'scorecard' ? this.scorecard : this.squads;
-    const age = cached ? Date.now() - cached.at : Infinity;
-    if (cached && (age < (force ? FORCE_COOLDOWN_MS : TTL_MS[kind]))) {
+    if (cached && (!force || Date.now() - cached.updatedAt < FORCE_COOLDOWN_MS)) {
       this.emit(kind);
       return;
     }
@@ -58,12 +83,15 @@ export class CardService {
     try {
       if (kind === 'scorecard' && this.provider.getScorecard) {
         const value = await this.provider.getScorecard(id);
-        if (this.matchId === id) this.scorecard = { at: Date.now(), value };
+        if (this.matchId === id) this.scorecard = { ...value, updatedAt: Date.now() };
       } else if (kind === 'squads' && this.provider.getSquads) {
         const value = await this.provider.getSquads(id);
-        if (this.matchId === id) this.squads = { at: Date.now(), value };
+        if (this.matchId === id) this.squads = { ...value, updatedAt: Date.now() };
       }
-      if (this.matchId === id) this.emit(kind);
+      if (this.matchId === id) {
+        this.save(id);
+        this.emit(kind);
+      }
     } catch (err) {
       this.hooks.onError(`${kind}: ${err instanceof Error ? err.message : String(err)}`);
     } finally {
@@ -71,14 +99,19 @@ export class CardService {
     }
   }
 
-  /** Called after each score poll: keep on-air cards current without extra polling loops. */
-  onPoll(cardsOnAir: { scorecard: boolean; squads: boolean }): void {
-    if (cardsOnAir.squads && !this.squads) void this.fetch('squads');
-    if (cardsOnAir.scorecard) void this.fetch('scorecard');
+  /** A card is on air: make sure it has data, without ever refreshing what is cached. */
+  ensure(needs: { scorecard: boolean; squads: boolean }): void {
+    if (needs.scorecard && !this.scorecard) void this.fetch('scorecard');
+    if (needs.squads && !this.squads) void this.fetch('squads');
+  }
+
+  private save(id: string): void {
+    const data: CardCacheFile = { scorecard: this.scorecard, squads: this.squads };
+    writeFileSync(this.file(id), JSON.stringify(data));
   }
 
   private emit(kind: CardKind): void {
-    if (kind === 'scorecard') this.hooks.onScorecard(this.scorecard?.value ?? null);
-    else this.hooks.onSquads(this.squads?.value ?? null);
+    if (kind === 'scorecard') this.hooks.onScorecard(this.scorecard);
+    else this.hooks.onSquads(this.squads);
   }
 }

@@ -6,9 +6,10 @@ import {
   afterNextRender,
   computed,
   inject,
+  signal,
   viewChild,
 } from '@angular/core';
-import { CANVAS_H, CANVAS_W, type WidgetType } from '@cos/shared';
+import { CANVAS_H, CANVAS_W, type WidgetInstance, type WidgetType } from '@cos/shared';
 import { LiveStore } from '../core/live.store';
 import { SceneBackgroundComponent } from '../widgets/scene-background.component';
 import { SceneRendererComponent } from '../widgets/scene-renderer.component';
@@ -62,6 +63,17 @@ export const WIDGET_DND_TYPE = 'application/x-cos-widget';
                   [style.z-index]="w.z"
                   (pointerdown)="select($event, w.id)"
                 >
+                  @if (isCard(w)) {
+                    <button
+                      type="button"
+                      class="card-reload"
+                      title="Reload this card's data (1 API call). Cards never refresh on their own."
+                      (pointerdown)="$event.stopPropagation()"
+                      (click)="reloadCard(w)"
+                    >
+                      ⟳ <span>{{ cardAge() }}</span>
+                    </button>
+                  }
                   @if (w.id === editor.selectedId()) {
                     <span class="tag">{{ w.name }}{{ w.locked ? ' · locked' : '' }}</span>
                     @if (!w.locked) {
@@ -200,6 +212,41 @@ export const WIDGET_DND_TYPE = 'application/x-cos-widget';
     .rh-s { left: 50%; top: 100%; cursor: ns-resize; }
     .rh-sw { left: 0; top: 100%; cursor: nesw-resize; }
     .rh-w { left: 0; top: 50%; cursor: ew-resize; }
+    .card-reload {
+      position: absolute;
+      right: 0;
+      top: 0;
+      transform-origin: 100% 0;
+      transform: scale(var(--inv));
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 9px;
+      border: 0;
+      border-radius: 0 0 0 6px;
+      background: rgba(11, 15, 23, 0.85);
+      color: #fff;
+      font: 600 13px/1 Inter, sans-serif;
+      cursor: pointer;
+      opacity: 0;
+      transition: opacity 0.12s;
+      z-index: 2;
+    }
+    .card-reload span {
+      font-weight: 500;
+      color: #9aa4b2;
+    }
+    .edit-box:hover .card-reload,
+    .edit-box.selected .card-reload {
+      opacity: 1;
+    }
+    .card-reload:hover {
+      background: #22c55e;
+      color: #06240f;
+    }
+    .card-reload:hover span {
+      color: #06240f;
+    }
     .guide {
       position: absolute;
       background: #f472b6;
@@ -242,6 +289,7 @@ export class CanvasComponent {
 
   constructor() {
     const destroyRef = inject(DestroyRef);
+    destroyRef.onDestroy(() => clearInterval(this.ageTimer));
     afterNextRender(() => {
       const el = this.viewport().nativeElement;
       const ro = new ResizeObserver(() => this.fit());
@@ -256,6 +304,26 @@ export class CanvasComponent {
     const pad = 32;
     const s = Math.min((el.clientWidth - pad) / CANVAS_W, (el.clientHeight - pad) / CANVAS_H);
     this.ctx.scale.set(Math.max(0.1, Math.round(s * 1000) / 1000));
+  }
+
+  protected isCard(w: WidgetInstance): boolean {
+    return w.type === 'scorecard' || w.type === 'teamCard' || w.type === 'playerCard';
+  }
+
+  private readonly now = signal(Date.now());
+  private readonly ageTimer = setInterval(() => this.now.set(Date.now()), 10_000);
+
+  protected readonly cardAge = computed(() => {
+    const at = this.live.scorecard()?.updatedAt;
+    if (!at) return 'not loaded';
+    const s = Math.max(0, Math.round((this.now() - at) / 1000));
+    return s < 60 ? 'just now' : s < 3600 ? `${Math.round(s / 60)} min ago` : `${Math.round(s / 3600)} h ago`;
+  });
+
+  /** ⟳ on a card: fresh scorecard; team and player cards also get the XIs if they're missing */
+  protected reloadCard(w: WidgetInstance): void {
+    this.live.send({ type: 'cards:fetch', kind: 'scorecard', force: true });
+    if (w.type !== 'scorecard' && !this.live.squads()) this.live.send({ type: 'cards:fetch', kind: 'squads', force: true });
   }
 
   // no stopPropagation here: interact.js listens on the document

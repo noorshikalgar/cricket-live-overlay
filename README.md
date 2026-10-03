@@ -78,11 +78,11 @@ Open the **Live cards** tab in the Studio's left panel while you talk:
 
 - **Scorecard**: current innings or any earlier one. Batting card with dismissals and who is batting now, bowling figures, extras, total, *yet to bat*, fall of wickets.
 - **Teams**: a team's playing XI with what each player has done: runs (balls), batting now, yet to bat, bowling figures. Roles, captain and keeper.
-- **Players**: one tap for the two batters and the bowler, or search both XIs. Shows role, batting and bowling style and this match's figures. *Show photo* is off by default; check you have the rights before showing player photos on a public stream.
+- **Players**: one tap for the two batters and the bowler, or pick from each team's list (team tabs, search). The list comes from the cached playing XIs, or from the scorecard when the XIs aren't loaded, so it costs no extra call. Shows role, batting and bowling style and this match's figures. *Show photo* is off by default; check you have the rights before showing player photos on a public stream.
 
 Cards open on the **on-air scene** with their enter animation. In the panel's *On air* list each card can be minimised to a title strip or closed (and reopened). They are normal widgets, so you can also move, resize and restyle them on the canvas.
 
-Data cost: the scorecard is 1 call and refreshes at most once a minute, only while a card is on air. The playing XIs are 1 call, fetched once per match (⟳ in the panel refreshes either on demand).
+Data cost and caching: card data is **never refreshed automatically**. The scorecard and the playing XIs are each fetched once per match (1 call each) the first time a card needs them, saved to `apps/server/data/cards/` and reused across restarts. Press **⟳** on a card's top-right corner in the Studio (shown on hover; never on `/output`) or in the Live cards panel to reload on demand.
 
 ### Scene background
 

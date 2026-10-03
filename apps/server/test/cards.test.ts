@@ -1,3 +1,6 @@
+import { mkdtempSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import path from 'node:path';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { CardService } from '../src/cards';
 import { mapScorecardReal, mapSquadsReal } from '../src/providers/cricketliveapi-cards';
@@ -60,22 +63,54 @@ describe('mock scorecard', () => {
 });
 
 describe('CardService', () => {
-  it('caches, refreshes only when stale, and resets per match', async () => {
-    vi.useFakeTimers();
-    const getScorecard = vi.fn(async (id: string) => ({ matchId: id, innings: [], updatedAt: Date.now() }));
-    const provider = { name: 'x', countsTowardQuota: true, listLiveMatches: async () => [], getMatchState: async () => { throw new Error(); }, getScorecard } as unknown as CricketProvider;
+  function make(dir = mkdtempSync(path.join(tmpdir(), 'cos-cards-'))) {
+    const getScorecard = vi.fn(async (id: string) => ({ matchId: id, innings: [], updatedAt: 0 }));
+    const provider = {
+      name: 'x',
+      countsTowardQuota: true,
+      listLiveMatches: async () => [],
+      getMatchState: async () => {
+        throw new Error();
+      },
+      getScorecard,
+    } as unknown as CricketProvider;
     const seen: unknown[] = [];
-    const svc = new CardService(provider, { onScorecard: (s) => seen.push(s), onSquads: () => undefined, onError: () => undefined });
+    const svc = new CardService(provider, dir, { onScorecard: (s) => seen.push(s), onSquads: () => undefined, onError: () => undefined });
+    return { svc, getScorecard, dir, seen };
+  }
+
+  it('fetches once, then serves the cache; never refreshes by itself', async () => {
+    vi.useFakeTimers();
+    const { svc, getScorecard } = make();
     svc.reset('m1');
     await svc.fetch('scorecard');
+    await vi.advanceTimersByTimeAsync(10 * 60_000);
     await svc.fetch('scorecard');
-    expect(getScorecard).toHaveBeenCalledTimes(1);
-    await vi.advanceTimersByTimeAsync(61_000);
-    svc.onPoll({ scorecard: true, squads: false });
+    svc.ensure({ scorecard: true, squads: false });
     await vi.advanceTimersByTimeAsync(0);
+    expect(getScorecard).toHaveBeenCalledTimes(1);
+  });
+
+  it('reload (force) fetches again, with a short cooldown', async () => {
+    vi.useFakeTimers();
+    const { svc, getScorecard } = make();
+    svc.reset('m1');
+    await svc.fetch('scorecard');
+    await svc.fetch('scorecard', true); // within cooldown: served from cache
+    expect(getScorecard).toHaveBeenCalledTimes(1);
+    await vi.advanceTimersByTimeAsync(16_000);
+    await svc.fetch('scorecard', true);
     expect(getScorecard).toHaveBeenCalledTimes(2);
-    svc.onPoll({ scorecard: false, squads: false });
-    await vi.advanceTimersByTimeAsync(120_000);
-    expect(getScorecard).toHaveBeenCalledTimes(2);
+  });
+
+  it('keeps the cache across restarts', async () => {
+    const first = make();
+    first.svc.reset('m1');
+    await first.svc.fetch('scorecard');
+    const second = make(first.dir);
+    second.svc.reset('m1');
+    expect(second.svc.current.scorecard?.matchId).toBe('m1');
+    await second.svc.fetch('scorecard');
+    expect(second.getScorecard).not.toHaveBeenCalled();
   });
 });
