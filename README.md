@@ -106,6 +106,12 @@ Each scene has a **Transition in** (scene panel, nothing selected), played on `/
 
 Length is adjustable (0.3–2.5 s, scaled by the global Speed). With **Reduce motion** on, every transition becomes a short crossfade.
 
+### On-air pointer
+
+OBS never sees your real mouse, so the pointer is driven from the Studio: turn on **Show pointer on this scene** (scene panel → *On-air pointer*), press **◎ Pointer** in the canvas toolbar, and move over the canvas. The Output draws it live, eased and with motion blur (a short fading trail plus a stretch along the direction of travel). Click for a ripple; **Esc** leaves pointer mode. While pointer mode is on, the canvas doesn't edit widgets.
+
+Styles: **Dot**, **Laser ring**, **Cricket ball** (spins as it moves) and **Bat** (tilts with movement), with colour and size per scene. The ball and bat are drawn in-app, no external assets.
+
 ### Themes and styling
 
 A scene has a theme: **Night** (dark glass, default), **Clean** (white panels for daytime) or **Team** (accent follows the batting team's colour). Every widget style field starts as "theme"; changing it on a widget overrides just that widget, ↺ resets it. Global **Reduce motion** and **Speed** live in the canvas toolbar and apply to every Output.

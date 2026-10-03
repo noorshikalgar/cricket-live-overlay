@@ -17,6 +17,7 @@ import { LiveStore } from '../core/live.store';
 import { Flip, gsap } from '../motion/gsap';
 import { MotionService } from '../motion/motion.service';
 import { SceneBackgroundComponent } from '../widgets/scene-background.component';
+import { PointerOverlayComponent } from './pointer-overlay.component';
 import { SceneRendererComponent } from '../widgets/scene-renderer.component';
 
 /**
@@ -26,7 +27,7 @@ import { SceneRendererComponent } from '../widgets/scene-renderer.component';
  */
 @Component({
   selector: 'cos-output-page',
-  imports: [SceneBackgroundComponent, SceneRendererComponent],
+  imports: [SceneBackgroundComponent, SceneRendererComponent, PointerOverlayComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { '[class.reduce-motion]': 'motion.reduced()', '(window:resize)': 'fit()' },
   template: `
@@ -37,6 +38,9 @@ import { SceneRendererComponent } from '../widgets/scene-renderer.component';
           <cos-scene-renderer [scene]="scene" [match]="store.match()" [teamColor]="store.teamColor()" mode="output" />
         }
       </div>
+      @if (displayed()?.pointer?.enabled) {
+        <cos-pointer-overlay [settings]="displayed()!.pointer" />
+      }
       <div class="stinger" #stinger aria-hidden="true">
         <div class="sp back"></div>
         <div class="sp front"></div>

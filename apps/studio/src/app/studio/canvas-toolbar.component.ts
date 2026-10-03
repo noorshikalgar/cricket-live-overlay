@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
-import { BACKGROUND_KINDS, THEMES, type BackgroundKind, type ThemeId } from '@cos/shared';
+import { BACKGROUND_KINDS, DEFAULT_POINTER, THEMES, type BackgroundKind, type ThemeId } from '@cos/shared';
 import { LiveStore } from '../core/live.store';
 import { EditorStore } from './editor.store';
 
@@ -44,6 +44,23 @@ import { EditorStore } from './editor.store';
       <input type="range" min="0.5" max="2" step="0.25" [value]="live.settings().speed" (change)="setSpeed($event)" />
       <output>{{ live.settings().speed }}×</output>
     </label>
+    <span class="sep"></span>
+    <button
+      type="button"
+      class="ptr"
+      [class.on]="editor.pointerMode()"
+      [attr.aria-pressed]="editor.pointerMode()"
+      (click)="editor.pointerMode.set(!editor.pointerMode())"
+      title="Pointer mode: your mouse over the canvas drives the on-air pointer (Esc to exit)"
+    >
+      ◎ Pointer
+    </button>
+    @if (editor.pointerMode() && !onAirPointer()) {
+      <span class="stale">
+        Pointer is off for the on-air scene ·
+        <button type="button" class="link" (click)="enableOnAirPointer()">turn it on</button>
+      </span>
+    }
     <span class="sep"></span>
     <label class="chk" [title]="live.obs().error ?? 'Move the OBS webcam source to match the camera frame automatically'">
       <input type="checkbox" [checked]="live.settings().obsBridge" (change)="toggleObs()" />
@@ -110,6 +127,19 @@ import { EditorStore } from './editor.store';
       padding: 4px 10px;
       cursor: pointer;
     }
+    .ptr.on {
+      background: #ef4444;
+      border-color: #ef4444;
+      color: #fff;
+    }
+    .link {
+      background: none;
+      border: 0;
+      padding: 0;
+      color: #fbbf24;
+      text-decoration: underline;
+      cursor: pointer;
+    }
     .stale {
       color: #fbbf24;
     }
@@ -122,6 +152,14 @@ export class CanvasToolbarComponent {
 
   protected setTheme(e: Event): void {
     this.editor.setTheme((e.target as HTMLSelectElement).value as ThemeId);
+  }
+
+  protected readonly onAirPointer = computed(() => this.live.activeScene()?.pointer?.enabled === true);
+
+  protected enableOnAirPointer(): void {
+    const s = this.live.activeScene();
+    if (!s) return;
+    this.live.pushScene({ ...s, pointer: { ...DEFAULT_POINTER, ...s.pointer, enabled: true }, updatedAt: Date.now() });
   }
 
   protected readonly bgKinds = BACKGROUND_KINDS;

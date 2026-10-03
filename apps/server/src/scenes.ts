@@ -6,8 +6,11 @@ import {
   BACKGROUND_KINDS,
   DEFAULT_BACKGROUND,
   DEFAULT_SETTINGS,
+  DEFAULT_POINTER,
   DEFAULT_TRANSITION,
+  POINTER_STYLES,
   TRANSITION_KINDS,
+  type ScenePointer,
   type SceneTransition,
   type SceneBackground,
   WIDGET_TYPES,
@@ -58,6 +61,14 @@ function validTransition(v: unknown): SceneTransition {
   return { kind, color, duration: Math.min(3, Math.max(0.3, d)), showName: t['showName'] !== false };
 }
 
+function validPointer(v: unknown): ScenePointer {
+  const p = typeof v === 'object' && v !== null ? (v as Record<string, unknown>) : {};
+  const style = POINTER_STYLES.some((k) => k.value === p['style']) ? (p['style'] as ScenePointer['style']) : DEFAULT_POINTER.style;
+  const color = typeof p['color'] === 'string' && HEX.test(p['color']) ? p['color'] : DEFAULT_POINTER.color;
+  const size = typeof p['size'] === 'number' && Number.isFinite(p['size']) ? Math.min(160, Math.max(12, p['size'])) : DEFAULT_POINTER.size;
+  return { enabled: p['enabled'] === true, style, color, size, motionBlur: p['motionBlur'] !== false };
+}
+
 /** Loose structural check for scenes arriving over the socket or from an import. */
 export function validateScene(v: unknown): Scene | null {
   if (typeof v !== 'object' || v === null) return null;
@@ -72,6 +83,7 @@ export function validateScene(v: unknown): Scene | null {
     theme,
     background: validBackground(s['background']),
     transition: validTransition(s['transition']),
+    pointer: validPointer(s['pointer']),
     widgets: s['widgets'] as WidgetInstance[],
     updatedAt: Date.now(),
   };

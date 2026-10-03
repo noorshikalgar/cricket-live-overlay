@@ -3,11 +3,13 @@ import {
   CANVAS_H,
   CANVAS_W,
   DEFAULT_BACKGROUND,
+  DEFAULT_POINTER,
   DEFAULT_TRANSITION,
   createWidget,
   newId,
   type Scene,
   type SceneBackground,
+  type ScenePointer,
   type SceneTransition,
   type WidgetInstance,
   type WidgetType,
@@ -30,6 +32,8 @@ export class EditorStore {
   readonly sceneId = signal<string | null>(null);
   readonly selectedId = signal<string | null>(null);
   readonly snap = signal(true);
+  /** while on, the mouse over the canvas drives the on-air pointer instead of editing */
+  readonly pointerMode = signal(false);
 
   readonly scene = computed<Scene | null>(() => {
     const id = this.sceneId();
@@ -230,6 +234,12 @@ export class EditorStore {
   setBackground(patch: Partial<SceneBackground>, coalesceKey?: string): void {
     this.commit((s) => {
       s.background = { ...DEFAULT_BACKGROUND, ...s.background, ...patch };
+    }, coalesceKey);
+  }
+
+  setPointer(patch: Partial<ScenePointer>, coalesceKey?: string): void {
+    this.commit((s) => {
+      s.pointer = { ...DEFAULT_POINTER, ...s.pointer, ...patch };
     }, coalesceKey);
   }
 

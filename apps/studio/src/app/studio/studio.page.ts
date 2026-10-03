@@ -307,6 +307,10 @@ export default class StudioPage {
       }
     }
     if (key === 'escape') {
+      if (this.editor.pointerMode()) {
+        this.editor.pointerMode.set(false);
+        this.live.send({ type: 'pointer', x: 0, y: 0, visible: false });
+      }
       this.editor.selectedId.set(null);
       return;
     }

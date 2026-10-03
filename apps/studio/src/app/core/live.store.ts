@@ -44,6 +44,8 @@ export class LiveStore {
   readonly squads = signal<Squads | null>(null);
   /** fires for every auto-detected and manual event */
   readonly events = new Subject<MatchEvent>();
+  /** live pointer moves from the Studio (high frequency, so a stream rather than a signal) */
+  readonly pointer = new Subject<{ x: number; y: number; visible: boolean; click: boolean }>();
   /** fires when the on-air scene changes, before signals update, so Output can capture Flip state */
   readonly sceneSwitch = new Subject<string>();
 
@@ -135,6 +137,9 @@ export class LiveStore {
         return;
       case 'clients':
         this.clients.set({ outputs: m.outputs, studios: m.studios });
+        return;
+      case 'pointer':
+        this.pointer.next({ x: m.x, y: m.y, visible: m.visible, click: m.click });
         return;
       case 'cards:scorecard':
         this.scorecard.set(m.scorecard);

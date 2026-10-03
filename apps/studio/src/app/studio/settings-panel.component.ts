@@ -3,8 +3,12 @@ import {
   ANIM_PRESETS,
   BACKGROUND_KINDS,
   DEFAULT_BACKGROUND,
+  DEFAULT_POINTER,
   DEFAULT_TRANSITION,
+  POINTER_STYLES,
   THEMES,
+  type PointerStyle,
+  type ScenePointer,
   TRANSITION_KINDS,
   type SceneTransition,
   type TransitionKind,
@@ -176,6 +180,19 @@ const ANIM_LABELS: Record<AnimPreset, string> = {
       </section>
 
       <section>
+        <h3>On-air pointer</h3>
+        @let ptr = scenePtr();
+        <cos-field [def]="ptrOnField" [value]="ptr.enabled" (changed)="setPtr({ enabled: $event === true })" />
+        @if (ptr.enabled) {
+          <cos-field [def]="ptrStyleField" [value]="ptr.style" (changed)="setPtr({ style: asPtrStyle($event) })" />
+          <cos-field [def]="ptrColorField" [value]="ptr.color" (changed)="setPtr({ color: asStr($event) }, 'ptr-color')" />
+          <cos-field [def]="ptrSizeField" [value]="ptr.size" (changed)="setPtr({ size: asNum($event) }, 'ptr-size')" />
+          <cos-field [def]="ptrBlurField" [value]="ptr.motionBlur" (changed)="setPtr({ motionBlur: $event === true })" />
+          <p class="hint">Press ◎ Pointer in the canvas toolbar, then move over the canvas: the pointer follows live on the Output. Click for a ripple, Esc to stop.</p>
+        }
+      </section>
+
+      <section>
         <h3>Background (on air)</h3>
         @let bg = sceneBg();
         <cos-field [def]="bgKindField" [value]="bg.kind" (changed)="setBg({ kind: asKind($event) })" />
@@ -325,6 +342,21 @@ export class SettingsPanelComponent {
   protected readonly enterField: FieldDef = { kind: 'select', key: 'enter', label: 'Enter', options: this.animOptions };
   protected readonly exitField: FieldDef = { kind: 'select', key: 'exit', label: 'Exit', options: this.animOptions };
   protected readonly delayField: FieldDef = { kind: 'slider', key: 'delay', label: 'Enter delay', min: 0, max: 2000, step: 50, unit: 'ms' };
+
+  protected readonly scenePtr = computed(() => ({ ...DEFAULT_POINTER, ...this.editor.scene()?.pointer }));
+  protected readonly ptrOnField: FieldDef = { kind: 'toggle', key: 'enabled', label: 'Show pointer on this scene' };
+  protected readonly ptrStyleField: FieldDef = { kind: 'select', key: 'style', label: 'Style', options: POINTER_STYLES };
+  protected readonly ptrColorField: FieldDef = { kind: 'color', key: 'color', label: 'Colour' };
+  protected readonly ptrSizeField: FieldDef = { kind: 'slider', key: 'size', label: 'Size', min: 12, max: 120, step: 2, unit: 'px' };
+  protected readonly ptrBlurField: FieldDef = { kind: 'toggle', key: 'motionBlur', label: 'Motion blur' };
+
+  protected setPtr(patch: Partial<ScenePointer>, coalesceKey?: string): void {
+    this.editor.setPointer(patch, coalesceKey);
+  }
+
+  protected asPtrStyle(v: PropValue): PointerStyle {
+    return POINTER_STYLES.find((k) => k.value === v)?.value ?? 'dot';
+  }
 
   protected readonly sceneTr = computed(() => ({ ...DEFAULT_TRANSITION, ...this.editor.scene()?.transition }));
   protected readonly trKindField: FieldDef = { kind: 'select', key: 'kind', label: 'Style', options: TRANSITION_KINDS };
