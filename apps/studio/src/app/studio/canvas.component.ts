@@ -98,10 +98,13 @@ export const WIDGET_DND_TYPE = 'application/x-cos-widget';
                       </button>
                     </div>
                   }
-                  @if (w.id === editor.selectedId() && !isCard(w)) {
-                    <span class="tag">{{ w.name }}{{ w.locked ? ' · locked' : '' }}</span>
+                  @if (w.id === editor.selectedId()) {
+                    @if (!isCard(w)) {
+                      <span class="tag">{{ w.name }}{{ w.locked ? ' · locked' : '' }}</span>
+                    }
                     @if (!w.locked) {
-                      @for (h of handles; track h) {
+                      <!-- cards scale by width (their height follows the content), so no top/bottom-only handles -->
+                      @for (h of isCard(w) ? cardHandles : handles; track h) {
                         <span [class]="'rh rh-' + h"></span>
                       }
                     }
@@ -227,6 +230,8 @@ export const WIDGET_DND_TYPE = 'application/x-cos-widget';
       border: calc(2px * var(--inv)) solid #60a5fa;
       border-radius: 2px;
       transform: translate(-50%, -50%);
+      /* above a card's title bar */
+      z-index: 3;
     }
     .rh-nw { left: 0; top: 0; cursor: nwse-resize; }
     .rh-n { left: 50%; top: 0; cursor: ns-resize; }
@@ -328,6 +333,7 @@ export class CanvasComponent {
   protected readonly W = CANVAS_W;
   protected readonly H = CANVAS_H;
   protected readonly handles = ['nw', 'n', 'ne', 'e', 'se', 's', 'sw', 'w'];
+  protected readonly cardHandles = ['nw', 'ne', 'e', 'se', 'sw', 'w'];
 
   protected readonly previewMatch = computed(() => this.live.match() ?? SAMPLE_MATCH);
   protected readonly previewTeamColor = computed(() => {
