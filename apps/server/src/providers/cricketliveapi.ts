@@ -5,22 +5,48 @@ import type { CricketProvider } from './types';
 /**
  * CricketLiveApi adapter.
  *
- * TODO(confirm): their docs sit behind the dashboard login, so every path and
- * field name below is a placeholder until real response samples are pasted in.
- * All guesses live in DEFAULT_BASE_URL, PATHS and FIELDS so fixing them is a one-file job.
+ * Confirmed from their docs: base URL, Bearer auth, /cricket/matches/live and its
+ * list fields (see mapLiveItem). Server-side caches: live list 15 s, commentary
+ * 10 s, scorecard 30 s — polling faster than 10 s only burns quota.
+ *
+ * TODO(confirm): the per-match endpoint and FIELDS below are still placeholders
+ * until a real /cricket/commentary/{id} and /cricket/scorecard/{id} sample is saved
+ * with `npm run probe -w apps/server -- /cricket/commentary/<id>`.
  */
-const DEFAULT_BASE_URL = 'https://api.cricketliveapi.com/v1'; // TODO(confirm); CRICKET_API_BASE_URL overrides
+const DEFAULT_BASE_URL = 'https://cricketliveapi.com/api/v1'; // CRICKET_API_BASE_URL overrides
 
 const PATHS = {
-  live: '/matches/live', // TODO(confirm)
-  match: (id: string) => `/matches/${encodeURIComponent(id)}/live`, // TODO(confirm)
+  live: '/cricket/matches/live',
+  match: (id: string) => `/cricket/commentary/${encodeURIComponent(id)}`, // TODO(confirm) shape
 };
+
+/** One item of /cricket/matches/live, as documented. */
+function mapLiveItem(m: unknown): MatchSummary {
+  const o = obj(m);
+  const teamA = str(o['team_a'], 'Team A');
+  const teamB = str(o['team_b'], 'Team B');
+  const desc = str(o['match_desc']);
+  const series = str(o['series_name']);
+  return {
+    id: str(o['match_id']),
+    title: `${teamA} v ${teamB}${desc ? ` · ${desc}` : ''}`,
+    teams: [shortCode(teamA), shortCode(teamB)],
+    format: formatFrom(str(o['format'])),
+    phase: phaseFrom(str(o['state'])),
+    statusText: [str(o['live_inning']), series].filter(Boolean).join(' · '),
+    scoreLine: str(o['score']),
+  };
+}
+
+/** "Mumbai Indians" → "MI", "Chennai Super Kings" → "CSK", "India" → "IND" */
+export function shortCode(name: string): string {
+  const words = name.trim().split(/\s+/).filter(Boolean);
+  if (words.length >= 2) return words.map((w) => w[0]).join('').toUpperCase().slice(0, 4);
+  return name.slice(0, 3).toUpperCase();
+}
 
 /** Dotted paths into their JSON. TODO(confirm) every entry. */
 const FIELDS = {
-  list: 'data',
-  id: 'id',
-  title: 'name',
   format: 'format',
   status: 'status',
   statusText: 'status_text',
@@ -169,6 +195,8 @@ export function mapMatchState(raw: unknown, id: string): MatchState {
 export class CricketLiveApiProvider implements CricketProvider {
   readonly name = 'cricketliveapi';
   readonly countsTowardQuota = true;
+  /** their commentary cache refreshes every 10 s */
+  readonly minIntervalSeconds = 10;
 
   private readonly baseUrl: string;
 
@@ -181,25 +209,12 @@ export class CricketLiveApiProvider implements CricketProvider {
   }
 
   private get headers(): Record<string, string> {
-    return { 'X-API-Key': this.apiKey };
+    return { authorization: `Bearer ${this.apiKey}` };
   }
 
   async listLiveMatches(): Promise<MatchSummary[]> {
     const raw = await getJson(this.baseUrl + PATHS.live, this.headers);
-    return arr(at(raw, FIELDS.list)).map((m) => {
-      const id = str(at(m, FIELDS.id));
-      const s = mapMatchState(m, id);
-      const inn = s.innings.at(-1);
-      return {
-        id,
-        title: str(at(m, FIELDS.title), `${s.teams[0].shortCode} v ${s.teams[1].shortCode}`),
-        teams: [s.teams[0].shortCode, s.teams[1].shortCode],
-        format: s.format,
-        phase: s.phase,
-        statusText: s.statusText,
-        scoreLine: inn ? `${inn.battingTeam} ${inn.runs}/${inn.wickets} (${inn.overs})` : '',
-      };
-    });
+    return arr(obj(raw)['data']).map(mapLiveItem);
   }
 
   async getMatchState(id: string): Promise<MatchState> {

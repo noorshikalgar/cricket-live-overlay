@@ -160,7 +160,8 @@ export class Poller {
 
   private baseInterval(): number {
     if (this.provider.fixedIntervalSeconds) return this.provider.fixedIntervalSeconds;
-    return budgetInterval(this.last?.format ?? 'T20', this.opts.dailyLimit, this.opts.minSeconds, this.opts.perMinute);
+    const min = Math.max(this.opts.minSeconds, this.provider.minIntervalSeconds ?? 0);
+    return budgetInterval(this.last?.format ?? 'T20', this.opts.dailyLimit, min, this.opts.perMinute);
   }
 
   private intervalFor(state: MatchState): number {

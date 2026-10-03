@@ -6,6 +6,8 @@ export interface CricketProvider {
   readonly countsTowardQuota: boolean;
   /** when set, the poller uses this instead of the budget formula */
   readonly fixedIntervalSeconds?: number;
+  /** never poll faster than this, e.g. when the provider caches responses server-side */
+  readonly minIntervalSeconds?: number;
   listLiveMatches(): Promise<MatchSummary[]>;
   getMatchState(id: string): Promise<MatchState>;
   /** optional hook: a match was (re)selected, e.g. so the mock can restart its replay */

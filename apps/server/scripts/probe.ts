@@ -1,16 +1,16 @@
 // Fetch one raw API response and save it, so the adapter can be mapped to real field names.
 //   npm run probe -w apps/server -- /matches/live
 //   npm run probe -w apps/server -- https://full.url/if/different?x=1
-// Uses CRICKET_API_KEY and CRICKET_API_BASE_URL from .env. Auth: X-API-Key header by default;
-// set PROBE_AUTH=query:apikey to send it as ?apikey=... instead, or PROBE_AUTH=bearer.
+// Uses CRICKET_API_KEY and CRICKET_API_BASE_URL from .env. Auth: Bearer token by default
+// (CricketLiveApi); PROBE_AUTH=header sends X-API-Key, PROBE_AUTH=query:apikey sends ?apikey=.
 import { mkdirSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { DATA_DIR } from '../src/config';
 
 const target = process.argv[2];
 const key = process.env['CRICKET_API_KEY'] ?? '';
-const base = (process.env['CRICKET_API_BASE_URL'] ?? '').replace(/\/+$/, '');
-const auth = process.env['PROBE_AUTH'] ?? 'header';
+const base = (process.env['CRICKET_API_BASE_URL'] || 'https://cricketliveapi.com/api/v1').replace(/\/+$/, '');
+const auth = process.env['PROBE_AUTH'] ?? 'bearer';
 
 if (!target) {
   console.error('usage: npm run probe -w apps/server -- <path-or-url>');
