@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, ElementRef, effect, inject, untracked } from '@angular/core';
+import { ChangeDetectionStrategy, Component, ElementRef, computed, effect, inject, untracked } from '@angular/core';
 import type { BallChip } from '@cos/shared';
 import { MotionService } from '../../motion/motion.service';
 import { gsap } from '../../motion/gsap';
@@ -38,10 +38,12 @@ function chipClass(c: BallChip): string {
         <span class="label">This over</span>
       }
       <div class="chips">
-        @for (c of match()?.thisOver ?? []; track $index) {
-          <span class="chip" [class]="'chip ' + cls(c)">{{ c.label }}</span>
-        } @empty {
-          <span class="empty-dash">—</span>
+        @for (c of balls(); track $index) {
+          <span [class]="'chip ' + cls(c)">{{ c.label }}</span>
+        }
+        <!-- one empty slot per legal ball still to come; wides and no-balls don't use a slot -->
+        @for (s of slots(); track $index) {
+          <span class="chip slot" aria-hidden="true"></span>
         }
       </div>
     </div>
@@ -76,11 +78,21 @@ function chipClass(c: BallChip): string {
       padding: 0 0.35em;
       font-size: max(22px, 0.8em);
     }
+    .chip.slot {
+      background: transparent;
+      box-shadow: inset 0 0 0 2px var(--chip);
+    }
   `,
 })
 export class ThisOverWidget extends WidgetBase<ThisOverProps> {
   protected readonly defaults: ThisOverProps = { chipStyle: 'filled', showLabel: true };
   protected readonly cls = chipClass;
+  protected readonly balls = computed(() => this.match()?.thisOver ?? []);
+  /** legal deliveries left in the over (6 minus bowled, extras excluded) */
+  protected readonly slots = computed(() => {
+    const legal = this.balls().filter((c) => c.kind !== 'wide' && c.kind !== 'noball').length;
+    return Array.from({ length: Math.max(0, 6 - legal) });
+  });
 
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef).nativeElement;
   private readonly motion = inject(MotionService);
@@ -96,7 +108,8 @@ export class ThisOverWidget extends WidgetBase<ThisOverProps> {
         this.lastCount = count;
         if (!grew || this.motion.reduced()) return;
         queueMicrotask(() => {
-          const chip = this.host.querySelector<HTMLElement>('.chips .chip:last-child');
+          const all = this.host.querySelectorAll<HTMLElement>('.chips .chip:not(.slot)');
+          const chip = all[all.length - 1];
           if (chip) gsap.fromTo(chip, { scale: 0.6, opacity: 0 }, { scale: 1, opacity: 1, duration: this.motion.d(0.3), ease: 'back.out(2)' });
         });
       });
