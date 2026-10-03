@@ -70,7 +70,7 @@ export class TextWidget extends WidgetBase<TextProps> {
     uppercase: true,
     panel: true,
     size: 26,
-    liveDot: true,
+    liveDot: false,
   };
   protected readonly justify = { left: 'flex-start', center: 'center', right: 'flex-end' } as const;
 }

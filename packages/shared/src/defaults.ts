@@ -120,7 +120,7 @@ export const WIDGET_DEFAULTS: Record<WidgetType, WidgetDefaults> = {
     icon: 'T',
     w: 420,
     h: 64,
-    props: { text: 'LIVE COMMENTARY', align: 'left', uppercase: true, panel: true, size: 26, liveDot: true },
+    props: { text: 'LIVE COMMENTARY', align: 'left', uppercase: true, panel: true, size: 26, liveDot: false },
   },
   image: {
     label: 'Image / Logo',

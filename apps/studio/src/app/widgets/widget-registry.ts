@@ -133,7 +133,7 @@ export const WIDGET_REGISTRY: Record<WidgetType, WidgetDef> = {
     { kind: 'select', key: 'align', label: 'Align', options: opts(['left', 'Left'], ['center', 'Centre'], ['right', 'Right']) },
     { kind: 'toggle', key: 'uppercase', label: 'Uppercase' },
     { kind: 'toggle', key: 'panel', label: 'Panel background' },
-    { kind: 'toggle', key: 'liveDot', label: 'Live dot' },
+    { kind: 'toggle', key: 'liveDot', label: 'Red live dot' },
   ]),
   image: def('image', ImageWidget, 'Your channel logo', [
     { kind: 'image', key: 'src', label: 'Image' },
