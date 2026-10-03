@@ -31,6 +31,7 @@ export type ServerMessage =
   | { type: 'settings'; settings: AppSettings }
   | { type: 'clients'; outputs: number; studios: number }
   | { type: 'obs:status'; status: ObsStatus }
+  | { type: 'pointer'; x: number; y: number; visible: boolean; click: boolean }
   | { type: 'cards:scorecard'; scorecard: Scorecard | null }
   | { type: 'cards:squads'; squads: Squads | null }
   | { type: 'error'; message: string };
@@ -47,6 +48,8 @@ export type ClientMessage =
   | { type: 'matches:refresh' }
   /** poll the selected match right now (manual mode or an impatient commentator) */
   | { type: 'poll:now' }
+  /** live pointer position in canvas px (relayed, never stored) */
+  | { type: 'pointer'; x: number; y: number; visible: boolean; click?: boolean }
   /** fetch detail data for cards (budget-guarded and cached on the server) */
   | { type: 'cards:fetch'; kind: CardKind; force?: boolean }
   | { type: 'settings:update'; settings: Partial<AppSettings> };

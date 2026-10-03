@@ -158,6 +158,28 @@ export const TRANSITION_KINDS: { value: TransitionKind; label: string }[] = [
   { value: 'cut', label: 'Cut (instant)' },
 ];
 
+export type PointerStyle = 'dot' | 'ring' | 'ball' | 'bat';
+
+/** On-air pointer, driven live from the Studio canvas. */
+export interface ScenePointer {
+  enabled: boolean;
+  style: PointerStyle;
+  color: string;
+  /** diameter in canvas px */
+  size: number;
+  /** fading trail + speed stretch */
+  motionBlur: boolean;
+}
+
+export const DEFAULT_POINTER: ScenePointer = { enabled: false, style: 'dot', color: '#EF4444', size: 34, motionBlur: true };
+
+export const POINTER_STYLES: { value: PointerStyle; label: string }[] = [
+  { value: 'dot', label: 'Dot' },
+  { value: 'ring', label: 'Laser ring' },
+  { value: 'ball', label: 'Cricket ball' },
+  { value: 'bat', label: 'Bat' },
+];
+
 export interface Scene {
   id: string;
   name: string;
@@ -167,6 +189,8 @@ export interface Scene {
   background?: SceneBackground;
   /** missing on older scenes = glide */
   transition?: SceneTransition;
+  /** missing on older scenes = off */
+  pointer?: ScenePointer;
   widgets: WidgetInstance[];
   updatedAt: number;
 }

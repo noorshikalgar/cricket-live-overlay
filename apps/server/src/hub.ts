@@ -151,6 +151,15 @@ export class Hub {
         poller?.select(msg.matchId);
         return;
       }
+      case 'pointer': {
+        if (c.role !== 'studio') return;
+        const x = Number(msg.x);
+        const y = Number(msg.y);
+        if (!Number.isFinite(x) || !Number.isFinite(y)) return;
+        // relay only: never stored, never echoed back to the sender
+        this.broadcast({ type: 'pointer', x, y, visible: msg.visible === true, click: msg.click === true }, c.id);
+        return;
+      }
       case 'poll:now': {
         if (c.role !== 'studio') return;
         poller?.pollNow();

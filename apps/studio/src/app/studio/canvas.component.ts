@@ -31,7 +31,10 @@ export const WIDGET_DND_TYPE = 'application/x-cos-widget';
     <div
       class="viewport"
       #viewport
+      [class.pointer-mode]="editor.pointerMode()"
       (pointerdown)="onBackgroundPointer($event)"
+      (pointermove)="onPointerMove($event)"
+      (pointerleave)="sendPointer(null)"
       (dragover)="onDragOver($event)"
       (drop)="onDrop($event)"
     >
@@ -175,6 +178,14 @@ export const WIDGET_DND_TYPE = 'application/x-cos-widget';
     .edit-layer {
       position: absolute;
       inset: 0;
+    }
+    /* pointer mode: no editing, a crosshair, every move goes to the Output */
+    .pointer-mode .edit-layer {
+      pointer-events: none;
+    }
+    .pointer-mode .stage {
+      cursor: crosshair;
+      outline: 2px solid #ef4444;
     }
     .edit-box {
       position: absolute;
@@ -422,7 +433,45 @@ export class CanvasComponent {
   }
 
   protected onBackgroundPointer(e: PointerEvent): void {
+    if (this.editor.pointerMode()) {
+      const p = this.toCanvas(e);
+      if (p) this.live.send({ type: 'pointer', x: p.x, y: p.y, visible: true, click: true });
+      return;
+    }
     if (!(e.target as Element | null)?.closest('.edit-box')) this.editor.selectedId.set(null);
+  }
+
+  private lastPointerSend = 0;
+  private pendingPointer: ReturnType<typeof setTimeout> | null = null;
+
+  protected onPointerMove(e: PointerEvent): void {
+    if (!this.editor.pointerMode()) return;
+    const p = this.toCanvas(e);
+    this.sendPointer(p);
+  }
+
+  /** ~40 updates a second is plenty: the Output eases between them */
+  protected sendPointer(p: { x: number; y: number } | null): void {
+    if (!this.editor.pointerMode() && p) return;
+    if (this.pendingPointer) clearTimeout(this.pendingPointer);
+    const send = () => {
+      this.lastPointerSend = Date.now();
+      this.live.send({ type: 'pointer', x: p?.x ?? 0, y: p?.y ?? 0, visible: !!p });
+    };
+    const wait = 25 - (Date.now() - this.lastPointerSend);
+    if (wait <= 0 || !p) send();
+    else this.pendingPointer = setTimeout(send, wait);
+  }
+
+  private toCanvas(e: PointerEvent): { x: number; y: number } | null {
+    const stage = this.stage()?.nativeElement;
+    if (!stage) return null;
+    const r = stage.getBoundingClientRect();
+    const s = this.ctx.scale();
+    const x = (e.clientX - r.left) / s;
+    const y = (e.clientY - r.top) / s;
+    if (x < 0 || y < 0 || x > CANVAS_W || y > CANVAS_H) return null;
+    return { x: Math.round(x), y: Math.round(y) };
   }
 
   protected onDragOver(e: DragEvent): void {
