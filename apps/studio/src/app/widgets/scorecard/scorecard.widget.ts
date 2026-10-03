@@ -106,7 +106,8 @@ const ORDINAL = ['1st', '2nd', '3rd', '4th'];
       display: block;
       width: 100%;
       height: 100%;
-      --u: calc(var(--wh) * 0.0285);
+      /* sized by width: the box height follows the content */
+      --u: calc(var(--ww) * 0.018);
     }
     .sc {
       display: flex;
@@ -116,7 +117,6 @@ const ORDINAL = ['1st', '2nd', '3rd', '4th'];
     /* hug the content; the box height is the maximum */
     .card {
       height: auto;
-      max-height: 100%;
     }
     .cols {
       flex: none;

@@ -73,7 +73,7 @@ export class EditBoxDirective {
     this.it = interact(this.el)
       .draggable({
         enabled: !locked,
-        ignoreFrom: '.card-reload',
+        ignoreFrom: '.win-btn',
         listeners: {
           start: () => this.begin(),
           move: (e: { dx: number; dy: number; altKey: boolean }) => {

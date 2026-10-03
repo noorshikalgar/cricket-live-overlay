@@ -72,7 +72,11 @@ export interface PlayerCardProps {
       display: block;
       width: 100%;
       height: 100%;
-      --u: calc(var(--wh) * 0.068);
+      /* sized by width: the box height follows the content */
+      --u: calc(var(--ww) * 0.037);
+    }
+    .card {
+      height: auto;
     }
     .pc {
       display: flex;
@@ -80,9 +84,9 @@ export interface PlayerCardProps {
       align-items: stretch;
     }
     .photo {
-      width: auto;
-      height: 100%;
-      aspect-ratio: 1;
+      width: 6em;
+      height: 6em;
+      flex: none;
       object-fit: cover;
       border-radius: calc(var(--radius) * 0.8);
       background: var(--chip);
@@ -94,6 +98,7 @@ export interface PlayerCardProps {
       flex-wrap: wrap;
       align-content: center;
       gap: 0.5em 1.4em;
+      padding: 0.3em 0;
     }
     .meta {
       flex-basis: 100%;

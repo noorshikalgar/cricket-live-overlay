@@ -66,11 +66,11 @@ interface Row {
       display: block;
       width: 100%;
       height: 100%;
-      --u: calc(var(--wh) * 0.029);
+      /* sized by width: the box height follows the content */
+      --u: calc(var(--ww) * 0.04);
     }
     .card {
       height: auto;
-      max-height: 100%;
     }
     td.name {
       width: 56%;
