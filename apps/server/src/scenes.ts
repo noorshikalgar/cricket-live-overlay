@@ -146,6 +146,9 @@ export class SceneStore {
     next.speed = Math.min(2, Math.max(0.25, Number(next.speed) || 1));
     next.pollMode = next.pollMode === 'manual' ? 'manual' : 'auto';
     next.pollPaused = next.pollPaused === true;
+    next.blackout = next.blackout === true;
+    next.blackoutText = String(next.blackoutText ?? '').slice(0, 120);
+    next.blackoutSubtext = String(next.blackoutSubtext ?? '').slice(0, 160);
     // null = .env default, 0 = budget-based, otherwise 5 s – 1 h
     const ps = next.pollSeconds;
     next.pollSeconds = ps === null || ps === undefined ? null : ps === 0 ? 0 : Math.min(3600, Math.max(5, Math.round(Number(ps)) || 60));
