@@ -51,7 +51,7 @@ import { EditorStore } from './editor.store';
       [class.on]="editor.pointerMode()"
       [attr.aria-pressed]="editor.pointerMode()"
       (click)="togglePointer()"
-      title="Pointer mode: your mouse over the canvas drives the on-air pointer (Esc to exit)"
+      title="Pointer mode: your mouse over the canvas drives the on-air pointer. It stays at its last spot until you switch this off (or press Esc)"
     >
       ◎ Pointer
     </button>
