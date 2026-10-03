@@ -3,10 +3,12 @@ import {
   CANVAS_H,
   CANVAS_W,
   DEFAULT_BACKGROUND,
+  DEFAULT_TRANSITION,
   createWidget,
   newId,
   type Scene,
   type SceneBackground,
+  type SceneTransition,
   type WidgetInstance,
   type WidgetType,
 } from '@cos/shared';
@@ -228,6 +230,12 @@ export class EditorStore {
   setBackground(patch: Partial<SceneBackground>, coalesceKey?: string): void {
     this.commit((s) => {
       s.background = { ...DEFAULT_BACKGROUND, ...s.background, ...patch };
+    }, coalesceKey);
+  }
+
+  setTransition(patch: Partial<SceneTransition>, coalesceKey?: string): void {
+    this.commit((s) => {
+      s.transition = { ...DEFAULT_TRANSITION, ...s.transition, ...patch };
     }, coalesceKey);
   }
 

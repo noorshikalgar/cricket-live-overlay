@@ -6,6 +6,9 @@ import {
   BACKGROUND_KINDS,
   DEFAULT_BACKGROUND,
   DEFAULT_SETTINGS,
+  DEFAULT_TRANSITION,
+  TRANSITION_KINDS,
+  type SceneTransition,
   type SceneBackground,
   WIDGET_TYPES,
   createStarterScenes,
@@ -47,6 +50,14 @@ function validBackground(v: unknown): SceneBackground {
   return { kind, color, color2, image, dim };
 }
 
+function validTransition(v: unknown): SceneTransition {
+  const t = typeof v === 'object' && v !== null ? (v as Record<string, unknown>) : {};
+  const kind = TRANSITION_KINDS.some((k) => k.value === t['kind']) ? (t['kind'] as SceneTransition['kind']) : DEFAULT_TRANSITION.kind;
+  const color = typeof t['color'] === 'string' && (t['color'] === '' || HEX.test(t['color'])) ? t['color'] : '';
+  const d = typeof t['duration'] === 'number' && Number.isFinite(t['duration']) ? t['duration'] : DEFAULT_TRANSITION.duration;
+  return { kind, color, duration: Math.min(3, Math.max(0.3, d)), showName: t['showName'] !== false };
+}
+
 /** Loose structural check for scenes arriving over the socket or from an import. */
 export function validateScene(v: unknown): Scene | null {
   if (typeof v !== 'object' || v === null) return null;
@@ -60,6 +71,7 @@ export function validateScene(v: unknown): Scene | null {
     canvas: { w: CANVAS_W, h: CANVAS_H },
     theme,
     background: validBackground(s['background']),
+    transition: validTransition(s['transition']),
     widgets: s['widgets'] as WidgetInstance[],
     updatedAt: Date.now(),
   };

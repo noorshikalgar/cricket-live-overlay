@@ -133,6 +133,31 @@ export const BACKGROUND_KINDS: { value: BackgroundKind; label: string }[] = [
   { value: 'image', label: 'Image' },
 ];
 
+export type TransitionKind = 'glide' | 'fade' | 'slide' | 'zoom' | 'wipe' | 'stinger' | 'cut';
+
+/** How the Output switches TO this scene. */
+export interface SceneTransition {
+  kind: TransitionKind;
+  /** stinger panel colour; empty = theme accent */
+  color: string;
+  /** seconds for the whole switch, before the global speed multiplier */
+  duration: number;
+  /** stinger only: show the scene name on the panel */
+  showName: boolean;
+}
+
+export const DEFAULT_TRANSITION: SceneTransition = { kind: 'glide', color: '', duration: 0.8, showName: true };
+
+export const TRANSITION_KINDS: { value: TransitionKind; label: string }[] = [
+  { value: 'glide', label: 'Glide (shared widgets move)' },
+  { value: 'fade', label: 'Fade' },
+  { value: 'slide', label: 'Slide' },
+  { value: 'zoom', label: 'Zoom' },
+  { value: 'wipe', label: 'Wipe' },
+  { value: 'stinger', label: 'Stinger (colour sweep)' },
+  { value: 'cut', label: 'Cut (instant)' },
+];
+
 export interface Scene {
   id: string;
   name: string;
@@ -140,6 +165,8 @@ export interface Scene {
   theme: ThemeId;
   /** missing on older scenes = transparent */
   background?: SceneBackground;
+  /** missing on older scenes = glide */
+  transition?: SceneTransition;
   widgets: WidgetInstance[];
   updatedAt: number;
 }
