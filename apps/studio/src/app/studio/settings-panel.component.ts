@@ -3,7 +3,11 @@ import {
   ANIM_PRESETS,
   BACKGROUND_KINDS,
   DEFAULT_BACKGROUND,
+  DEFAULT_TRANSITION,
   THEMES,
+  TRANSITION_KINDS,
+  type SceneTransition,
+  type TransitionKind,
   type BackgroundKind,
   type SceneBackground,
   resolveStyle,
@@ -150,6 +154,27 @@ const ANIM_LABELS: Record<AnimPreset, string> = {
           value; ↺ puts it back.
         </p>
       </section>
+      <section>
+        <h3>Transition in</h3>
+        @let tr = sceneTr();
+        <cos-field [def]="trKindField" [value]="tr.kind" (changed)="setTr({ kind: asTrKind($event) })" />
+        @if (tr.kind !== 'cut') {
+          <cos-field [def]="trDurField" [value]="tr.duration" (changed)="setTr({ duration: asNum($event) }, 'tr-dur')" />
+        }
+        @if (tr.kind === 'stinger') {
+          <cos-field
+            [def]="trColorField"
+            [value]="tr.color"
+            [inherited]="!tr.color"
+            [resettable]="!!tr.color"
+            (changed)="setTr({ color: asStr($event) }, 'tr-color')"
+            (reset)="setTr({ color: '' })"
+          />
+          <cos-field [def]="trNameField" [value]="tr.showName" (changed)="setTr({ showName: $event === true })" />
+        }
+        <p class="hint">Plays on the Output when this scene is put on air.</p>
+      </section>
+
       <section>
         <h3>Background (on air)</h3>
         @let bg = sceneBg();
@@ -300,6 +325,20 @@ export class SettingsPanelComponent {
   protected readonly enterField: FieldDef = { kind: 'select', key: 'enter', label: 'Enter', options: this.animOptions };
   protected readonly exitField: FieldDef = { kind: 'select', key: 'exit', label: 'Exit', options: this.animOptions };
   protected readonly delayField: FieldDef = { kind: 'slider', key: 'delay', label: 'Enter delay', min: 0, max: 2000, step: 50, unit: 'ms' };
+
+  protected readonly sceneTr = computed(() => ({ ...DEFAULT_TRANSITION, ...this.editor.scene()?.transition }));
+  protected readonly trKindField: FieldDef = { kind: 'select', key: 'kind', label: 'Style', options: TRANSITION_KINDS };
+  protected readonly trDurField: FieldDef = { kind: 'slider', key: 'duration', label: 'Length', min: 0.3, max: 2.5, step: 0.1, unit: 's' };
+  protected readonly trColorField: FieldDef = { kind: 'color', key: 'color', label: 'Stinger colour' };
+  protected readonly trNameField: FieldDef = { kind: 'toggle', key: 'showName', label: 'Show scene name' };
+
+  protected setTr(patch: Partial<SceneTransition>, coalesceKey?: string): void {
+    this.editor.setTransition(patch, coalesceKey);
+  }
+
+  protected asTrKind(v: PropValue): TransitionKind {
+    return TRANSITION_KINDS.find((k) => k.value === v)?.value ?? 'glide';
+  }
 
   protected readonly sceneBg = computed(() => ({ ...DEFAULT_BACKGROUND, ...this.editor.scene()?.background }));
   protected readonly bgKindField: FieldDef = { kind: 'select', key: 'kind', label: 'Type', options: BACKGROUND_KINDS };

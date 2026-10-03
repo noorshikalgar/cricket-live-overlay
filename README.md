@@ -93,6 +93,19 @@ Each scene has a **Background** (canvas toolbar, or the scene panel when nothing
 
 `/output` is exactly 1:1 when the window is 1920×1080 (OBS). In any other browser window it scales to fit and centres, so you can preview it anywhere.
 
+### Scene transitions
+
+Each scene has a **Transition in** (scene panel, nothing selected), played on `/output` when that scene is put on air:
+
+| Style | What it does |
+| --- | --- |
+| Glide | Widgets that exist in both scenes glide to their new place (duplicate a scene to share widgets); others fade |
+| Fade / Slide / Zoom / Wipe | The whole scene goes out, the new one comes in |
+| Stinger | Two skewed colour panels sweep across with the scene name, the scene swaps while covered, then they sweep away. Colour defaults to the theme accent |
+| Cut | Instant |
+
+Length is adjustable (0.3–2.5 s, scaled by the global Speed). With **Reduce motion** on, every transition becomes a short crossfade.
+
 ### Themes and styling
 
 A scene has a theme: **Night** (dark glass, default), **Clean** (white panels for daytime) or **Team** (accent follows the batting team's colour). Every widget style field starts as "theme"; changing it on a widget overrides just that widget, ↺ resets it. Global **Reduce motion** and **Speed** live in the canvas toolbar and apply to every Output.
