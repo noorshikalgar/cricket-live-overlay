@@ -1,0 +1,34 @@
+/* Global styles shared by Studio and Output. Editor-only styles live in studio/ components. */
+@import '@fontsource/inter/400.css';
+@import '@fontsource/inter/500.css';
+@import '@fontsource/inter/600.css';
+@import '@fontsource/inter/700.css';
+@import '@fontsource/barlow-condensed/600.css';
+@import '@fontsource/barlow-condensed/700.css';
+@import './app/theme/tokens.css';
+@import './app/theme/widgets.css';
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  font-family: Inter, system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* Output page: transparent, fixed 1080p, nothing scrolls */
+html.is-output,
+html.is-output body {
+  background: transparent;
+  margin: 0;
+  overflow: hidden;
+  width: 1920px;
+  height: 1080px;
+}

@@ -1,0 +1,27 @@
+/*
+ * Broadcast design tokens (defaults). Every widget host overrides these with
+ * its resolved theme + per-widget style, so these only matter as fallbacks.
+ */
+:root {
+  --bg: rgba(11, 15, 23, 0.78);
+  --blur: 12px;
+  --text: #f5f7fa;
+  --muted: #9aa4b2;
+  --accent: #22c55e;
+  --chip: rgba(255, 255, 255, 0.08);
+  --c-four: #3b82f6;
+  --c-six: #a855f7;
+  --c-wicket: #ef4444;
+  --radius: 10px;
+  --chip-radius: 6px;
+  --pad: 16px;
+  --fs: 1;
+  --font: Inter, system-ui, sans-serif;
+  --font-display: 'Barlow Condensed', Inter, sans-serif;
+  --border: 0 solid transparent;
+  --shadow: 0 8px 24px rgba(0, 0, 0, 0.28);
+  --wh: 100px;
+  --ww: 400px;
+
+  --ease-out: cubic-bezier(0.215, 0.61, 0.355, 1);
+}

@@ -1,0 +1,2114 @@
+{
+ "meta": {
+  "id": "mock-t20",
+  "series": "Demo Premier League · Match 12",
+  "venue": "Harbour Oval, Mumbai",
+  "toss": "Mumbai Mariners won the toss and chose to bat",
+  "format": "T20",
+  "oversPerInnings": 20,
+  "teams": [
+   {
+    "name": "Mumbai Mariners",
+    "shortCode": "MUM",
+    "primaryColor": "#1D4ED8"
+   },
+   {
+    "name": "Chennai Chargers",
+    "shortCode": "CHE",
+    "primaryColor": "#EAB308"
+   }
+  ],
+  "battingFirst": "MUM"
+ },
+ "deliveries": [
+  {
+   "inn": 0,
+   "batter": "Arjun Mehta",
+   "nonStriker": "Rohan Desai",
+   "bowler": "Naveen Kumar",
+   "runs": 2,
+   "extras": 0
+  },
+  {
+   "inn": 0,
+   "batter": "Arjun Mehta",
+   "nonStriker": "Rohan Desai",
+   "bowler": "Naveen Kumar",
+   "runs": 2,
+   "extras": 0
+  },
+  {
+   "inn": 0,
+   "batter": "Arjun Mehta",
+   "nonStriker": "Rohan Desai",
+   "bowler": "Naveen Kumar",
+   "runs": 2,
+   "extras": 0
+  },
+  {
+   "inn": 0,
+   "batter": "Arjun Mehta",
+   "nonStriker": "Rohan Desai",
+   "bowler": "Naveen Kumar",
+   "runs": 1,
+   "extras": 0
+  },
+  {
+   "inn": 0,
+   "batter": "Rohan Desai",
+   "nonStriker": "Arjun Mehta",
+   "bowler": "Naveen Kumar",
+   "runs": 6,
+   "extras": 0
+  },
+  {
+   "inn": 0,
+   "batter": "Rohan Desai",
+   "nonStriker": "Arjun Mehta",
+   "bowler": "Naveen Kumar",
+   "runs": 2,
+   "extras": 0
+  },
+  {
+   "inn": 0,
+   "batter": "Arjun Mehta",
+   "nonStriker": "Rohan Desai",
+   "bowler": "Gokul Das",
+   "runs": 4,
+   "extras": 0
+  },
+  {
+   "inn": 0,
+   "batter": "Arjun Mehta",
+   "nonStriker": "Rohan Desai",
+   "bowler": "Gokul Das",
+   "runs": 0,
+   "extras": 0
+  },
+  {
+   "inn": 0,
+   "batter": "Arjun Mehta",
+   "nonStriker": "Rohan Desai",
+   "bowler": "Gokul Das",
+   "runs": 1,
+   "extras": 0
+  },
+  {
+   "inn": 0,
+   "batter": "Rohan Desai",
+   "nonStriker": "Arjun Mehta",
+   "bowler": "Gokul Das",
+   "runs": 1,
+   "extras": 0
+  },
+  {
+   "inn": 0,
+   "batter": "Arjun Mehta",
+   "nonStriker": "Rohan Desai",
+   "bowler": "Gokul Das",
+   "runs": 2,
+   "extras": 0
+  },
+  {
+   "inn": 0,
+   "batter": "Arjun Mehta",
+   "nonStriker": "Rohan Desai",
+   "bowler": "Gokul Das",
+   "runs": 0,
+   "extras": 0
+  },
+  {
+   "inn": 0,
+   "batter": "Rohan Desai",
+   "nonStriker": "Arjun Mehta",
+   "bowler": "Hari Prasad",
+   "runs": 0,
+   "extras": 1,
+   "extraType": "wide"
+  },
+  {
+   "inn": 0,
+   "batter": "Rohan Desai",
+   "nonStriker": "Arjun Mehta",
+   "bowler": "Hari Prasad",
+   "runs": 0,
+   "extras": 0
+  },
+  {
+   "inn": 0,
+   "batter": "Rohan Desai",
+   "nonStriker": "Arjun Mehta",
+   "bowler": "Hari Prasad",
+   "runs": 0,
+   "extras": 0
+  },
+  {
+   "inn": 0,
+   "batter": "Rohan Desai",
+   "nonStriker": "Arjun Mehta",
+   "bowler": "Hari Prasad",
+   "runs": 0,
+   "extras": 0
+  },
+  {
+   "inn": 0,
+   "batter": "Rohan Desai",
+   "nonStriker": "Arjun Mehta",
+   "bowler": "Hari Prasad",
+   "runs": 6,
+   "extras": 0
+  },
+  {
+   "inn": 0,
+   "batter": "Rohan Desai",
+   "nonStriker": "Arjun Mehta",
+   "bowler": "Hari Prasad",
+   "runs": 0,
+   "extras": 0
+  },
+  {
+   "inn": 0,
+   "batter": "Rohan Desai",
+   "nonStriker": "Arjun Mehta",
+   "bowler": "Hari Prasad",
+   "runs": 4,
+   "extras": 0
+  },
+  {
+   "inn": 0,
+   "batter": "Arjun Mehta",
+   "nonStriker": "Rohan Desai",
+   "bowler": "Vijay Selvan",
+   "runs": 0,
+   "extras": 0
+  },
+  {
+   "inn": 0,
+   "batter": "Arjun Mehta",
+   "nonStriker": "Rohan Desai",
+   "bowler": "Vijay Selvan",
+   "runs": 4,
+   "extras": 0
+  },
+  {
+   "inn": 0,
+   "batter": "Arjun Mehta",
+   "nonStriker": "Rohan Desai",
+   "bowler": "Vijay Selvan",
+   "runs": 1,
+   "extras": 0
+  },
+  {
+   "inn": 0,
+   "batter": "Rohan Desai",
+   "nonStriker": "Arjun Mehta",
+   "bowler": "Vijay Selvan",
+   "runs": 1,
+   "extras": 0
+  },
+  {
+   "inn": 0,
+   "batter": "Arjun Mehta",
+   "nonStriker": "Rohan Desai",
+   "bowler": "Vijay Selvan",
+   "runs": 1,
+   "extras": 0
+  },
+  {
+   "inn": 0,
+   "batter": "Rohan Desai",
+   "nonStriker": "Arjun Mehta",
+   "bowler": "Vijay Selvan",
+   "runs": 0,
+   "extras": 0
+  },
+  {
+   "inn": 0,
+   "batter": "Arjun Mehta",
+   "nonStriker": "Rohan Desai",
+   "bowler": "Hari Prasad",
+   "runs": 1,
+   "extras": 0
+  },
+  {
+   "inn": 0,
+   "batter": "Rohan Desai",
+   "nonStriker": "Arjun Mehta",
+   "bowler": "Hari Prasad",
+   "runs": 4,
+   "extras": 0
+  },
+  {
+   "inn": 0,
+   "batter": "Rohan Desai",
+   "nonStriker": "Arjun Mehta",
+   "bowler": "Hari Prasad",
+   "runs": 2,
+   "extras": 0
+  },
+  {
+   "inn": 0,
+   "batter": "Rohan Desai",
+   "nonStriker": "Arjun Mehta",
+   "bowler": "Hari Prasad",
+   "runs": 4,
+   "extras": 0
+  },
+  {
+   "inn": 0,
+   "batter": "Rohan Desai",
+   "nonStriker": "Arjun Mehta",
+   "bowler": "Hari Prasad",
+   "runs": 6,
+   "extras": 0
+  },
+  {
+   "inn": 0,
+   "batter": "Rohan Desai",
+   "nonStriker": "Arjun Mehta",
+   "bowler": "Hari Prasad",
+   "runs": 2,
+   "extras": 0
+  },
+  {
+   "inn": 0,
+   "batter": "Arjun Mehta",
+   "nonStriker": "Rohan Desai",
+   "bowler": "Manoj Raju",
+   "runs": 1,
+   "extras": 0
+  },
+  {
+   "inn": 0,
+   "batter": "Rohan Desai",
+   "nonStriker": "Arjun Mehta",
+   "bowler": "Manoj Raju",
+   "runs": 2,
+   "extras": 0
+  },
+  {
+   "inn": 0,
+   "batter": "Rohan Desai",
+   "nonStriker": "Arjun Mehta",
+   "bowler": "Manoj Raju",
+   "runs": 0,
+   "extras": 0
+  },
+  {
+   "inn": 0,
+   "batter": "Rohan Desai",
+   "nonStriker": "Arjun Mehta",
+   "bowler": "Manoj Raju",
+   "runs": 4,
+   "extras": 0
+  },
+  {
+   "inn": 0,
+   "batter": "Rohan Desai",
+   "nonStriker": "Arjun Mehta",
+   "bowler": "Manoj Raju",
+   "runs": 0,
+   "extras": 0
+  },
+  {
+   "inn": 0,
+   "batter": "Rohan Desai",
+   "nonStriker": "Arjun Mehta",
+   "bowler": "Manoj Raju",
+   "runs": 1,
+   "extras": 0
+  },
+  {
+   "inn": 0,
+   "batter": "Rohan Desai",
+   "nonStriker": "Arjun Mehta",
+   "bowler": "Hari Prasad",
+   "runs": 0,
+   "extras": 1,
+   "extraType": "wide"
+  },
+  {
+   "inn": 0,
+   "batter": "Rohan Desai",
+   "nonStriker": "Arjun Mehta",
+   "bowler": "Hari Prasad",
+   "runs": 0,
+   "extras": 0
+  },
+  {
+   "inn": 0,
+   "batter": "Rohan Desai",
+   "nonStriker": "Arjun Mehta",
+   "bowler": "Hari Prasad",
+   "runs": 1,
+   "extras": 0
+  },
+  {
+   "inn": 0,
+   "batter": "Arjun Mehta",
+   "nonStriker": "Rohan Desai",
+   "bowler": "Hari Prasad",
+   "runs": 0,
+   "extras": 0
+  },
+  {
+   "inn": 0,
+   "batter": "Arjun Mehta",
+   "nonStriker": "Rohan Desai",
+   "bowler": "Hari Prasad",
+   "runs": 1,
+   "extras": 0
+  },
+  {
+   "inn": 0,
+   "batter": "Rohan Desai",
+   "nonStriker": "Arjun Mehta",
+   "bowler": "Hari Prasad",
+   "runs": 0,
+   "extras": 0
+  },
+  {
+   "inn": 0,
+   "batter": "Rohan Desai",
+   "nonStriker": "Arjun Mehta",
+   "bowler": "Hari Prasad",
+   "runs": 2,
+   "extras": 0
+  },
+  {
+   "inn": 0,
+   "batter": "Arjun Mehta",
+   "nonStriker": "Rohan Desai",
+   "bowler": "Gokul Das",
+   "runs": 1,
+   "extras": 0
+  },
+  {
+   "inn": 0,
+   "batter": "Rohan Desai",
+   "nonStriker": "Arjun Mehta",
+   "bowler": "Gokul Das",
+   "runs": 4,
+   "extras": 0
+  },
+  {
+   "inn": 0,
+   "batter": "Rohan Desai",
+   "nonStriker": "Arjun Mehta",
+   "bowler": "Gokul Das",
+   "runs": 0,
+   "extras": 0
+  },
+  {
+   "inn": 0,
+   "batter": "Rohan Desai",
+   "nonStriker": "Arjun Mehta",
+   "bowler": "Gokul Das",
+   "runs": 4,
+   "extras": 0
+  },
+  {
+   "inn": 0,
+   "batter": "Rohan Desai",
+   "nonStriker": "Arjun Mehta",
+   "bowler": "Gokul Das",
+   "runs": 0,
+   "extras": 1,
+   "extraType": "legbye"
+  },
+  {
+   "inn": 0,
+   "batter": "Arjun Mehta",
+   "nonStriker": "Rohan Desai",
+   "bowler": "Gokul Das",
+   "runs": 0,
+   "extras": 0
+  },
+  {
+   "inn": 0,
+   "batter": "Rohan Desai",
+   "nonStriker": "Arjun Mehta",
+   "bowler": "Vijay Selvan",
+   "runs": 0,
+   "extras": 0
+  },
+  {
+   "inn": 0,
+   "batter": "Rohan Desai",
+   "nonStriker": "Arjun Mehta",
+   "bowler": "Vijay Selvan",
+   "runs": 0,
+   "extras": 0
+  },
+  {
+   "inn": 0,
+   "batter": "Rohan Desai",
+   "nonStriker": "Arjun Mehta",
+   "bowler": "Vijay Selvan",
+   "runs": 1,
+   "extras": 0
+  },
+  {
+   "inn": 0,
+   "batter": "Arjun Mehta",
+   "nonStriker": "Rohan Desai",
+   "bowler": "Vijay Selvan",
+   "runs": 1,
+   "extras": 0
+  },
+  {
+   "inn": 0,
+   "batter": "Rohan Desai",
+   "nonStriker": "Arjun Mehta",
+   "bowler": "Vijay Selvan",
+   "runs": 0,
+   "extras": 0
+  },
+  {
+   "inn": 0,
+   "batter": "Rohan Desai",
+   "nonStriker": "Arjun Mehta",
+   "bowler": "Vijay Selvan",
+   "runs": 0,
+   "extras": 0
+  },
+  {
+   "inn": 0,
+   "batter": "Arjun Mehta",
+   "nonStriker": "Rohan Desai",
+   "bowler": "Manoj Raju",
+   "runs": 0,
+   "extras": 0,
+   "wicket": {
+    "player": "Arjun Mehta",
+    "kind": "bowled"
+   }
+  },
+  {
+   "inn": 0,
+   "batter": "Kabir Shah",
+   "nonStriker": "Rohan Desai",
+   "bowler": "Manoj Raju",
+   "runs": 0,
+   "extras": 1,
+   "extraType": "wide"
+  },
+  {
+   "inn": 0,
+   "batter": "Kabir Shah",
+   "nonStriker": "Rohan Desai",
+   "bowler": "Manoj Raju",
+   "runs": 0,
+   "extras": 0
+  },
+  {
+   "inn": 0,
+   "batter": "Kabir Shah",
+   "nonStriker": "Rohan Desai",
+   "bowler": "Manoj Raju",
+   "runs": 1,
+   "extras": 0
+  },
+  {
+   "inn": 0,
+   "batter": "Rohan Desai",
+   "nonStriker": "Kabir Shah",
+   "bowler": "Manoj Raju",
+   "runs": 2,
+   "extras": 0
+  },
+  {
+   "inn": 0,
+   "batter": "Rohan Desai",
+   "nonStriker": "Kabir Shah",
+   "bowler": "Manoj Raju",
+   "runs": 1,
+   "extras": 0
+  },
+  {
+   "inn": 0,
+   "batter": "Kabir Shah",
+   "nonStriker": "Rohan Desai",
+   "bowler": "Manoj Raju",
+   "runs": 0,
+   "extras": 0,
+   "wicket": {
+    "player": "Kabir Shah",
+    "kind": "bowled"
+   }
+  },
+  {
+   "inn": 0,
+   "batter": "Rohan Desai",
+   "nonStriker": "Vikram Rao",
+   "bowler": "Vijay Selvan",
+   "runs": 1,
+   "extras": 0
+  },
+  {
+   "inn": 0,
+   "batter": "Vikram Rao",
+   "nonStriker": "Rohan Desai",
+   "bowler": "Vijay Selvan",
+   "runs": 1,
+   "extras": 0
+  },
+  {
+   "inn": 0,
+   "batter": "Rohan Desai",
+   "nonStriker": "Vikram Rao",
+   "bowler": "Vijay Selvan",
+   "runs": 6,
+   "extras": 0
+  },
+  {
+   "inn": 0,
+   "batter": "Rohan Desai",
+   "nonStriker": "Vikram Rao",
+   "bowler": "Vijay Selvan",
+   "runs": 0,
+   "extras": 0,
+   "wicket": {
+    "player": "Rohan Desai",
+    "kind": "lbw"
+   }
+  },
+  {
+   "inn": 0,
+   "batter": "Ishaan Kulkarni",
+   "nonStriker": "Vikram Rao",
+   "bowler": "Vijay Selvan",
+   "runs": 0,
+   "extras": 0
+  },
+  {
+   "inn": 0,
+   "batter": "Ishaan Kulkarni",
+   "nonStriker": "Vikram Rao",
+   "bowler": "Vijay Selvan",
+   "runs": 0,
+   "extras": 0
+  },
+  {
+   "inn": 0,
+   "batter": "Vikram Rao",
+   "nonStriker": "Ishaan Kulkarni",
+   "bowler": "Hari Prasad",
+   "runs": 1,
+   "extras": 0
+  },
+  {
+   "inn": 0,
+   "batter": "Ishaan Kulkarni",
+   "nonStriker": "Vikram Rao",
+   "bowler": "Hari Prasad",
+   "runs": 1,
+   "extras": 0
+  },
+  {
+   "inn": 0,
+   "batter": "Vikram Rao",
+   "nonStriker": "Ishaan Kulkarni",
+   "bowler": "Hari Prasad",
+   "runs": 1,
+   "extras": 0
+  },
+  {
+   "inn": 0,
+   "batter": "Ishaan Kulkarni",
+   "nonStriker": "Vikram Rao",
+   "bowler": "Hari Prasad",
+   "runs": 0,
+   "extras": 0,
+   "wicket": {
+    "player": "Ishaan Kulkarni",
+    "kind": "caught"
+   }
+  },
+  {
+   "inn": 0,
+   "batter": "Dev Patil",
+   "nonStriker": "Vikram Rao",
+   "bowler": "Hari Prasad",
+   "runs": 4,
+   "extras": 0
+  },
+  {
+   "inn": 0,
+   "batter": "Dev Patil",
+   "nonStriker": "Vikram Rao",
+   "bowler": "Hari Prasad",
+   "runs": 6,
+   "extras": 0
+  },
+  {
+   "inn": 0,
+   "batter": "Vikram Rao",
+   "nonStriker": "Dev Patil",
+   "bowler": "Naveen Kumar",
+   "runs": 4,
+   "extras": 0
+  },
+  {
+   "inn": 0,
+   "batter": "Vikram Rao",
+   "nonStriker": "Dev Patil",
+   "bowler": "Naveen Kumar",
+   "runs": 1,
+   "extras": 0
+  },
+  {
+   "inn": 0,
+   "batter": "Dev Patil",
+   "nonStriker": "Vikram Rao",
+   "bowler": "Naveen Kumar",
+   "runs": 1,
+   "extras": 0
+  },
+  {
+   "inn": 0,
+   "batter": "Vikram Rao",
+   "nonStriker": "Dev Patil",
+   "bowler": "Naveen Kumar",
+   "runs": 1,
+   "extras": 0
+  },
+  {
+   "inn": 0,
+   "batter": "Dev Patil",
+   "nonStriker": "Vikram Rao",
+   "bowler": "Naveen Kumar",
+   "runs": 0,
+   "extras": 0
+  },
+  {
+   "inn": 0,
+   "batter": "Dev Patil",
+   "nonStriker": "Vikram Rao",
+   "bowler": "Naveen Kumar",
+   "runs": 0,
+   "extras": 0
+  },
+  {
+   "inn": 0,
+   "batter": "Vikram Rao",
+   "nonStriker": "Dev Patil",
+   "bowler": "Manoj Raju",
+   "runs": 0,
+   "extras": 0
+  },
+  {
+   "inn": 0,
+   "batter": "Vikram Rao",
+   "nonStriker": "Dev Patil",
+   "bowler": "Manoj Raju",
+   "runs": 1,
+   "extras": 0
+  },
+  {
+   "inn": 0,
+   "batter": "Dev Patil",
+   "nonStriker": "Vikram Rao",
+   "bowler": "Manoj Raju",
+   "runs": 0,
+   "extras": 0,
+   "wicket": {
+    "player": "Dev Patil",
+    "kind": "lbw"
+   }
+  },
+  {
+   "inn": 0,
+   "batter": "Aman Joshi",
+   "nonStriker": "Vikram Rao",
+   "bowler": "Manoj Raju",
+   "runs": 2,
+   "extras": 0
+  },
+  {
+   "inn": 0,
+   "batter": "Aman Joshi",
+   "nonStriker": "Vikram Rao",
+   "bowler": "Manoj Raju",
+   "runs": 0,
+   "extras": 0
+  },
+  {
+   "inn": 0,
+   "batter": "Aman Joshi",
+   "nonStriker": "Vikram Rao",
+   "bowler": "Manoj Raju",
+   "runs": 0,
+   "extras": 0
+  },
+  {
+   "inn": 0,
+   "batter": "Vikram Rao",
+   "nonStriker": "Aman Joshi",
+   "bowler": "Gokul Das",
+   "runs": 0,
+   "extras": 0,
+   "wicket": {
+    "player": "Vikram Rao",
+    "kind": "caught"
+   }
+  },
+  {
+   "inn": 0,
+   "batter": "Siddharth Nair",
+   "nonStriker": "Aman Joshi",
+   "bowler": "Gokul Das",
+   "runs": 0,
+   "extras": 0
+  },
+  {
+   "inn": 0,
+   "batter": "Siddharth Nair",
+   "nonStriker": "Aman Joshi",
+   "bowler": "Gokul Das",
+   "runs": 0,
+   "extras": 1,
+   "extraType": "wide"
+  },
+  {
+   "inn": 0,
+   "batter": "Siddharth Nair",
+   "nonStriker": "Aman Joshi",
+   "bowler": "Gokul Das",
+   "runs": 0,
+   "extras": 0
+  },
+  {
+   "inn": 0,
+   "batter": "Siddharth Nair",
+   "nonStriker": "Aman Joshi",
+   "bowler": "Gokul Das",
+   "runs": 0,
+   "extras": 0
+  },
+  {
+   "inn": 0,
+   "batter": "Siddharth Nair",
+   "nonStriker": "Aman Joshi",
+   "bowler": "Gokul Das",
+   "runs": 2,
+   "extras": 0
+  },
+  {
+   "inn": 0,
+   "batter": "Siddharth Nair",
+   "nonStriker": "Aman Joshi",
+   "bowler": "Gokul Das",
+   "runs": 0,
+   "extras": 0
+  },
+  {
+   "inn": 0,
+   "batter": "Aman Joshi",
+   "nonStriker": "Siddharth Nair",
+   "bowler": "Vijay Selvan",
+   "runs": 0,
+   "extras": 0
+  },
+  {
+   "inn": 0,
+   "batter": "Aman Joshi",
+   "nonStriker": "Siddharth Nair",
+   "bowler": "Vijay Selvan",
+   "runs": 0,
+   "extras": 1,
+   "extraType": "wide"
+  },
+  {
+   "inn": 0,
+   "batter": "Aman Joshi",
+   "nonStriker": "Siddharth Nair",
+   "bowler": "Vijay Selvan",
+   "runs": 0,
+   "extras": 0
+  },
+  {
+   "inn": 0,
+   "batter": "Aman Joshi",
+   "nonStriker": "Siddharth Nair",
+   "bowler": "Vijay Selvan",
+   "runs": 2,
+   "extras": 0
+  },
+  {
+   "inn": 0,
+   "batter": "Aman Joshi",
+   "nonStriker": "Siddharth Nair",
+   "bowler": "Vijay Selvan",
+   "runs": 6,
+   "extras": 0
+  },
+  {
+   "inn": 0,
+   "batter": "Aman Joshi",
+   "nonStriker": "Siddharth Nair",
+   "bowler": "Vijay Selvan",
+   "runs": 0,
+   "extras": 1,
+   "extraType": "wide"
+  },
+  {
+   "inn": 0,
+   "batter": "Aman Joshi",
+   "nonStriker": "Siddharth Nair",
+   "bowler": "Vijay Selvan",
+   "runs": 1,
+   "extras": 0
+  },
+  {
+   "inn": 0,
+   "batter": "Siddharth Nair",
+   "nonStriker": "Aman Joshi",
+   "bowler": "Vijay Selvan",
+   "runs": 4,
+   "extras": 0
+  },
+  {
+   "inn": 0,
+   "batter": "Aman Joshi",
+   "nonStriker": "Siddharth Nair",
+   "bowler": "Naveen Kumar",
+   "runs": 0,
+   "extras": 0
+  },
+  {
+   "inn": 0,
+   "batter": "Aman Joshi",
+   "nonStriker": "Siddharth Nair",
+   "bowler": "Naveen Kumar",
+   "runs": 1,
+   "extras": 0
+  },
+  {
+   "inn": 0,
+   "batter": "Siddharth Nair",
+   "nonStriker": "Aman Joshi",
+   "bowler": "Naveen Kumar",
+   "runs": 4,
+   "extras": 0
+  },
+  {
+   "inn": 0,
+   "batter": "Siddharth Nair",
+   "nonStriker": "Aman Joshi",
+   "bowler": "Naveen Kumar",
+   "runs": 1,
+   "extras": 0
+  },
+  {
+   "inn": 0,
+   "batter": "Aman Joshi",
+   "nonStriker": "Siddharth Nair",
+   "bowler": "Naveen Kumar",
+   "runs": 0,
+   "extras": 0
+  },
+  {
+   "inn": 0,
+   "batter": "Aman Joshi",
+   "nonStriker": "Siddharth Nair",
+   "bowler": "Naveen Kumar",
+   "runs": 1,
+   "extras": 0
+  },
+  {
+   "inn": 0,
+   "batter": "Aman Joshi",
+   "nonStriker": "Siddharth Nair",
+   "bowler": "Gokul Das",
+   "runs": 0,
+   "extras": 0
+  },
+  {
+   "inn": 0,
+   "batter": "Aman Joshi",
+   "nonStriker": "Siddharth Nair",
+   "bowler": "Gokul Das",
+   "runs": 6,
+   "extras": 0
+  },
+  {
+   "inn": 0,
+   "batter": "Aman Joshi",
+   "nonStriker": "Siddharth Nair",
+   "bowler": "Gokul Das",
+   "runs": 1,
+   "extras": 0
+  },
+  {
+   "inn": 0,
+   "batter": "Siddharth Nair",
+   "nonStriker": "Aman Joshi",
+   "bowler": "Gokul Das",
+   "runs": 0,
+   "extras": 0
+  },
+  {
+   "inn": 0,
+   "batter": "Siddharth Nair",
+   "nonStriker": "Aman Joshi",
+   "bowler": "Gokul Das",
+   "runs": 0,
+   "extras": 0
+  },
+  {
+   "inn": 0,
+   "batter": "Siddharth Nair",
+   "nonStriker": "Aman Joshi",
+   "bowler": "Gokul Das",
+   "runs": 1,
+   "extras": 0
+  },
+  {
+   "inn": 0,
+   "batter": "Siddharth Nair",
+   "nonStriker": "Aman Joshi",
+   "bowler": "Manoj Raju",
+   "runs": 0,
+   "extras": 0
+  },
+  {
+   "inn": 0,
+   "batter": "Siddharth Nair",
+   "nonStriker": "Aman Joshi",
+   "bowler": "Manoj Raju",
+   "runs": 0,
+   "extras": 0
+  },
+  {
+   "inn": 0,
+   "batter": "Siddharth Nair",
+   "nonStriker": "Aman Joshi",
+   "bowler": "Manoj Raju",
+   "runs": 0,
+   "extras": 0
+  },
+  {
+   "inn": 0,
+   "batter": "Siddharth Nair",
+   "nonStriker": "Aman Joshi",
+   "bowler": "Manoj Raju",
+   "runs": 0,
+   "extras": 0
+  },
+  {
+   "inn": 0,
+   "batter": "Siddharth Nair",
+   "nonStriker": "Aman Joshi",
+   "bowler": "Manoj Raju",
+   "runs": 2,
+   "extras": 0
+  },
+  {
+   "inn": 0,
+   "batter": "Siddharth Nair",
+   "nonStriker": "Aman Joshi",
+   "bowler": "Manoj Raju",
+   "runs": 0,
+   "extras": 0
+  },
+  {
+   "inn": 0,
+   "batter": "Aman Joshi",
+   "nonStriker": "Siddharth Nair",
+   "bowler": "Naveen Kumar",
+   "runs": 6,
+   "extras": 0
+  },
+  {
+   "inn": 0,
+   "batter": "Aman Joshi",
+   "nonStriker": "Siddharth Nair",
+   "bowler": "Naveen Kumar",
+   "runs": 1,
+   "extras": 0
+  },
+  {
+   "inn": 0,
+   "batter": "Siddharth Nair",
+   "nonStriker": "Aman Joshi",
+   "bowler": "Naveen Kumar",
+   "runs": 4,
+   "extras": 0
+  },
+  {
+   "inn": 0,
+   "batter": "Siddharth Nair",
+   "nonStriker": "Aman Joshi",
+   "bowler": "Naveen Kumar",
+   "runs": 1,
+   "extras": 0
+  },
+  {
+   "inn": 0,
+   "batter": "Aman Joshi",
+   "nonStriker": "Siddharth Nair",
+   "bowler": "Naveen Kumar",
+   "runs": 0,
+   "extras": 0,
+   "wicket": {
+    "player": "Aman Joshi",
+    "kind": "caught"
+   }
+  },
+  {
+   "inn": 0,
+   "batter": "Harsh Gill",
+   "nonStriker": "Siddharth Nair",
+   "bowler": "Naveen Kumar",
+   "runs": 0,
+   "extras": 0
+  },
+  {
+   "inn": 1,
+   "batter": "Karthik Iyer",
+   "nonStriker": "Pranav Reddy",
+   "bowler": "Om Bhatt",
+   "runs": 1,
+   "extras": 0
+  },
+  {
+   "inn": 1,
+   "batter": "Pranav Reddy",
+   "nonStriker": "Karthik Iyer",
+   "bowler": "Om Bhatt",
+   "runs": 0,
+   "extras": 0
+  },
+  {
+   "inn": 1,
+   "batter": "Pranav Reddy",
+   "nonStriker": "Karthik Iyer",
+   "bowler": "Om Bhatt",
+   "runs": 0,
+   "extras": 0
+  },
+  {
+   "inn": 1,
+   "batter": "Pranav Reddy",
+   "nonStriker": "Karthik Iyer",
+   "bowler": "Om Bhatt",
+   "runs": 0,
+   "extras": 0
+  },
+  {
+   "inn": 1,
+   "batter": "Pranav Reddy",
+   "nonStriker": "Karthik Iyer",
+   "bowler": "Om Bhatt",
+   "runs": 0,
+   "extras": 1,
+   "extraType": "noball"
+  },
+  {
+   "inn": 1,
+   "batter": "Pranav Reddy",
+   "nonStriker": "Karthik Iyer",
+   "bowler": "Om Bhatt",
+   "runs": 1,
+   "extras": 0
+  },
+  {
+   "inn": 1,
+   "batter": "Karthik Iyer",
+   "nonStriker": "Pranav Reddy",
+   "bowler": "Om Bhatt",
+   "runs": 0,
+   "extras": 0
+  },
+  {
+   "inn": 1,
+   "batter": "Pranav Reddy",
+   "nonStriker": "Karthik Iyer",
+   "bowler": "Dev Patil",
+   "runs": 1,
+   "extras": 0
+  },
+  {
+   "inn": 1,
+   "batter": "Karthik Iyer",
+   "nonStriker": "Pranav Reddy",
+   "bowler": "Dev Patil",
+   "runs": 0,
+   "extras": 0
+  },
+  {
+   "inn": 1,
+   "batter": "Karthik Iyer",
+   "nonStriker": "Pranav Reddy",
+   "bowler": "Dev Patil",
+   "runs": 0,
+   "extras": 0,
+   "wicket": {
+    "player": "Karthik Iyer",
+    "kind": "lbw"
+   }
+  },
+  {
+   "inn": 1,
+   "batter": "Surya Menon",
+   "nonStriker": "Pranav Reddy",
+   "bowler": "Dev Patil",
+   "runs": 1,
+   "extras": 0
+  },
+  {
+   "inn": 1,
+   "batter": "Pranav Reddy",
+   "nonStriker": "Surya Menon",
+   "bowler": "Dev Patil",
+   "runs": 2,
+   "extras": 0
+  },
+  {
+   "inn": 1,
+   "batter": "Pranav Reddy",
+   "nonStriker": "Surya Menon",
+   "bowler": "Dev Patil",
+   "runs": 0,
+   "extras": 0
+  },
+  {
+   "inn": 1,
+   "batter": "Surya Menon",
+   "nonStriker": "Pranav Reddy",
+   "bowler": "Siddharth Nair",
+   "runs": 1,
+   "extras": 0
+  },
+  {
+   "inn": 1,
+   "batter": "Pranav Reddy",
+   "nonStriker": "Surya Menon",
+   "bowler": "Siddharth Nair",
+   "runs": 1,
+   "extras": 0
+  },
+  {
+   "inn": 1,
+   "batter": "Surya Menon",
+   "nonStriker": "Pranav Reddy",
+   "bowler": "Siddharth Nair",
+   "runs": 1,
+   "extras": 0
+  },
+  {
+   "inn": 1,
+   "batter": "Pranav Reddy",
+   "nonStriker": "Surya Menon",
+   "bowler": "Siddharth Nair",
+   "runs": 0,
+   "extras": 0
+  },
+  {
+   "inn": 1,
+   "batter": "Pranav Reddy",
+   "nonStriker": "Surya Menon",
+   "bowler": "Siddharth Nair",
+   "runs": 1,
+   "extras": 0
+  },
+  {
+   "inn": 1,
+   "batter": "Surya Menon",
+   "nonStriker": "Pranav Reddy",
+   "bowler": "Siddharth Nair",
+   "runs": 1,
+   "extras": 0
+  },
+  {
+   "inn": 1,
+   "batter": "Surya Menon",
+   "nonStriker": "Pranav Reddy",
+   "bowler": "Om Bhatt",
+   "runs": 1,
+   "extras": 0
+  },
+  {
+   "inn": 1,
+   "batter": "Pranav Reddy",
+   "nonStriker": "Surya Menon",
+   "bowler": "Om Bhatt",
+   "runs": 1,
+   "extras": 0
+  },
+  {
+   "inn": 1,
+   "batter": "Surya Menon",
+   "nonStriker": "Pranav Reddy",
+   "bowler": "Om Bhatt",
+   "runs": 4,
+   "extras": 1,
+   "extraType": "noball"
+  },
+  {
+   "inn": 1,
+   "batter": "Surya Menon",
+   "nonStriker": "Pranav Reddy",
+   "bowler": "Om Bhatt",
+   "runs": 0,
+   "extras": 0,
+   "wicket": {
+    "player": "Pranav Reddy",
+    "kind": "run out"
+   }
+  },
+  {
+   "inn": 1,
+   "batter": "Surya Menon",
+   "nonStriker": "Aditya Pillai",
+   "bowler": "Om Bhatt",
+   "runs": 0,
+   "extras": 0
+  },
+  {
+   "inn": 1,
+   "batter": "Surya Menon",
+   "nonStriker": "Aditya Pillai",
+   "bowler": "Om Bhatt",
+   "runs": 1,
+   "extras": 0
+  },
+  {
+   "inn": 1,
+   "batter": "Aditya Pillai",
+   "nonStriker": "Surya Menon",
+   "bowler": "Om Bhatt",
+   "runs": 0,
+   "extras": 0
+  },
+  {
+   "inn": 1,
+   "batter": "Surya Menon",
+   "nonStriker": "Aditya Pillai",
+   "bowler": "Harsh Gill",
+   "runs": 0,
+   "extras": 0
+  },
+  {
+   "inn": 1,
+   "batter": "Surya Menon",
+   "nonStriker": "Aditya Pillai",
+   "bowler": "Harsh Gill",
+   "runs": 1,
+   "extras": 0
+  },
+  {
+   "inn": 1,
+   "batter": "Aditya Pillai",
+   "nonStriker": "Surya Menon",
+   "bowler": "Harsh Gill",
+   "runs": 0,
+   "extras": 1,
+   "extraType": "wide"
+  },
+  {
+   "inn": 1,
+   "batter": "Aditya Pillai",
+   "nonStriker": "Surya Menon",
+   "bowler": "Harsh Gill",
+   "runs": 4,
+   "extras": 0
+  },
+  {
+   "inn": 1,
+   "batter": "Aditya Pillai",
+   "nonStriker": "Surya Menon",
+   "bowler": "Harsh Gill",
+   "runs": 4,
+   "extras": 0
+  },
+  {
+   "inn": 1,
+   "batter": "Aditya Pillai",
+   "nonStriker": "Surya Menon",
+   "bowler": "Harsh Gill",
+   "runs": 2,
+   "extras": 0
+  },
+  {
+   "inn": 1,
+   "batter": "Aditya Pillai",
+   "nonStriker": "Surya Menon",
+   "bowler": "Harsh Gill",
+   "runs": 1,
+   "extras": 0
+  },
+  {
+   "inn": 1,
+   "batter": "Aditya Pillai",
+   "nonStriker": "Surya Menon",
+   "bowler": "Om Bhatt",
+   "runs": 0,
+   "extras": 0
+  },
+  {
+   "inn": 1,
+   "batter": "Aditya Pillai",
+   "nonStriker": "Surya Menon",
+   "bowler": "Om Bhatt",
+   "runs": 4,
+   "extras": 0
+  },
+  {
+   "inn": 1,
+   "batter": "Aditya Pillai",
+   "nonStriker": "Surya Menon",
+   "bowler": "Om Bhatt",
+   "runs": 0,
+   "extras": 0
+  },
+  {
+   "inn": 1,
+   "batter": "Aditya Pillai",
+   "nonStriker": "Surya Menon",
+   "bowler": "Om Bhatt",
+   "runs": 0,
+   "extras": 1,
+   "extraType": "wide"
+  },
+  {
+   "inn": 1,
+   "batter": "Aditya Pillai",
+   "nonStriker": "Surya Menon",
+   "bowler": "Om Bhatt",
+   "runs": 1,
+   "extras": 0
+  },
+  {
+   "inn": 1,
+   "batter": "Surya Menon",
+   "nonStriker": "Aditya Pillai",
+   "bowler": "Om Bhatt",
+   "runs": 0,
+   "extras": 0
+  },
+  {
+   "inn": 1,
+   "batter": "Surya Menon",
+   "nonStriker": "Aditya Pillai",
+   "bowler": "Om Bhatt",
+   "runs": 6,
+   "extras": 0
+  },
+  {
+   "inn": 1,
+   "batter": "Aditya Pillai",
+   "nonStriker": "Surya Menon",
+   "bowler": "Neel Pandey",
+   "runs": 0,
+   "extras": 0,
+   "wicket": {
+    "player": "Aditya Pillai",
+    "kind": "caught"
+   }
+  },
+  {
+   "inn": 1,
+   "batter": "Rahul Varma",
+   "nonStriker": "Surya Menon",
+   "bowler": "Neel Pandey",
+   "runs": 0,
+   "extras": 0
+  },
+  {
+   "inn": 1,
+   "batter": "Rahul Varma",
+   "nonStriker": "Surya Menon",
+   "bowler": "Neel Pandey",
+   "runs": 1,
+   "extras": 0
+  },
+  {
+   "inn": 1,
+   "batter": "Surya Menon",
+   "nonStriker": "Rahul Varma",
+   "bowler": "Neel Pandey",
+   "runs": 0,
+   "extras": 0
+  },
+  {
+   "inn": 1,
+   "batter": "Surya Menon",
+   "nonStriker": "Rahul Varma",
+   "bowler": "Neel Pandey",
+   "runs": 1,
+   "extras": 0
+  },
+  {
+   "inn": 1,
+   "batter": "Rahul Varma",
+   "nonStriker": "Surya Menon",
+   "bowler": "Neel Pandey",
+   "runs": 0,
+   "extras": 0
+  },
+  {
+   "inn": 1,
+   "batter": "Surya Menon",
+   "nonStriker": "Rahul Varma",
+   "bowler": "Om Bhatt",
+   "runs": 0,
+   "extras": 0,
+   "wicket": {
+    "player": "Surya Menon",
+    "kind": "run out"
+   }
+  },
+  {
+   "inn": 1,
+   "batter": "Naveen Kumar",
+   "nonStriker": "Rahul Varma",
+   "bowler": "Om Bhatt",
+   "runs": 1,
+   "extras": 0
+  },
+  {
+   "inn": 1,
+   "batter": "Rahul Varma",
+   "nonStriker": "Naveen Kumar",
+   "bowler": "Om Bhatt",
+   "runs": 0,
+   "extras": 0
+  },
+  {
+   "inn": 1,
+   "batter": "Rahul Varma",
+   "nonStriker": "Naveen Kumar",
+   "bowler": "Om Bhatt",
+   "runs": 0,
+   "extras": 0
+  },
+  {
+   "inn": 1,
+   "batter": "Rahul Varma",
+   "nonStriker": "Naveen Kumar",
+   "bowler": "Om Bhatt",
+   "runs": 0,
+   "extras": 0
+  },
+  {
+   "inn": 1,
+   "batter": "Rahul Varma",
+   "nonStriker": "Naveen Kumar",
+   "bowler": "Om Bhatt",
+   "runs": 1,
+   "extras": 0
+  },
+  {
+   "inn": 1,
+   "batter": "Rahul Varma",
+   "nonStriker": "Naveen Kumar",
+   "bowler": "Dev Patil",
+   "runs": 0,
+   "extras": 0
+  },
+  {
+   "inn": 1,
+   "batter": "Rahul Varma",
+   "nonStriker": "Naveen Kumar",
+   "bowler": "Dev Patil",
+   "runs": 0,
+   "extras": 0
+  },
+  {
+   "inn": 1,
+   "batter": "Rahul Varma",
+   "nonStriker": "Naveen Kumar",
+   "bowler": "Dev Patil",
+   "runs": 1,
+   "extras": 0
+  },
+  {
+   "inn": 1,
+   "batter": "Naveen Kumar",
+   "nonStriker": "Rahul Varma",
+   "bowler": "Dev Patil",
+   "runs": 2,
+   "extras": 0
+  },
+  {
+   "inn": 1,
+   "batter": "Naveen Kumar",
+   "nonStriker": "Rahul Varma",
+   "bowler": "Dev Patil",
+   "runs": 6,
+   "extras": 0
+  },
+  {
+   "inn": 1,
+   "batter": "Naveen Kumar",
+   "nonStriker": "Rahul Varma",
+   "bowler": "Dev Patil",
+   "runs": 0,
+   "extras": 0
+  },
+  {
+   "inn": 1,
+   "batter": "Rahul Varma",
+   "nonStriker": "Naveen Kumar",
+   "bowler": "Siddharth Nair",
+   "runs": 4,
+   "extras": 0
+  },
+  {
+   "inn": 1,
+   "batter": "Rahul Varma",
+   "nonStriker": "Naveen Kumar",
+   "bowler": "Siddharth Nair",
+   "runs": 4,
+   "extras": 0
+  },
+  {
+   "inn": 1,
+   "batter": "Rahul Varma",
+   "nonStriker": "Naveen Kumar",
+   "bowler": "Siddharth Nair",
+   "runs": 1,
+   "extras": 0
+  },
+  {
+   "inn": 1,
+   "batter": "Naveen Kumar",
+   "nonStriker": "Rahul Varma",
+   "bowler": "Siddharth Nair",
+   "runs": 6,
+   "extras": 0
+  },
+  {
+   "inn": 1,
+   "batter": "Naveen Kumar",
+   "nonStriker": "Rahul Varma",
+   "bowler": "Siddharth Nair",
+   "runs": 4,
+   "extras": 0
+  },
+  {
+   "inn": 1,
+   "batter": "Naveen Kumar",
+   "nonStriker": "Rahul Varma",
+   "bowler": "Siddharth Nair",
+   "runs": 1,
+   "extras": 0
+  },
+  {
+   "inn": 1,
+   "batter": "Naveen Kumar",
+   "nonStriker": "Rahul Varma",
+   "bowler": "Dev Patil",
+   "runs": 1,
+   "extras": 0
+  },
+  {
+   "inn": 1,
+   "batter": "Rahul Varma",
+   "nonStriker": "Naveen Kumar",
+   "bowler": "Dev Patil",
+   "runs": 0,
+   "extras": 0
+  },
+  {
+   "inn": 1,
+   "batter": "Rahul Varma",
+   "nonStriker": "Naveen Kumar",
+   "bowler": "Dev Patil",
+   "runs": 0,
+   "extras": 0
+  },
+  {
+   "inn": 1,
+   "batter": "Rahul Varma",
+   "nonStriker": "Naveen Kumar",
+   "bowler": "Dev Patil",
+   "runs": 0,
+   "extras": 1,
+   "extraType": "legbye"
+  },
+  {
+   "inn": 1,
+   "batter": "Naveen Kumar",
+   "nonStriker": "Rahul Varma",
+   "bowler": "Dev Patil",
+   "runs": 0,
+   "extras": 1,
+   "extraType": "wide"
+  },
+  {
+   "inn": 1,
+   "batter": "Naveen Kumar",
+   "nonStriker": "Rahul Varma",
+   "bowler": "Dev Patil",
+   "runs": 4,
+   "extras": 0
+  },
+  {
+   "inn": 1,
+   "batter": "Naveen Kumar",
+   "nonStriker": "Rahul Varma",
+   "bowler": "Dev Patil",
+   "runs": 0,
+   "extras": 0
+  },
+  {
+   "inn": 1,
+   "batter": "Rahul Varma",
+   "nonStriker": "Naveen Kumar",
+   "bowler": "Neel Pandey",
+   "runs": 4,
+   "extras": 0
+  },
+  {
+   "inn": 1,
+   "batter": "Rahul Varma",
+   "nonStriker": "Naveen Kumar",
+   "bowler": "Neel Pandey",
+   "runs": 0,
+   "extras": 0
+  },
+  {
+   "inn": 1,
+   "batter": "Rahul Varma",
+   "nonStriker": "Naveen Kumar",
+   "bowler": "Neel Pandey",
+   "runs": 0,
+   "extras": 1,
+   "extraType": "legbye"
+  },
+  {
+   "inn": 1,
+   "batter": "Naveen Kumar",
+   "nonStriker": "Rahul Varma",
+   "bowler": "Neel Pandey",
+   "runs": 1,
+   "extras": 0
+  },
+  {
+   "inn": 1,
+   "batter": "Rahul Varma",
+   "nonStriker": "Naveen Kumar",
+   "bowler": "Neel Pandey",
+   "runs": 4,
+   "extras": 0
+  },
+  {
+   "inn": 1,
+   "batter": "Rahul Varma",
+   "nonStriker": "Naveen Kumar",
+   "bowler": "Neel Pandey",
+   "runs": 4,
+   "extras": 0
+  },
+  {
+   "inn": 1,
+   "batter": "Naveen Kumar",
+   "nonStriker": "Rahul Varma",
+   "bowler": "Siddharth Nair",
+   "runs": 1,
+   "extras": 0
+  },
+  {
+   "inn": 1,
+   "batter": "Rahul Varma",
+   "nonStriker": "Naveen Kumar",
+   "bowler": "Siddharth Nair",
+   "runs": 0,
+   "extras": 1,
+   "extraType": "legbye"
+  },
+  {
+   "inn": 1,
+   "batter": "Naveen Kumar",
+   "nonStriker": "Rahul Varma",
+   "bowler": "Siddharth Nair",
+   "runs": 1,
+   "extras": 0
+  },
+  {
+   "inn": 1,
+   "batter": "Rahul Varma",
+   "nonStriker": "Naveen Kumar",
+   "bowler": "Siddharth Nair",
+   "runs": 4,
+   "extras": 0
+  },
+  {
+   "inn": 1,
+   "batter": "Rahul Varma",
+   "nonStriker": "Naveen Kumar",
+   "bowler": "Siddharth Nair",
+   "runs": 0,
+   "extras": 0
+  },
+  {
+   "inn": 1,
+   "batter": "Rahul Varma",
+   "nonStriker": "Naveen Kumar",
+   "bowler": "Siddharth Nair",
+   "runs": 1,
+   "extras": 0
+  },
+  {
+   "inn": 1,
+   "batter": "Rahul Varma",
+   "nonStriker": "Naveen Kumar",
+   "bowler": "Harsh Gill",
+   "runs": 0,
+   "extras": 0
+  },
+  {
+   "inn": 1,
+   "batter": "Rahul Varma",
+   "nonStriker": "Naveen Kumar",
+   "bowler": "Harsh Gill",
+   "runs": 1,
+   "extras": 0
+  },
+  {
+   "inn": 1,
+   "batter": "Naveen Kumar",
+   "nonStriker": "Rahul Varma",
+   "bowler": "Harsh Gill",
+   "runs": 1,
+   "extras": 0
+  },
+  {
+   "inn": 1,
+   "batter": "Rahul Varma",
+   "nonStriker": "Naveen Kumar",
+   "bowler": "Harsh Gill",
+   "runs": 1,
+   "extras": 0
+  },
+  {
+   "inn": 1,
+   "batter": "Naveen Kumar",
+   "nonStriker": "Rahul Varma",
+   "bowler": "Harsh Gill",
+   "runs": 0,
+   "extras": 1,
+   "extraType": "wide"
+  },
+  {
+   "inn": 1,
+   "batter": "Naveen Kumar",
+   "nonStriker": "Rahul Varma",
+   "bowler": "Harsh Gill",
+   "runs": 1,
+   "extras": 0
+  },
+  {
+   "inn": 1,
+   "batter": "Rahul Varma",
+   "nonStriker": "Naveen Kumar",
+   "bowler": "Harsh Gill",
+   "runs": 0,
+   "extras": 0
+  },
+  {
+   "inn": 1,
+   "batter": "Naveen Kumar",
+   "nonStriker": "Rahul Varma",
+   "bowler": "Neel Pandey",
+   "runs": 0,
+   "extras": 0
+  },
+  {
+   "inn": 1,
+   "batter": "Naveen Kumar",
+   "nonStriker": "Rahul Varma",
+   "bowler": "Neel Pandey",
+   "runs": 1,
+   "extras": 0
+  },
+  {
+   "inn": 1,
+   "batter": "Rahul Varma",
+   "nonStriker": "Naveen Kumar",
+   "bowler": "Neel Pandey",
+   "runs": 0,
+   "extras": 0
+  },
+  {
+   "inn": 1,
+   "batter": "Rahul Varma",
+   "nonStriker": "Naveen Kumar",
+   "bowler": "Neel Pandey",
+   "runs": 0,
+   "extras": 0
+  },
+  {
+   "inn": 1,
+   "batter": "Rahul Varma",
+   "nonStriker": "Naveen Kumar",
+   "bowler": "Neel Pandey",
+   "runs": 0,
+   "extras": 0
+  },
+  {
+   "inn": 1,
+   "batter": "Rahul Varma",
+   "nonStriker": "Naveen Kumar",
+   "bowler": "Neel Pandey",
+   "runs": 0,
+   "extras": 0
+  },
+  {
+   "inn": 1,
+   "batter": "Naveen Kumar",
+   "nonStriker": "Rahul Varma",
+   "bowler": "Harsh Gill",
+   "runs": 0,
+   "extras": 0
+  },
+  {
+   "inn": 1,
+   "batter": "Naveen Kumar",
+   "nonStriker": "Rahul Varma",
+   "bowler": "Harsh Gill",
+   "runs": 0,
+   "extras": 0
+  },
+  {
+   "inn": 1,
+   "batter": "Naveen Kumar",
+   "nonStriker": "Rahul Varma",
+   "bowler": "Harsh Gill",
+   "runs": 0,
+   "extras": 0
+  },
+  {
+   "inn": 1,
+   "batter": "Naveen Kumar",
+   "nonStriker": "Rahul Varma",
+   "bowler": "Harsh Gill",
+   "runs": 2,
+   "extras": 0
+  },
+  {
+   "inn": 1,
+   "batter": "Naveen Kumar",
+   "nonStriker": "Rahul Varma",
+   "bowler": "Harsh Gill",
+   "runs": 1,
+   "extras": 0
+  },
+  {
+   "inn": 1,
+   "batter": "Rahul Varma",
+   "nonStriker": "Naveen Kumar",
+   "bowler": "Harsh Gill",
+   "runs": 2,
+   "extras": 0
+  },
+  {
+   "inn": 1,
+   "batter": "Naveen Kumar",
+   "nonStriker": "Rahul Varma",
+   "bowler": "Siddharth Nair",
+   "runs": 1,
+   "extras": 0
+  },
+  {
+   "inn": 1,
+   "batter": "Rahul Varma",
+   "nonStriker": "Naveen Kumar",
+   "bowler": "Siddharth Nair",
+   "runs": 1,
+   "extras": 0
+  },
+  {
+   "inn": 1,
+   "batter": "Naveen Kumar",
+   "nonStriker": "Rahul Varma",
+   "bowler": "Siddharth Nair",
+   "runs": 1,
+   "extras": 0
+  },
+  {
+   "inn": 1,
+   "batter": "Rahul Varma",
+   "nonStriker": "Naveen Kumar",
+   "bowler": "Siddharth Nair",
+   "runs": 1,
+   "extras": 0
+  },
+  {
+   "inn": 1,
+   "batter": "Naveen Kumar",
+   "nonStriker": "Rahul Varma",
+   "bowler": "Siddharth Nair",
+   "runs": 4,
+   "extras": 0
+  },
+  {
+   "inn": 1,
+   "batter": "Naveen Kumar",
+   "nonStriker": "Rahul Varma",
+   "bowler": "Siddharth Nair",
+   "runs": 0,
+   "extras": 0
+  },
+  {
+   "inn": 1,
+   "batter": "Rahul Varma",
+   "nonStriker": "Naveen Kumar",
+   "bowler": "Neel Pandey",
+   "runs": 4,
+   "extras": 0
+  },
+  {
+   "inn": 1,
+   "batter": "Rahul Varma",
+   "nonStriker": "Naveen Kumar",
+   "bowler": "Neel Pandey",
+   "runs": 6,
+   "extras": 0
+  },
+  {
+   "inn": 1,
+   "batter": "Rahul Varma",
+   "nonStriker": "Naveen Kumar",
+   "bowler": "Neel Pandey",
+   "runs": 2,
+   "extras": 0
+  },
+  {
+   "inn": 1,
+   "batter": "Rahul Varma",
+   "nonStriker": "Naveen Kumar",
+   "bowler": "Neel Pandey",
+   "runs": 0,
+   "extras": 0
+  },
+  {
+   "inn": 1,
+   "batter": "Rahul Varma",
+   "nonStriker": "Naveen Kumar",
+   "bowler": "Neel Pandey",
+   "runs": 2,
+   "extras": 0
+  },
+  {
+   "inn": 1,
+   "batter": "Rahul Varma",
+   "nonStriker": "Naveen Kumar",
+   "bowler": "Neel Pandey",
+   "runs": 4,
+   "extras": 1,
+   "extraType": "noball"
+  },
+  {
+   "inn": 1,
+   "batter": "Rahul Varma",
+   "nonStriker": "Naveen Kumar",
+   "bowler": "Neel Pandey",
+   "runs": 0,
+   "extras": 0
+  },
+  {
+   "inn": 1,
+   "batter": "Naveen Kumar",
+   "nonStriker": "Rahul Varma",
+   "bowler": "Dev Patil",
+   "runs": 0,
+   "extras": 0
+  },
+  {
+   "inn": 1,
+   "batter": "Naveen Kumar",
+   "nonStriker": "Rahul Varma",
+   "bowler": "Dev Patil",
+   "runs": 1,
+   "extras": 0
+  },
+  {
+   "inn": 1,
+   "batter": "Rahul Varma",
+   "nonStriker": "Naveen Kumar",
+   "bowler": "Dev Patil",
+   "runs": 0,
+   "extras": 0,
+   "wicket": {
+    "player": "Rahul Varma",
+    "kind": "lbw"
+   }
+  },
+  {
+   "inn": 1,
+   "batter": "Ajay Swamy",
+   "nonStriker": "Naveen Kumar",
+   "bowler": "Dev Patil",
+   "runs": 2,
+   "extras": 0
+  },
+  {
+   "inn": 1,
+   "batter": "Ajay Swamy",
+   "nonStriker": "Naveen Kumar",
+   "bowler": "Dev Patil",
+   "runs": 0,
+   "extras": 0
+  },
+  {
+   "inn": 1,
+   "batter": "Ajay Swamy",
+   "nonStriker": "Naveen Kumar",
+   "bowler": "Dev Patil",
+   "runs": 4,
+   "extras": 0
+  },
+  {
+   "inn": 1,
+   "batter": "Naveen Kumar",
+   "nonStriker": "Ajay Swamy",
+   "bowler": "Harsh Gill",
+   "runs": 3,
+   "extras": 0
+  },
+  {
+   "inn": 1,
+   "batter": "Ajay Swamy",
+   "nonStriker": "Naveen Kumar",
+   "bowler": "Harsh Gill",
+   "runs": 6,
+   "extras": 0
+  },
+  {
+   "inn": 1,
+   "batter": "Ajay Swamy",
+   "nonStriker": "Naveen Kumar",
+   "bowler": "Harsh Gill",
+   "runs": 4,
+   "extras": 0
+  },
+  {
+   "inn": 1,
+   "batter": "Ajay Swamy",
+   "nonStriker": "Naveen Kumar",
+   "bowler": "Harsh Gill",
+   "runs": 1,
+   "extras": 0
+  },
+  {
+   "inn": 1,
+   "batter": "Naveen Kumar",
+   "nonStriker": "Ajay Swamy",
+   "bowler": "Harsh Gill",
+   "runs": 0,
+   "extras": 0
+  },
+  {
+   "inn": 1,
+   "batter": "Naveen Kumar",
+   "nonStriker": "Ajay Swamy",
+   "bowler": "Harsh Gill",
+   "runs": 1,
+   "extras": 0
+  }
+ ]
+}

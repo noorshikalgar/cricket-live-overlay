@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1080" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <linearGradient id="stand" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#1c2533"/>
+      <stop offset="1" stop-color="#2b3a2e"/>
+    </linearGradient>
+    <linearGradient id="grass" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#2f6b34"/>
+      <stop offset="1" stop-color="#1f4d25"/>
+    </linearGradient>
+    <linearGradient id="pitch" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#b9a77a"/>
+      <stop offset="1" stop-color="#9c8a5e"/>
+    </linearGradient>
+    <filter id="soft"><feGaussianBlur stdDeviation="6"/></filter>
+  </defs>
+  <rect width="1920" height="1080" fill="url(#stand)"/>
+  <g opacity="0.35" filter="url(#soft)">
+    <rect x="0" y="120" width="1920" height="40" fill="#3b4a63"/>
+    <rect x="0" y="200" width="1920" height="30" fill="#46556e"/>
+    <rect x="0" y="270" width="1920" height="26" fill="#3b4a63"/>
+  </g>
+  <rect x="0" y="330" width="1920" height="750" fill="url(#grass)"/>
+  <g opacity="0.12">
+    <rect x="0" y="330" width="1920" height="70" fill="#fff"/>
+    <rect x="0" y="470" width="1920" height="90" fill="#fff"/>
+    <rect x="0" y="650" width="1920" height="120" fill="#fff"/>
+    <rect x="0" y="880" width="1920" height="160" fill="#fff"/>
+  </g>
+  <polygon points="880,360 1040,360 1260,1080 660,1080" fill="url(#pitch)"/>
+  <g stroke="#f4f1e6" stroke-width="6" opacity="0.85">
+    <line x1="860" y1="430" x2="1060" y2="430"/>
+    <line x1="745" y1="900" x2="1175" y2="900"/>
+  </g>
+  <g fill="#f4f1e6">
+    <rect x="950" y="398" width="5" height="34"/><rect x="959" y="398" width="5" height="34"/><rect x="968" y="398" width="5" height="34"/>
+    <rect x="930" y="820" width="12" height="82"/><rect x="954" y="820" width="12" height="82"/><rect x="978" y="820" width="12" height="82"/>
+  </g>
+</svg>

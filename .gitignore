@@ -1,0 +1,10 @@
+node_modules/
+dist/
+.env
+.angular/
+apps/server/data/scenes/*.json
+!apps/server/data/scenes/.gitkeep
+apps/server/data/usage.json
+.DS_Store
+apps/server/data/settings.json
+apps/server/data/uploads/

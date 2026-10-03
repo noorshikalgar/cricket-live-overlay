@@ -1,0 +1,152 @@
+/*
+ * Building blocks every widget uses. Sizes scale with the widget box height
+ * (--wh) and the user's font scale (--fs), so resizing a widget scales its
+ * type instead of overflowing. No container queries: OBS 28/29 ship an older
+ * Chromium that lacks them.
+ */
+.widget-host {
+  position: absolute;
+  color: var(--text);
+  font-family: var(--font);
+}
+
+.panel {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  background: var(--bg);
+  -webkit-backdrop-filter: blur(var(--blur));
+  backdrop-filter: blur(var(--blur));
+  border-radius: var(--radius);
+  border: var(--border);
+  box-shadow: var(--shadow);
+  padding: calc(var(--pad) * 0.75) var(--pad);
+  color: var(--text);
+  overflow: hidden;
+}
+
+.panel.flush {
+  padding: 0;
+}
+
+.w-title {
+  position: absolute;
+  left: var(--pad);
+  top: 0;
+  transform: translateY(-100%);
+  padding: 4px 12px;
+  background: var(--accent);
+  color: #0b0f17;
+  border-radius: var(--chip-radius) var(--chip-radius) 0 0;
+  font-weight: 600;
+  font-size: calc(18px * var(--fs));
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.num {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum' 1;
+  font-weight: 600;
+}
+
+.label {
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 500;
+  color: var(--muted);
+}
+
+.ellipsis {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+
+/* odometer roll: old value slides up and out, new one slides up and in */
+.odo {
+  position: relative;
+  display: inline-block;
+  overflow: hidden;
+  vertical-align: bottom;
+  line-height: 1.1;
+}
+.odo > span {
+  display: inline-block;
+}
+.odo > .odo-old {
+  position: absolute;
+  left: 0;
+  top: 0;
+}
+
+.live-dot {
+  display: inline-block;
+  width: 0.5em;
+  height: 0.5em;
+  border-radius: 50%;
+  background: var(--c-wicket);
+  /* the only idle motion allowed on air: a slow opacity breathe */
+  animation: live-breathe 2.4s ease-in-out infinite;
+}
+
+@keyframes live-breathe {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.45;
+  }
+}
+
+.reduce-motion .live-dot {
+  animation: none;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--chip-radius);
+  background: var(--chip);
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+.chip.four {
+  background: var(--c-four);
+  color: #fff;
+}
+.chip.six {
+  background: var(--c-six);
+  color: #fff;
+}
+.chip.wicket {
+  background: var(--c-wicket);
+  color: #fff;
+}
+.chip.extra {
+  color: var(--muted);
+}
+.chips-outline .chip {
+  background: transparent;
+  border: 2px solid var(--chip);
+}
+.chips-outline .chip.four {
+  border-color: var(--c-four);
+  color: var(--c-four);
+}
+.chips-outline .chip.six {
+  border-color: var(--c-six);
+  color: var(--c-six);
+}
+.chips-outline .chip.wicket {
+  border-color: var(--c-wicket);
+  color: var(--c-wicket);
+}
+
+.empty-dash {
+  color: var(--muted);
+}

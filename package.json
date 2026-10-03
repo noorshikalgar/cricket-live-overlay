@@ -1,0 +1,21 @@
+{
+  "name": "cricket-overlay-studio",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "packages/shared",
+    "apps/server",
+    "apps/studio"
+  ],
+  "scripts": {
+    "dev": "concurrently -k -n server,studio -c green,cyan \"npm run dev -w apps/server\" \"npm run start -w apps/studio\"",
+    "build": "npm run build -w apps/studio && npm run build -w apps/server",
+    "start": "npm run start -w apps/server",
+    "typecheck": "npm run typecheck -w packages/shared && npm run typecheck -w apps/server",
+    "test": "npm run test -w apps/server"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.0"
+  }
+}
