@@ -9,7 +9,7 @@ import { PromptService } from './prompt-dialog.component';
   selector: 'cos-top-bar',
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <div class="brand"><span class="logo">◢</span> Overlay Studio</div>
+    <div class="brand"><img class="logo" src="/logo.svg" alt="" width="26" height="26" /> Overlay Studio</div>
 
     <div class="group scene">
       <select [value]="editor.sceneId() ?? ''" (change)="pickScene($event)" aria-label="Scene being edited">
@@ -137,7 +137,8 @@ import { PromptService } from './prompt-dialog.component';
       gap: 8px;
     }
     .logo {
-      color: var(--ui-accent);
+      display: block;
+      border-radius: 7px;
     }
     .group {
       display: flex;

@@ -1,3 +1,5 @@
+<img src="apps/studio/public/logo.svg" width="72" alt="Overlay Studio logo" />
+
 # Cricket Live Overlay Studio
 
 Broadcast-style live cricket overlays for OBS, with a drag-and-drop editor.
