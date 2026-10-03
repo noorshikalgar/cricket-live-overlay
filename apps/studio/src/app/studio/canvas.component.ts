@@ -52,6 +52,12 @@ export const WIDGET_DND_TYPE = 'application/x-cos-widget';
               mode="editor"
               (heightChange)="fitHeight($event)"
             />
+            @if (live.settings().blackout) {
+              <div class="bo-preview">
+                <span class="bo-tag">BLACKOUT ON AIR</span>
+                <span class="bo-msg">{{ live.settings().blackoutText }}</span>
+              </div>
+            }
             <div class="edit-layer">
               @for (w of scene.widgets; track w.id) {
                 <div
@@ -176,6 +182,30 @@ export const WIDGET_DND_TYPE = 'application/x-cos-widget';
     .edit-layer {
       position: absolute;
       inset: 0;
+    }
+    /* what the Output shows during a blackout; the canvas stays editable underneath */
+    .bo-preview {
+      position: absolute;
+      inset: 0;
+      z-index: 50000;
+      background: rgba(0, 0, 0, 0.88);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 24px;
+      pointer-events: none;
+      outline: 6px solid #dc2626;
+      outline-offset: -6px;
+    }
+    .bo-tag {
+      color: #f87171;
+      font: 700 34px/1 Inter, sans-serif;
+      letter-spacing: 0.12em;
+    }
+    .bo-msg {
+      color: #f5f7fa;
+      font: 600 64px/1.2 Inter, sans-serif;
     }
     /* pointer mode: no editing, a crosshair, every move goes to the Output */
     .pointer-mode .edit-layer {
@@ -335,7 +365,7 @@ export const WIDGET_DND_TYPE = 'application/x-cos-widget';
 export class CanvasComponent {
   protected readonly editor = inject(EditorStore);
   protected readonly ctx = inject(CanvasContext);
-  private readonly live = inject(LiveStore);
+  protected readonly live = inject(LiveStore);
   private readonly viewport = viewChild.required<ElementRef<HTMLElement>>('viewport');
   private readonly stage = viewChild<ElementRef<HTMLElement>>('stage');
 

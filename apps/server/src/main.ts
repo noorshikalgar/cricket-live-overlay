@@ -2,7 +2,7 @@ import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import Fastify from 'fastify';
 import fastifyStatic from '@fastify/static';
-import { CARD_WIDGET_TYPES, newId, type MatchEventType } from '@cos/shared';
+import { CARD_WIDGET_TYPES, newId, type AppSettings, type MatchEventType } from '@cos/shared';
 import { CardService } from './cards';
 import { manualEvent } from './events';
 import { DATA_DIR, SCENES_DIR, STUDIO_DIST, UPLOADS_DIR, loadConfig } from './config';
@@ -85,6 +85,18 @@ app.post<{ Params: { type: string } }>('/api/events/:type', async (req, reply) =
   const event = manualEvent(type, poller.state);
   hub.broadcast({ type: 'match:event', event });
   return event;
+});
+
+// Emergency blackout, also for a Stream Deck button:
+//   curl -X POST localhost:4300/api/blackout -H 'content-type: application/json' -d '{"on":true,"text":"Back soon"}'
+app.post<{ Body: { on?: boolean; text?: string; subtext?: string } }>('/api/blackout', async (req) => {
+  const b = req.body ?? {};
+  const patch: Partial<AppSettings> = { blackout: b.on === undefined ? !scenes.getSettings().blackout : b.on === true };
+  if (typeof b.text === 'string') patch.blackoutText = b.text;
+  if (typeof b.subtext === 'string') patch.blackoutSubtext = b.subtext;
+  const settings = scenes.updateSettings(patch);
+  hub.broadcastSettings();
+  return { blackout: settings.blackout, text: settings.blackoutText };
 });
 
 const IMAGE_EXT: Record<string, string> = {

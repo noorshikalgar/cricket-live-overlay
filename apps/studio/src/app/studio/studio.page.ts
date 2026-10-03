@@ -270,9 +270,15 @@ export default class StudioPage {
   }
 
   protected onKey(e: KeyboardEvent): void {
-    if (this.prompt.request() || typingInField(e)) return;
     const mod = e.metaKey || e.ctrlKey;
     const key = e.key.toLowerCase();
+    // emergency blackout works everywhere, even while typing
+    if (mod && e.shiftKey && key === 'b') {
+      e.preventDefault();
+      this.live.send({ type: 'settings:update', settings: { blackout: !this.live.settings().blackout } });
+      return;
+    }
+    if (this.prompt.request() || typingInField(e)) return;
 
     if (mod && key === 'z') {
       e.preventDefault();

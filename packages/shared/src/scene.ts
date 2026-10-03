@@ -215,6 +215,10 @@ export interface AppSettings {
   pollSeconds: number | null;
   /** paused: no automatic API calls at all (breaks); "Update now" still works */
   pollPaused: boolean;
+  /** emergency blackout: the Output shows only a black screen with the message */
+  blackout: boolean;
+  blackoutText: string;
+  blackoutSubtext: string;
 }
 
 export const DEFAULT_SETTINGS: AppSettings = {
@@ -226,6 +230,9 @@ export const DEFAULT_SETTINGS: AppSettings = {
   pollMode: 'auto',
   pollSeconds: null,
   pollPaused: false,
+  blackout: false,
+  blackoutText: "We'll be right back",
+  blackoutSubtext: '',
 };
 
 export function newId(): string {

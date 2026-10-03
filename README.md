@@ -74,6 +74,18 @@ curl -X POST http://localhost:4300/api/events/SIX
 
 Types: `FOUR SIX WICKET FIFTY HUNDRED MAIDEN DRS DRINKS INNINGS_BREAK INNINGS_END MATCH_RESULT`.
 
+### Emergency blackout
+
+**⛔ Blackout** (top bar, left) or **Ctrl/⌘+Shift+B** (works even while typing) instantly covers the whole Output in solid black with your message; press again to restore. Because it is opaque it also hides everything below the Browser Source in OBS (webcam, match feed). **✎** next to it edits the message and an optional second line. The Studio canvas shows a red *BLACKOUT ON AIR* preview while it's active. It is pure CSS, so it switches even if the browser is throttling animation.
+
+Stream Deck / scripts:
+
+```bash
+curl -X POST localhost:4300/api/blackout -H 'content-type: application/json' -d '{"on":true,"text":"Back soon"}'
+```
+
+Omit `on` to toggle.
+
 ### Timer
 
 The **Timer** widget (library → Studio) shows a title such as *STARTING IN* or *BACK IN* above a big countdown:

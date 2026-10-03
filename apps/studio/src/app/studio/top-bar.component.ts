@@ -11,6 +11,18 @@ import { PromptService } from './prompt-dialog.component';
   template: `
     <div class="brand"><img class="logo" src="/logo.svg" alt="" width="26" height="26" /> Overlay Studio</div>
 
+    <div class="group bo" [class.active]="live.settings().blackout">
+      <button
+        type="button"
+        class="bo-btn"
+        (click)="toggleBlackout()"
+        [title]="live.settings().blackout ? 'Restore the Output (Ctrl/⌘+Shift+B)' : 'Emergency: cover the Output in black with your message (Ctrl/⌘+Shift+B)'"
+      >
+        {{ live.settings().blackout ? '⛔ BLACKOUT ON · Restore' : '⛔ Blackout' }}
+      </button>
+      <button type="button" class="icon" title="Edit the blackout message" (click)="editBlackout()">✎</button>
+    </div>
+
     <div class="group scene">
       <select [value]="editor.sceneId() ?? ''" (change)="pickScene($event)" aria-label="Scene being edited">
         @for (s of live.sceneList(); track s.id) {
@@ -113,6 +125,8 @@ import { PromptService } from './prompt-dialog.component';
     </div>
 
     <div class="spacer"></div>
+
+
 
     <div class="group">
       <button type="button" class="icon" title="Undo (Ctrl/⌘+Z)" [disabled]="!editor.canUndo()" (click)="editor.undo()">↶</button>
@@ -243,6 +257,21 @@ import { PromptService } from './prompt-dialog.component';
     .pollctl select {
       max-width: 120px;
     }
+    .bo-btn {
+      background: #3b0d0d;
+      border-color: #7f1d1d;
+      color: #fecaca;
+      font-weight: 700;
+    }
+    .bo-btn:hover:not(:disabled) {
+      background: #7f1d1d;
+    }
+    .bo.active .bo-btn {
+      background: #dc2626;
+      border-color: #ef4444;
+      color: #fff;
+      box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.35);
+    }
     .pause.on {
       background: #f59e0b;
       border-color: #f59e0b;
@@ -364,6 +393,21 @@ export class TopBarComponent {
     if (!this.live.settings().selectedMatchId || !p) return false;
     return !p.lastPollAt || this.now() - p.lastPollAt > 5000;
   });
+
+  toggleBlackout(): void {
+    this.live.send({ type: 'settings:update', settings: { blackout: !this.live.settings().blackout } });
+  }
+
+  protected async editBlackout(): Promise<void> {
+    const s = this.live.settings();
+    const text = await this.prompt.ask('Blackout message (main line)', s.blackoutText || "We'll be right back", 'Next');
+    if (text === null) return;
+    const sub = await this.prompt.ask('Second line (optional, leave empty for none)', s.blackoutSubtext || ' ', 'Save');
+    this.live.send({
+      type: 'settings:update',
+      settings: { blackoutText: text, blackoutSubtext: (sub ?? '').trim() },
+    });
+  }
 
   protected readonly paused = computed(() => this.live.settings().pollPaused === true);
 

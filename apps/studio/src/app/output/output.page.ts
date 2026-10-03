@@ -41,6 +41,15 @@ import { SceneRendererComponent } from '../widgets/scene-renderer.component';
       @if (displayed()?.pointer?.enabled) {
         <cos-pointer-overlay [settings]="displayed()!.pointer" />
       }
+      <!-- emergency blackout: opaque, above everything, pure CSS so it switches even when animation is throttled -->
+      <div class="blackout" [class.on]="store.settings().blackout" aria-live="assertive">
+        @if (store.settings().blackout) {
+          <div class="bo-text">{{ store.settings().blackoutText }}</div>
+          @if (store.settings().blackoutSubtext) {
+            <div class="bo-sub">{{ store.settings().blackoutSubtext }}</div>
+          }
+        }
+      </div>
       <div class="stinger" #stinger aria-hidden="true">
         <div class="sp back"></div>
         <div class="sp front"></div>
@@ -70,6 +79,38 @@ import { SceneRendererComponent } from '../widgets/scene-renderer.component';
       position: absolute;
       inset: 0;
       transform-origin: 50% 50%;
+    }
+    .blackout {
+      position: absolute;
+      inset: 0;
+      z-index: 200000;
+      background: #000;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 24px;
+      padding: 0 160px;
+      text-align: center;
+      opacity: 0;
+      visibility: hidden;
+      transition:
+        opacity 0.2s ease-out,
+        visibility 0s linear 0.2s;
+    }
+    .blackout.on {
+      opacity: 1;
+      visibility: visible;
+      transition: opacity 0.12s ease-out;
+    }
+    .bo-text {
+      color: #f5f7fa;
+      font: 600 72px/1.15 Inter, system-ui, sans-serif;
+      letter-spacing: 0.01em;
+    }
+    .bo-sub {
+      color: #9aa4b2;
+      font: 500 36px/1.3 Inter, system-ui, sans-serif;
     }
     .stinger {
       position: absolute;
