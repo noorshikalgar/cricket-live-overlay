@@ -100,11 +100,43 @@ export interface WidgetInstance {
   animation: WidgetAnimation;
 }
 
+export type BackgroundKind = 'transparent' | 'pitch' | 'color' | 'gradient' | 'image';
+
+/** What sits behind the widgets on air. Transparent lets the OBS sources below show through. */
+export interface SceneBackground {
+  kind: BackgroundKind;
+  color: string;
+  /** gradient end colour */
+  color2: string;
+  /** uploaded image URL */
+  image: string;
+  /** 0–0.8 black overlay so widgets stay legible over busy images */
+  dim: number;
+}
+
+export const DEFAULT_BACKGROUND: SceneBackground = {
+  kind: 'transparent',
+  color: '#0B0F17',
+  color2: '#1D4ED8',
+  image: '',
+  dim: 0,
+};
+
+export const BACKGROUND_KINDS: { value: BackgroundKind; label: string }[] = [
+  { value: 'transparent', label: 'Transparent' },
+  { value: 'pitch', label: 'Sample pitch' },
+  { value: 'color', label: 'Solid colour' },
+  { value: 'gradient', label: 'Gradient' },
+  { value: 'image', label: 'Image' },
+];
+
 export interface Scene {
   id: string;
   name: string;
   canvas: { w: number; h: number };
   theme: ThemeId;
+  /** missing on older scenes = transparent */
+  background?: SceneBackground;
   widgets: WidgetInstance[];
   updatedAt: number;
 }

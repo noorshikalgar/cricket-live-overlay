@@ -72,6 +72,15 @@ curl -X POST http://localhost:4300/api/events/SIX
 
 Types: `FOUR SIX WICKET FIFTY HUNDRED MAIDEN DRS DRINKS INNINGS_BREAK INNINGS_END MATCH_RESULT`.
 
+### Scene background
+
+Each scene has a **Background** (canvas toolbar, or the scene panel when nothing is selected) and it goes on air exactly as you see it:
+
+- **Transparent** (default): nothing is drawn, so the OBS sources below the Browser Source (webcam, match feed) show through. The Studio shows a checkerboard.
+- **Sample pitch**, **Solid colour**, **Gradient**, **Image** (upload): drawn behind the widgets on `/output` too, with an optional *Darken* overlay. Use these for full-screen scenes such as breaks; they cover everything below the Browser Source.
+
+`/output` is exactly 1:1 when the window is 1920×1080 (OBS). In any other browser window it scales to fit and centres, so you can preview it anywhere.
+
 ### Themes and styling
 
 A scene has a theme: **Night** (dark glass, default), **Clean** (white panels for daytime) or **Team** (accent follows the batting team's colour). Every widget style field starts as "theme"; changing it on a widget overrides just that widget, ↺ resets it. Global **Reduce motion** and **Speed** live in the canvas toolbar and apply to every Output.

@@ -2,9 +2,11 @@ import { Injectable, computed, effect, inject, signal, untracked } from '@angula
 import {
   CANVAS_H,
   CANVAS_W,
+  DEFAULT_BACKGROUND,
   createWidget,
   newId,
   type Scene,
+  type SceneBackground,
   type WidgetInstance,
   type WidgetType,
 } from '@cos/shared';
@@ -13,8 +15,6 @@ import { LiveStore } from '../core/live.store';
 const HISTORY_LIMIT = 100;
 /** edits to the same field within this window merge into one undo step */
 const COALESCE_MS = 700;
-
-export type CanvasBackground = 'checker' | 'sample' | 'dark';
 
 /**
  * Editor state: which scene is being edited, the selection, and undo/redo.
@@ -28,7 +28,6 @@ export class EditorStore {
   readonly sceneId = signal<string | null>(null);
   readonly selectedId = signal<string | null>(null);
   readonly snap = signal(true);
-  readonly background = signal<CanvasBackground>('sample');
 
   readonly scene = computed<Scene | null>(() => {
     const id = this.sceneId();
@@ -224,6 +223,12 @@ export class EditorStore {
       { x: clamp(w.x + dx, -w.w + 8, CANVAS_W - 8), y: clamp(w.y + dy, -w.h + 8, CANVAS_H - 8) },
       `nudge:${w.id}`,
     );
+  }
+
+  setBackground(patch: Partial<SceneBackground>, coalesceKey?: string): void {
+    this.commit((s) => {
+      s.background = { ...DEFAULT_BACKGROUND, ...s.background, ...patch };
+    }, coalesceKey);
   }
 
   setTheme(theme: Scene['theme']): void {

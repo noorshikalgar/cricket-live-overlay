@@ -1,7 +1,11 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import {
   ANIM_PRESETS,
+  BACKGROUND_KINDS,
+  DEFAULT_BACKGROUND,
   THEMES,
+  type BackgroundKind,
+  type SceneBackground,
   resolveStyle,
   type AnimPreset,
   type PropValue,
@@ -147,6 +151,26 @@ const ANIM_LABELS: Record<AnimPreset, string> = {
         </p>
       </section>
       <section>
+        <h3>Background (on air)</h3>
+        @let bg = sceneBg();
+        <cos-field [def]="bgKindField" [value]="bg.kind" (changed)="setBg({ kind: asKind($event) })" />
+        @if (bg.kind === 'transparent') {
+          <p class="hint">Nothing is drawn behind the widgets, so the OBS sources below the Browser Source show through.</p>
+        } @else {
+          @if (bg.kind === 'color' || bg.kind === 'gradient' || bg.kind === 'image') {
+            <cos-field [def]="bgColorField" [value]="bg.color" (changed)="setBg({ color: asStr($event) }, 'bg-color')" />
+          }
+          @if (bg.kind === 'gradient') {
+            <cos-field [def]="bgColor2Field" [value]="bg.color2" (changed)="setBg({ color2: asStr($event) }, 'bg-color2')" />
+          }
+          @if (bg.kind === 'image') {
+            <cos-field [def]="bgImageField" [value]="bg.image" (changed)="setBg({ image: asStr($event) })" />
+          }
+          <cos-field [def]="bgDimField" [value]="bg.dim" (changed)="setBg({ dim: asNum($event) }, 'bg-dim')" />
+          <p class="hint">Covers everything below the Browser Source in OBS, so use it for full-screen scenes like breaks.</p>
+        }
+      </section>
+      <section>
         <h3>Tips</h3>
         <ul class="tips">
           <li>Click a widget in the library to add it, or drag it onto the canvas.</li>
@@ -276,6 +300,29 @@ export class SettingsPanelComponent {
   protected readonly enterField: FieldDef = { kind: 'select', key: 'enter', label: 'Enter', options: this.animOptions };
   protected readonly exitField: FieldDef = { kind: 'select', key: 'exit', label: 'Exit', options: this.animOptions };
   protected readonly delayField: FieldDef = { kind: 'slider', key: 'delay', label: 'Enter delay', min: 0, max: 2000, step: 50, unit: 'ms' };
+
+  protected readonly sceneBg = computed(() => ({ ...DEFAULT_BACKGROUND, ...this.editor.scene()?.background }));
+  protected readonly bgKindField: FieldDef = { kind: 'select', key: 'kind', label: 'Type', options: BACKGROUND_KINDS };
+  protected readonly bgColorField: FieldDef = { kind: 'color', key: 'color', label: 'Colour' };
+  protected readonly bgColor2Field: FieldDef = { kind: 'color', key: 'color2', label: 'Second colour' };
+  protected readonly bgImageField: FieldDef = { kind: 'image', key: 'image', label: 'Image' };
+  protected readonly bgDimField: FieldDef = { kind: 'slider', key: 'dim', label: 'Darken', min: 0, max: 0.8, step: 0.05 };
+
+  protected setBg(patch: Partial<SceneBackground>, coalesceKey?: string): void {
+    this.editor.setBackground(patch, coalesceKey);
+  }
+
+  protected asKind(v: PropValue): BackgroundKind {
+    return (BACKGROUND_KINDS.find((k) => k.value === v)?.value ?? 'transparent');
+  }
+
+  protected asStr(v: PropValue): string {
+    return typeof v === 'string' ? v : '';
+  }
+
+  protected asNum(v: PropValue): number {
+    return typeof v === 'number' ? v : Number(v) || 0;
+  }
 
   protected readonly resolved = computed<ResolvedStyle>(() => {
     const w = this.editor.selected();

@@ -1,9 +1,9 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
-import { THEMES, type ThemeId } from '@cos/shared';
+import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
+import { BACKGROUND_KINDS, THEMES, type BackgroundKind, type ThemeId } from '@cos/shared';
 import { LiveStore } from '../core/live.store';
-import { EditorStore, type CanvasBackground } from './editor.store';
+import { EditorStore } from './editor.store';
 
-/** Above the canvas: theme, snapping, preview background, global motion and the OBS bridge. */
+/** Above the canvas: theme, on-air background, snapping, global motion and the OBS bridge. */
 @Component({
   selector: 'cos-canvas-toolbar',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -16,12 +16,12 @@ import { EditorStore, type CanvasBackground } from './editor.store';
         }
       </select>
     </label>
-    <label>
-      Preview
-      <select [value]="editor.background()" (change)="setBg($event)">
-        <option value="sample" [selected]="editor.background() === 'sample'">Sample pitch</option>
-        <option value="checker" [selected]="editor.background() === 'checker'">Transparent</option>
-        <option value="dark" [selected]="editor.background() === 'dark'">Dark</option>
+    <label title="Shown on /output too. Transparent lets your OBS sources show through.">
+      Background
+      <select [value]="bgKind()" (change)="setBg($event)">
+        @for (k of bgKinds; track k.value) {
+          <option [value]="k.value" [selected]="k.value === bgKind()">{{ k.label }}</option>
+        }
       </select>
     </label>
     <label class="chk">
@@ -114,8 +114,14 @@ export class CanvasToolbarComponent {
     this.editor.setTheme((e.target as HTMLSelectElement).value as ThemeId);
   }
 
+  protected readonly bgKinds = BACKGROUND_KINDS;
+  protected readonly bgKind = computed<BackgroundKind>(() => this.editor.scene()?.background?.kind ?? 'transparent');
+
   protected setBg(e: Event): void {
-    this.editor.background.set((e.target as HTMLSelectElement).value as CanvasBackground);
+    const kind = (e.target as HTMLSelectElement).value as BackgroundKind;
+    this.editor.setBackground({ kind });
+    // colour, gradient and image have more options in the scene panel
+    if (kind === 'color' || kind === 'gradient' || kind === 'image') this.editor.selectedId.set(null);
   }
 
   protected toggleReduce(): void {

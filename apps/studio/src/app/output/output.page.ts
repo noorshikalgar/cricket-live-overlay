@@ -12,10 +12,11 @@ import {
   untracked,
   viewChild,
 } from '@angular/core';
-import type { Scene } from '@cos/shared';
+import { CANVAS_H, CANVAS_W, type Scene } from '@cos/shared';
 import { LiveStore } from '../core/live.store';
 import { Flip } from '../motion/gsap';
 import { MotionService } from '../motion/motion.service';
+import { SceneBackgroundComponent } from '../widgets/scene-background.component';
 import { SceneRendererComponent } from '../widgets/scene-renderer.component';
 
 /**
@@ -25,12 +26,13 @@ import { SceneRendererComponent } from '../widgets/scene-renderer.component';
  */
 @Component({
   selector: 'cos-output-page',
-  imports: [SceneRendererComponent],
+  imports: [SceneBackgroundComponent, SceneRendererComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  host: { '[class.reduce-motion]': 'motion.reduced()' },
+  host: { '[class.reduce-motion]': 'motion.reduced()', '(window:resize)': 'fit()' },
   template: `
-    <div class="stage" #stage>
+    <div class="stage" #stage [style.transform]="transform()">
       @if (displayed(); as scene) {
+        <cos-scene-background [background]="scene.background" />
         <cos-scene-renderer [scene]="scene" [match]="store.match()" [teamColor]="store.teamColor()" mode="output" />
       }
     </div>
@@ -38,16 +40,19 @@ import { SceneRendererComponent } from '../widgets/scene-renderer.component';
   styles: `
     :host {
       display: block;
-      width: 1920px;
-      height: 1080px;
+      position: fixed;
+      inset: 0;
       overflow: hidden;
       cursor: none;
       background: transparent;
     }
     .stage {
-      position: relative;
+      position: absolute;
+      left: 0;
+      top: 0;
       width: 1920px;
       height: 1080px;
+      transform-origin: 0 0;
     }
   `,
 })
@@ -66,9 +71,25 @@ export default class OutputPage {
   });
   protected readonly displayed = signal<Scene | null>(null);
   private switching = false;
+  /** 1:1 in OBS (viewport is exactly 1920×1080); scaled to fit and centred in any other window */
+  protected readonly transform = signal('none');
+
+  protected fit(): void {
+    const w = window.innerWidth;
+    const h = window.innerHeight;
+    if (w === CANVAS_W && h === CANVAS_H) {
+      this.transform.set('none');
+      return;
+    }
+    const s = Math.min(w / CANVAS_W, h / CANVAS_H);
+    const x = Math.round((w - CANVAS_W * s) / 2);
+    const y = Math.round((h - CANVAS_H * s) / 2);
+    this.transform.set(`translate(${x}px, ${y}px) scale(${s})`);
+  }
 
   constructor() {
     document.documentElement.classList.add('is-output');
+    this.fit();
     this.store.connect('output');
     effect(() => {
       const next = this.target();
