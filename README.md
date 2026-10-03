@@ -72,12 +72,24 @@ curl -X POST http://localhost:4300/api/events/SIX
 
 Types: `FOUR SIX WICKET FIFTY HUNDRED MAIDEN DRS DRINKS INNINGS_BREAK INNINGS_END MATCH_RESULT`.
 
+### Live cards (scorecard, team, player)
+
+Open the **Live cards** tab in the Studio's left panel while you talk:
+
+- **Scorecard**: current innings or any earlier one. Batting card with dismissals and who is batting now, bowling figures, extras, total, *yet to bat*, fall of wickets.
+- **Teams**: a team's playing XI with what each player has done: runs (balls), batting now, yet to bat, bowling figures. Roles, captain and keeper.
+- **Players**: one tap for the two batters and the bowler, or search both XIs. Shows role, batting and bowling style and this match's figures. *Show photo* is off by default; check you have the rights before showing player photos on a public stream.
+
+Cards open on the **on-air scene** with their enter animation. In the panel's *On air* list each card can be minimised to a title strip or closed (and reopened). They are normal widgets, so you can also move, resize and restyle them on the canvas.
+
+Data cost: the scorecard is 1 call and refreshes at most once a minute, only while a card is on air. The playing XIs are 1 call, fetched once per match (⟳ in the panel refreshes either on demand).
+
 ### Scene background
 
 Each scene has a **Background** (canvas toolbar, or the scene panel when nothing is selected) and it goes on air exactly as you see it:
 
 - **Transparent** (default): nothing is drawn, so the OBS sources below the Browser Source (webcam, match feed) show through. The Studio shows a checkerboard.
-- **Sample pitch**, **Solid colour**, **Gradient**, **Image** (upload): drawn behind the widgets on `/output` too, with an optional *Darken* overlay. Use these for full-screen scenes such as breaks; they cover everything below the Browser Source.
+- **Sample pitch**, **Solid colour**, **Gradient**, **Image** (choose Image, then **⬆ Upload…** in the toolbar): drawn behind the widgets on `/output` too, with an optional *Darken* overlay. Use these for full-screen scenes such as breaks; they cover everything below the Browser Source.
 
 `/output` is exactly 1:1 when the window is 1920×1080 (OBS). In any other browser window it scales to fit and centres, so you can preview it anywhere.
 

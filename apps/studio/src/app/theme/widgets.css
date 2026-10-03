@@ -150,3 +150,124 @@
 .empty-dash {
   color: var(--muted);
 }
+
+/* ---- cards (scorecard, team, player) ---- */
+.card {
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  font-size: calc(var(--u, 22px) * var(--fs));
+}
+.card-head {
+  display: flex;
+  align-items: center;
+  gap: 0.6em;
+  padding: 0.55em var(--pad);
+  border-bottom: 1px solid var(--chip);
+  flex: none;
+  position: relative;
+}
+.card-head::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 6px;
+  background: var(--team, var(--accent));
+}
+.card-title {
+  font-weight: 700;
+  font-size: 1.2em;
+  letter-spacing: 0.01em;
+}
+.card-sub {
+  color: var(--muted);
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.75em;
+}
+.card-score {
+  margin-left: auto;
+  font-weight: 700;
+  font-size: 1.25em;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.card-body {
+  flex: 1;
+  min-height: 0;
+  padding: 0.4em var(--pad) 0.6em;
+  overflow: hidden;
+}
+.card.minimized {
+  height: auto !important;
+  border-radius: var(--radius);
+}
+.card.minimized .card-head {
+  border-bottom: 0;
+}
+.tbl {
+  width: 100%;
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+}
+.tbl th {
+  text-align: right;
+  font-weight: 500;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-size: 0.72em;
+  padding: 0.2em 0.35em;
+}
+.tbl th:first-child,
+.tbl td:first-child {
+  text-align: left;
+  padding-left: 0;
+}
+.tbl td {
+  text-align: right;
+  padding: 0.16em 0.35em;
+  border-top: 1px solid var(--chip);
+  white-space: nowrap;
+}
+.tbl td.name {
+  font-weight: 600;
+  max-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.tbl .muted,
+.card .muted {
+  color: var(--muted);
+  font-weight: 500;
+}
+.tbl tr.live td.name {
+  color: var(--accent);
+}
+.tbl .big {
+  font-weight: 700;
+}
+.tag-mini {
+  display: inline-block;
+  font-size: 0.62em;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  padding: 0.05em 0.35em;
+  margin-left: 0.35em;
+  border-radius: 4px;
+  background: var(--chip);
+  color: var(--muted);
+  vertical-align: middle;
+}
+.card-empty {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--muted);
+  text-align: center;
+  padding: 1em;
+}

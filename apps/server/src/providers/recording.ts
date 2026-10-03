@@ -3,6 +3,11 @@ import {
   round2,
   type BallChip,
   type Batter,
+  type CardInnings,
+  type CardPartnership,
+  type FallOfWicket,
+  type Scorecard,
+  type Squads,
   type Bowler,
   type Innings,
   type MatchFormat,
@@ -39,6 +44,8 @@ export interface Recording {
     teams: [Team, Team];
     /** shortCode of the team batting first */
     battingFirst: string;
+    /** batting order per team code, with roles; used for squads and "yet to bat" */
+    squads?: Record<string, { name: string; role: string }[]>;
   };
   deliveries: RecordedDelivery[];
 }
@@ -367,5 +374,178 @@ export function toSummary(state: MatchState, title: string): MatchSummary {
     phase: state.phase,
     statusText: state.statusText,
     scoreLine: summaryLine(state),
+  };
+}
+
+/** Dismissal text in scorecard style; the fielder is picked deterministically from the bowling side. */
+function dismissal(d: RecordedDelivery, fielders: string[]): string {
+  const w = d.wicket;
+  if (!w) return '';
+  const fielder = fielders.length ? fielders[(d.batter.length + d.bowler.length) % fielders.length] : 'sub';
+  switch (w.kind) {
+    case 'bowled':
+      return `b ${d.bowler}`;
+    case 'lbw':
+      return `lbw b ${d.bowler}`;
+    case 'run out':
+      return `run out (${fielder})`;
+    default:
+      return fielder === d.bowler ? `c & b ${d.bowler}` : `c ${fielder} b ${d.bowler}`;
+  }
+}
+
+/** Full scorecard after the first `count` deliveries, for the mock provider's cards. */
+export function buildScorecard(rec: Recording, count: number, now: number): Scorecard {
+  const all = rec.deliveries.slice(0, Math.max(0, Math.min(count, rec.deliveries.length)));
+  const first = rec.meta.battingFirst;
+  const second = otherTeam(rec, first).shortCode;
+  const innings: CardInnings[] = [];
+  const state = buildState(rec, count, now);
+
+  for (let i = 0; i <= (all.at(-1)?.inn ?? -1); i++) {
+    const code = i === 0 ? first : second;
+    const bowlCode = i === 0 ? second : first;
+    const ds = all.filter((d) => d.inn === i);
+    const lineup = rec.meta.squads?.[code]?.map((p) => p.name) ?? [];
+    const fielders = rec.meta.squads?.[bowlCode]?.map((p) => p.name) ?? [];
+    const order: string[] = [];
+    const bat = new Map<string, { runs: number; balls: number; fours: number; sixes: number; out: string }>();
+    const bowl = new Map<string, { balls: number; runs: number; wickets: number; wides: number; noBalls: number; overRuns: number[] }>();
+    const extras = { total: 0, byes: 0, legByes: 0, wides: 0, noBalls: 0, penalty: 0 };
+    const fow: FallOfWicket[] = [];
+    const parts: CardPartnership[] = [];
+    let pair = { a: '', aRuns: 0, b: '', bRuns: 0, runs: 0, balls: 0 };
+    let runs = 0;
+    let wkts = 0;
+    let legal = 0;
+
+    const seen = (n: string) => {
+      if (!bat.has(n)) {
+        bat.set(n, { runs: 0, balls: 0, fours: 0, sixes: 0, out: '' });
+        order.push(n);
+      }
+    };
+    for (const d of ds) {
+      seen(d.batter);
+      seen(d.nonStriker);
+      if (!pair.a) pair = { a: d.batter, aRuns: 0, b: d.nonStriker, bRuns: 0, runs: 0, balls: 0 };
+      if (pair.a !== d.batter && pair.b !== d.batter) {
+        if (pair.a === '' || bat.get(pair.a)?.out) pair = { ...pair, a: d.batter, aRuns: 0 };
+        else pair = { ...pair, b: d.batter, bRuns: 0 };
+      }
+      if (!pair.b && d.nonStriker !== pair.a) pair = { ...pair, b: d.nonStriker };
+      const b = bat.get(d.batter)!;
+      if (d.extraType !== 'wide') b.balls += 1;
+      b.runs += d.runs;
+      if (d.runs === 4) b.fours += 1;
+      if (d.runs === 6) b.sixes += 1;
+      const bw = bowl.get(d.bowler) ?? { balls: 0, runs: 0, wickets: 0, wides: 0, noBalls: 0, overRuns: [] };
+      bowl.set(d.bowler, bw);
+      const total = d.runs + d.extras;
+      runs += total;
+      pair.runs += total;
+      if (pair.a === d.batter) pair.aRuns += d.runs;
+      else pair.bRuns += d.runs;
+      const over = Math.floor(bw.balls / 6);
+      if (d.extraType === 'bye') extras.byes += d.extras;
+      else if (d.extraType === 'legbye') extras.legByes += d.extras;
+      else if (d.extraType === 'wide') {
+        extras.wides += d.extras;
+        bw.wides += d.extras;
+      } else if (d.extraType === 'noball') {
+        extras.noBalls += d.extras;
+        bw.noBalls += d.extras;
+      }
+      extras.total += d.extras;
+      const toBowler = d.extraType === 'bye' || d.extraType === 'legbye' ? d.runs : total;
+      bw.runs += toBowler;
+      bw.overRuns[over] = (bw.overRuns[over] ?? 0) + toBowler;
+      if (isLegal(d)) {
+        legal += 1;
+        bw.balls += 1;
+        pair.balls += 1;
+      }
+      if (d.wicket) {
+        wkts += 1;
+        const outName = d.wicket.player;
+        const ob = bat.get(outName);
+        if (ob) ob.out = dismissal({ ...d, batter: outName }, fielders);
+        if (d.wicket.kind !== 'run out') bw.wickets += 1;
+        fow.push({ wicket: wkts, runs, over: ballsToOvers(legal), player: outName });
+        parts.push({ bat1: pair.a, bat1Runs: pair.aRuns, bat2: pair.b, bat2Runs: pair.bRuns, runs: pair.runs, balls: pair.balls });
+        const survivor = outName === pair.a ? pair.b : pair.a;
+        pair = { a: survivor, aRuns: 0, b: '', bRuns: 0, runs: 0, balls: 0 };
+      }
+    }
+    if (pair.runs || pair.balls) parts.push({ bat1: pair.a, bat1Runs: pair.aRuns, bat2: pair.b, bat2Runs: pair.bRuns, runs: pair.runs, balls: pair.balls });
+
+    const inningsOver = i < (all.at(-1)?.inn ?? 0) || state.phase === 'complete';
+    const captain = lineup[0];
+    const keeper = rec.meta.squads?.[code]?.find((p) => p.role.startsWith('WK'))?.name;
+    innings.push({
+      team: code,
+      teamName: rec.meta.teams.find((t) => t.shortCode === code)?.name ?? code,
+      runs,
+      wickets: wkts,
+      overs: ballsToOvers(legal),
+      runRate: legal ? round2((runs / legal) * 6) : 0,
+      batters: order.map((name) => {
+        const b = bat.get(name)!;
+        return {
+          id: null,
+          name,
+          dismissal: b.out || (inningsOver ? 'not out' : 'batting'),
+          status: b.out ? 'out' : inningsOver ? 'not out' : 'batting',
+          runs: b.runs,
+          balls: b.balls,
+          fours: b.fours,
+          sixes: b.sixes,
+          strikeRate: b.balls ? round2((b.runs / b.balls) * 100) : 0,
+          captain: name === captain,
+          keeper: name === keeper,
+        };
+      }),
+      yetToBat: lineup.filter((n) => !bat.has(n)),
+      bowlers: [...bowl.entries()].map(([name, b]) => ({
+        id: null,
+        name,
+        overs: ballsToOvers(b.balls),
+        maidens: b.overRuns.filter((r, o) => r === 0 && b.balls >= (o + 1) * 6).length,
+        runs: b.runs,
+        wickets: b.wickets,
+        economy: b.balls ? round2((b.runs / b.balls) * 6) : 0,
+        wides: b.wides,
+        noBalls: b.noBalls,
+      })),
+      extras,
+      fallOfWickets: fow,
+      partnerships: parts,
+    });
+  }
+  return { matchId: rec.meta.id, innings, updatedAt: now };
+}
+
+export function buildSquads(rec: Recording, now: number): Squads {
+  return {
+    matchId: rec.meta.id,
+    updatedAt: now,
+    teams: rec.meta.teams.map((t) => {
+      const list = rec.meta.squads?.[t.shortCode] ?? [];
+      return {
+        code: t.shortCode,
+        name: t.name,
+        playingXI: list.map((p, i) => ({
+          id: `${t.shortCode}-${i}`,
+          name: p.name,
+          role: p.role.replace(' (c)', ''),
+          battingStyle: i % 3 === 1 ? 'Left-hand bat' : 'Right-hand bat',
+          bowlingStyle: i >= 7 ? (i % 2 ? 'Right-arm fast' : 'Left-arm orthodox') : i === 5 ? 'Right-arm off break' : '',
+          captain: i === 0,
+          keeper: p.role.startsWith('WK'),
+          imageUrl: null,
+        })),
+        bench: [],
+      };
+    }),
   };
 }

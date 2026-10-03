@@ -18,7 +18,101 @@
     "primaryColor": "#EAB308"
    }
   ],
-  "battingFirst": "MUM"
+  "battingFirst": "MUM",
+  "squads": {
+   "MUM": [
+    {
+     "name": "Arjun Mehta",
+     "role": "Batter (c)"
+    },
+    {
+     "name": "Rohan Desai",
+     "role": "Batter"
+    },
+    {
+     "name": "Kabir Shah",
+     "role": "Batter"
+    },
+    {
+     "name": "Vikram Rao",
+     "role": "Batter"
+    },
+    {
+     "name": "Ishaan Kulkarni",
+     "role": "Batter"
+    },
+    {
+     "name": "Dev Patil",
+     "role": "Batting Allrounder"
+    },
+    {
+     "name": "Aman Joshi",
+     "role": "WK-Batter"
+    },
+    {
+     "name": "Siddharth Nair",
+     "role": "Bowling Allrounder"
+    },
+    {
+     "name": "Harsh Gill",
+     "role": "Bowler"
+    },
+    {
+     "name": "Neel Pandey",
+     "role": "Bowler"
+    },
+    {
+     "name": "Om Bhatt",
+     "role": "Bowler"
+    }
+   ],
+   "CHE": [
+    {
+     "name": "Karthik Iyer",
+     "role": "Batter (c)"
+    },
+    {
+     "name": "Pranav Reddy",
+     "role": "Batter"
+    },
+    {
+     "name": "Surya Menon",
+     "role": "Batter"
+    },
+    {
+     "name": "Aditya Pillai",
+     "role": "Batter"
+    },
+    {
+     "name": "Rahul Varma",
+     "role": "Batter"
+    },
+    {
+     "name": "Naveen Kumar",
+     "role": "Batting Allrounder"
+    },
+    {
+     "name": "Ajay Swamy",
+     "role": "WK-Batter"
+    },
+    {
+     "name": "Manoj Raju",
+     "role": "Bowling Allrounder"
+    },
+    {
+     "name": "Gokul Das",
+     "role": "Bowler"
+    },
+    {
+     "name": "Hari Prasad",
+     "role": "Bowler"
+    },
+    {
+     "name": "Vijay Selvan",
+     "role": "Bowler"
+    }
+   ]
+  }
  },
  "deliveries": [
   {

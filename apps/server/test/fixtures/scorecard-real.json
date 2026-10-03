@@ -1,0 +1,380 @@
+{
+  "success": true,
+  "data": {
+    "match_id": 174923,
+    "innings": [
+      {
+        "bat_team": "Cricket South Africa Invitation XI",
+        "bat_team_short": "CSA Inv XI",
+        "bowl_team": "Australia",
+        "score": "180/5 (62.4 ov)",
+        "run_rate": 2.87,
+        "batsmen": [
+          {
+            "player_id": 18142,
+            "name": "Lesego Senokwane",
+            "short_name": "Lesego Senokwane",
+            "is_captain": true,
+            "is_keeper": false,
+            "runs": 7,
+            "balls": 32,
+            "fours": 1,
+            "sixes": 0,
+            "strike_rate": 21.88,
+            "out_desc": "c Marnus Labuschagne b Josh Hazlewood",
+            "wicket_code": "CAUGHT",
+            "mins": 1,
+            "dots": 28
+          },
+          {
+            "player_id": 10687,
+            "name": "Tshepang Dithole",
+            "short_name": "Dithole",
+            "is_captain": false,
+            "is_keeper": false,
+            "runs": 30,
+            "balls": 60,
+            "fours": 5,
+            "sixes": 0,
+            "strike_rate": 50,
+            "out_desc": "lbw b Pat Cummins",
+            "wicket_code": "LBW",
+            "mins": 4,
+            "dots": 49
+          },
+          {
+            "player_id": 14430,
+            "name": "Joshua Richards",
+            "short_name": "Joshua Richards",
+            "is_captain": false,
+            "is_keeper": false,
+            "runs": 28,
+            "balls": 53,
+            "fours": 4,
+            "sixes": 0,
+            "strike_rate": 52.83,
+            "out_desc": "c Pat Cummins b Matthew Kuhnemann",
+            "wicket_code": "CAUGHT",
+            "mins": 3,
+            "dots": 40
+          },
+          {
+            "player_id": 14308,
+            "name": "Neil Brand",
+            "short_name": "Neil Brand",
+            "is_captain": false,
+            "is_keeper": false,
+            "runs": 69,
+            "balls": 105,
+            "fours": 8,
+            "sixes": 0,
+            "strike_rate": 65.71,
+            "out_desc": "batting",
+            "wicket_code": "",
+            "mins": 10,
+            "dots": 65
+          },
+          {
+            "player_id": 13101,
+            "name": "Jiveshan Pillay",
+            "short_name": "Jiveshan Pillay",
+            "is_captain": false,
+            "is_keeper": false,
+            "runs": 9,
+            "balls": 38,
+            "fours": 1,
+            "sixes": 0,
+            "strike_rate": 23.68,
+            "out_desc": "lbw b Lyon",
+            "wicket_code": "LBW",
+            "mins": 3,
+            "dots": 32
+          },
+          {
+            "player_id": 1450377,
+            "name": "Jorich Van Schalkwyk",
+            "short_name": "Jorich Van Schalkwyk",
+            "is_captain": false,
+            "is_keeper": false,
+            "runs": 33,
+            "balls": 87,
+            "fours": 5,
+            "sixes": 0,
+            "strike_rate": 37.93,
+            "out_desc": "b Cooper Connolly",
+            "wicket_code": "BOWLED",
+            "mins": 10,
+            "dots": 70
+          },
+          {
+            "player_id": 13318,
+            "name": "Jean du Plessis",
+            "short_name": "Jean du Plessis",
+            "is_captain": false,
+            "is_keeper": true,
+            "runs": 0,
+            "balls": 1,
+            "fours": 0,
+            "sixes": 0,
+            "strike_rate": 0,
+            "out_desc": "batting",
+            "wicket_code": "",
+            "mins": 4,
+            "dots": 1
+          }
+        ],
+        "yet_to_bat": [
+          "Christopher King",
+          "Mthiwekhaya Nabe",
+          "Ntando Soni",
+          "Nealan van Heerden",
+          "Tladi Bokako",
+          "Semal Pillay",
+          "Wilco de Bruin",
+          "Jade de Klerk"
+        ],
+        "bowlers": [
+          {
+            "player_id": 7710,
+            "name": "Mitchell Starc",
+            "short_name": "Mitchell Starc",
+            "is_captain": false,
+            "overs": 7.4,
+            "maidens": 3,
+            "runs": 12,
+            "wickets": 0,
+            "no_balls": 0,
+            "wides": 0,
+            "economy": 1.6,
+            "dots": 0
+          },
+          {
+            "player_id": 15927,
+            "name": "Cooper Connolly",
+            "short_name": "Cooper Connolly",
+            "is_captain": false,
+            "overs": 2,
+            "maidens": 0,
+            "runs": 4,
+            "wickets": 1,
+            "no_balls": 0,
+            "wides": 0,
+            "economy": 2,
+            "dots": 0
+          },
+          {
+            "player_id": 6258,
+            "name": "Josh Hazlewood",
+            "short_name": "Josh Hazlewood",
+            "is_captain": false,
+            "overs": 5,
+            "maidens": 2,
+            "runs": 9,
+            "wickets": 1,
+            "no_balls": 0,
+            "wides": 0,
+            "economy": 1.8,
+            "dots": 0
+          },
+          {
+            "player_id": 8130,
+            "name": "Michael Neser",
+            "short_name": "Neser",
+            "is_captain": false,
+            "overs": 8,
+            "maidens": 1,
+            "runs": 30,
+            "wickets": 0,
+            "no_balls": 0,
+            "wides": 0,
+            "economy": 3.8,
+            "dots": 0
+          },
+          {
+            "player_id": 8631,
+            "name": "Scott Boland",
+            "short_name": "Boland",
+            "is_captain": false,
+            "overs": 10,
+            "maidens": 0,
+            "runs": 33,
+            "wickets": 0,
+            "no_balls": 0,
+            "wides": 0,
+            "economy": 3.3,
+            "dots": 0
+          },
+          {
+            "player_id": 8095,
+            "name": "Pat Cummins",
+            "short_name": "Pat Cummins",
+            "is_captain": true,
+            "overs": 4,
+            "maidens": 1,
+            "runs": 17,
+            "wickets": 1,
+            "no_balls": 0,
+            "wides": 0,
+            "economy": 4.2,
+            "dots": 0
+          },
+          {
+            "player_id": 7850,
+            "name": "Nathan Lyon",
+            "short_name": "Lyon",
+            "is_captain": false,
+            "overs": 12,
+            "maidens": 3,
+            "runs": 25,
+            "wickets": 1,
+            "no_balls": 0,
+            "wides": 0,
+            "economy": 2.1,
+            "dots": 0
+          },
+          {
+            "player_id": 13141,
+            "name": "Matthew Kuhnemann",
+            "short_name": "Matthew Kuhnemann",
+            "is_captain": false,
+            "overs": 9,
+            "maidens": 1,
+            "runs": 30,
+            "wickets": 1,
+            "no_balls": 0,
+            "wides": 0,
+            "economy": 3.3,
+            "dots": 0
+          },
+          {
+            "player_id": 8497,
+            "name": "Travis Head",
+            "short_name": "Travis Head",
+            "is_captain": false,
+            "overs": 3,
+            "maidens": 0,
+            "runs": 9,
+            "wickets": 0,
+            "no_balls": 0,
+            "wides": 0,
+            "economy": 3,
+            "dots": 0
+          },
+          {
+            "player_id": 10182,
+            "name": "Marnus Labuschagne",
+            "short_name": "Marnus Labuschagne",
+            "is_captain": false,
+            "overs": 2,
+            "maidens": 0,
+            "runs": 7,
+            "wickets": 0,
+            "no_balls": 0,
+            "wides": 0,
+            "economy": 3.5,
+            "dots": 0
+          }
+        ],
+        "extras": "Extras: 4 (b 2, lb 2, w 0, nb 0, p 0)",
+        "extras_detail": {
+          "total": 4,
+          "byes": 2,
+          "leg_byes": 2,
+          "wides": 0,
+          "no_balls": 0,
+          "penalty": 0
+        },
+        "fall_of_wickets": [
+          {
+            "wkt_num": 1,
+            "player": "Lesego Senokwane",
+            "runs": 21,
+            "over": 9.4
+          },
+          {
+            "wkt_num": 2,
+            "player": "Tshepang Dithole",
+            "runs": 65,
+            "over": 22.5
+          },
+          {
+            "wkt_num": 3,
+            "player": "Joshua Richards",
+            "runs": 82,
+            "over": 26.4
+          },
+          {
+            "wkt_num": 4,
+            "player": "Jiveshan Pillay",
+            "runs": 105,
+            "over": 37.5
+          },
+          {
+            "wkt_num": 5,
+            "player": "Jorich Van Schalkwyk",
+            "runs": 179,
+            "over": 61.5
+          }
+        ],
+        "partnerships": [
+          {
+            "bat1_name": "Lesego Senokwane",
+            "bat1_runs": 7,
+            "bat2_name": "Dithole",
+            "bat2_runs": 12,
+            "total_runs": 21,
+            "total_balls": 58
+          },
+          {
+            "bat1_name": "Joshua Richards",
+            "bat1_runs": 26,
+            "bat2_name": "Dithole",
+            "bat2_runs": 18,
+            "total_runs": 44,
+            "total_balls": 79
+          },
+          {
+            "bat1_name": "Joshua Richards",
+            "bat1_runs": 2,
+            "bat2_name": "Neil Brand",
+            "bat2_runs": 14,
+            "total_runs": 17,
+            "total_balls": 23
+          },
+          {
+            "bat1_name": "Jiveshan Pillay",
+            "bat1_runs": 9,
+            "bat2_name": "Neil Brand",
+            "bat2_runs": 14,
+            "total_runs": 23,
+            "total_balls": 67
+          },
+          {
+            "bat1_name": "Van Schalkwyk",
+            "bat1_runs": 33,
+            "bat2_name": "Neil Brand",
+            "bat2_runs": 40,
+            "total_runs": 74,
+            "total_balls": 144
+          },
+          {
+            "bat1_name": "Jean du Plessis",
+            "bat1_runs": 0,
+            "bat2_name": "Neil Brand",
+            "bat2_runs": 1,
+            "total_runs": 1,
+            "total_balls": 5
+          }
+        ],
+        "innings_id": 0,
+        "is_declared": false,
+        "is_following_on": false
+      }
+    ],
+    "match_header": {
+      "name": "Cricket South Africa Invitation XI vs Australia, 2 Days Warm-Up Match, Australia tour of South Africa, 2026 - Live Cricket Score, Commentary",
+      "start_date": "2026-10-03T07:30:00.000Z",
+      "location": "Senwes Park"
+    }
+  }
+}

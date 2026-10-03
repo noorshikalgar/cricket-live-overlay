@@ -14,7 +14,10 @@ export type WidgetType =
   | 'camera'
   | 'text'
   | 'image'
-  | 'clock';
+  | 'clock'
+  | 'scorecard'
+  | 'teamCard'
+  | 'playerCard';
 
 export type AnimPreset = 'none' | 'fade' | 'slideUp' | 'slideDown' | 'slideLeft' | 'slideRight' | 'wipe';
 

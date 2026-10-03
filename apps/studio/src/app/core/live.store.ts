@@ -12,7 +12,9 @@ import {
   type ObsStatus,
   type PollStatus,
   type Scene,
+  type Scorecard,
   type ServerMessage,
+  type Squads,
 } from '@cos/shared';
 import { WsService } from './ws.service';
 
@@ -37,6 +39,9 @@ export class LiveStore {
   readonly clients = signal({ outputs: 0, studios: 0 });
   readonly obs = signal<ObsStatus>({ enabled: false, connected: false, error: null });
   readonly lastError = signal<string | null>(null);
+  /** detail data for on-air cards */
+  readonly scorecard = signal<Scorecard | null>(null);
+  readonly squads = signal<Squads | null>(null);
   /** fires for every auto-detected and manual event */
   readonly events = new Subject<MatchEvent>();
   /** fires when the on-air scene changes, before signals update, so Output can capture Flip state */
@@ -130,6 +135,12 @@ export class LiveStore {
         return;
       case 'clients':
         this.clients.set({ outputs: m.outputs, studios: m.studios });
+        return;
+      case 'cards:scorecard':
+        this.scorecard.set(m.scorecard);
+        return;
+      case 'cards:squads':
+        this.squads.set(m.squads);
         return;
       case 'obs:status':
         this.obs.set(m.status);

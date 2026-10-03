@@ -2,7 +2,8 @@ import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import Fastify from 'fastify';
 import fastifyStatic from '@fastify/static';
-import { newId, type MatchEventType } from '@cos/shared';
+import { CARD_WIDGET_TYPES, newId, type MatchEventType } from '@cos/shared';
+import { CardService } from './cards';
 import { manualEvent } from './events';
 import { DATA_DIR, SCENES_DIR, STUDIO_DIST, UPLOADS_DIR, loadConfig } from './config';
 import { Hub } from './hub';
@@ -20,18 +21,37 @@ const budget = new CallBudget(path.join(DATA_DIR, 'usage.json'), cfg.dailyCallLi
 const obs = new ObsBridge(cfg.obs, (status) => hub.broadcast({ type: 'obs:status', status }));
 const hub = new Hub(scenes, obs);
 const provider = createProvider(cfg);
+const cards = new CardService(provider, {
+  onScorecard: (scorecard) => hub.broadcast({ type: 'cards:scorecard', scorecard }),
+  onSquads: (squads) => hub.broadcast({ type: 'cards:squads', squads }),
+  onError: (message) => hub.broadcast({ type: 'error', message }),
+});
+
+/** Which card data the on-air scene needs right now. */
+function cardsOnAir(): { scorecard: boolean; squads: boolean } {
+  const id = scenes.getSettings().activeSceneId;
+  const widgets = (id ? scenes.get(id)?.widgets : undefined)?.filter((w) => w.visible) ?? [];
+  return {
+    scorecard: widgets.some((w) => (CARD_WIDGET_TYPES as readonly string[]).includes(w.type)),
+    squads: widgets.some((w) => w.type === 'teamCard' || w.type === 'playerCard'),
+  };
+}
+
 const poller = new Poller(
   provider,
   budget,
   { minSeconds: cfg.minPollSeconds, fixedSeconds: cfg.pollSeconds },
   {
-    onState: (state) => hub.broadcast({ type: 'match:state', state }),
+    onState: (state) => {
+      hub.broadcast({ type: 'match:state', state });
+      if (state && !state.isStale) cards.onPoll(cardsOnAir());
+    },
     onEvent: (event) => hub.broadcast({ type: 'match:event', event }),
     onStatus: (status) => hub.broadcast({ type: 'poll:status', status }),
     onMatches: (matches) => hub.broadcast({ type: 'matches:list', matches }),
   },
 );
-hub.attach(poller);
+hub.attach(poller, cards);
 
 const app = Fastify({ logger: { level: 'warn' }, bodyLimit: 6 * 1024 * 1024 });
 
@@ -114,7 +134,10 @@ await app.listen({ port: cfg.port, host: '0.0.0.0' });
 poller.setControl(scenes.getSettings().pollMode, scenes.getSettings().pollSeconds);
 poller.start();
 const selected = scenes.getSettings().selectedMatchId;
-if (selected) poller.select(selected);
+if (selected) {
+  cards.reset(selected);
+  poller.select(selected);
+}
 if (scenes.getSettings().obsBridge) void obs.setEnabled(true);
 
 console.log(`\n  Cricket Overlay Studio server  ·  provider: ${provider.name}`);

@@ -1,5 +1,6 @@
 import type { MatchEvent, MatchEventType, MatchState, MatchSummary, PollStatus } from './match';
 import type { AppSettings, Scene, SceneSummary } from './scene';
+import type { CardKind, Scorecard, Squads } from './cards';
 
 export type ClientRole = 'studio' | 'output';
 
@@ -30,6 +31,8 @@ export type ServerMessage =
   | { type: 'settings'; settings: AppSettings }
   | { type: 'clients'; outputs: number; studios: number }
   | { type: 'obs:status'; status: ObsStatus }
+  | { type: 'cards:scorecard'; scorecard: Scorecard | null }
+  | { type: 'cards:squads'; squads: Squads | null }
   | { type: 'error'; message: string };
 
 /** Messages clients send up. Outputs only ever send `hello`. */
@@ -44,6 +47,8 @@ export type ClientMessage =
   | { type: 'matches:refresh' }
   /** poll the selected match right now (manual mode or an impatient commentator) */
   | { type: 'poll:now' }
+  /** fetch detail data for cards (budget-guarded and cached on the server) */
+  | { type: 'cards:fetch'; kind: CardKind; force?: boolean }
   | { type: 'settings:update'; settings: Partial<AppSettings> };
 
 export function isClientMessage(v: unknown): v is ClientMessage {

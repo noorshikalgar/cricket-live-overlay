@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { BACKGROUND_KINDS, THEMES, type BackgroundKind, type ThemeId } from '@cos/shared';
 import { LiveStore } from '../core/live.store';
 import { EditorStore } from './editor.store';
@@ -24,6 +24,12 @@ import { EditorStore } from './editor.store';
         }
       </select>
     </label>
+ @if (bgKind() === 'image') {
+      <label class="btn upload" [title]="'Upload a background image for this scene'">
+        {{ uploading() ? 'Uploading…' : '⬆ Upload…' }}
+        <input type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml,image/gif" hidden (change)="upload($event)" />
+      </label>
+    }
     <label class="chk">
       <input type="checkbox" [checked]="editor.snap()" (change)="editor.snap.set(!editor.snap())" />
       Snap 8px
@@ -100,6 +106,10 @@ import { EditorStore } from './editor.store';
     .dot.bad {
       background: #ef4444;
     }
+    .upload {
+      padding: 4px 10px;
+      cursor: pointer;
+    }
     .stale {
       color: #fbbf24;
     }
@@ -116,6 +126,27 @@ export class CanvasToolbarComponent {
 
   protected readonly bgKinds = BACKGROUND_KINDS;
   protected readonly bgKind = computed<BackgroundKind>(() => this.editor.scene()?.background?.kind ?? 'transparent');
+
+  protected readonly uploading = signal(false);
+
+  protected async upload(e: Event): Promise<void> {
+    const input = e.target as HTMLInputElement;
+    const file = input.files?.[0];
+    input.value = '';
+    if (!file) return;
+    this.uploading.set(true);
+    try {
+      const res = await fetch('/api/uploads', { method: 'POST', body: file, headers: { 'content-type': file.type } });
+      const body = (await res.json()) as { url?: string; error?: string };
+      if (!res.ok || !body.url) throw new Error(body.error ?? `Upload failed (${res.status})`);
+      this.editor.setBackground({ kind: 'image', image: body.url });
+    } catch (err) {
+      this.live.lastError.set(err instanceof Error ? err.message : 'Upload failed');
+      setTimeout(() => this.live.lastError.set(null), 5000);
+    } finally {
+      this.uploading.set(false);
+    }
+  }
 
   protected setBg(e: Event): void {
     const kind = (e.target as HTMLSelectElement).value as BackgroundKind;
