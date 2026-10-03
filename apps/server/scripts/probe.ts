@@ -5,7 +5,8 @@
 // (CricketLiveApi); PROBE_AUTH=header sends X-API-Key, PROBE_AUTH=query:apikey sends ?apikey=.
 import { mkdirSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
-import { DATA_DIR } from '../src/config';
+import { DATA_DIR, loadConfig } from '../src/config';
+import { CallBudget } from '../src/usage';
 
 const target = process.argv[2];
 const key = process.env['CRICKET_API_KEY'] ?? '';
@@ -24,6 +25,15 @@ if (!target.startsWith('http') && !base) {
   console.error('Set CRICKET_API_BASE_URL in .env, or pass a full URL');
   process.exit(1);
 }
+
+// probes spend from the same daily / per-minute budget as the server
+const cfg = loadConfig();
+const budget = new CallBudget(path.join(DATA_DIR, 'usage.json'), cfg.dailyCallLimit, cfg.perMinuteLimit);
+if (!budget.tryAcquire()) {
+  console.error(`Not sent: ${budget.blockedReason()}`);
+  process.exit(1);
+}
+console.log(`call ${budget.calls}/${cfg.dailyCallLimit || '∞'} today · ${budget.lastMinute}/${cfg.perMinuteLimit || '∞'} this minute`);
 
 const url = new URL(target.startsWith('http') ? target : base + (target.startsWith('/') ? target : `/${target}`));
 const headers: Record<string, string> = { accept: 'application/json' };

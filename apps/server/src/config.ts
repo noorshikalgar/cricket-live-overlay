@@ -26,6 +26,8 @@ export interface Config {
   /** overrides the provider's default base URL */
   apiBaseUrl: string;
   minPollSeconds: number;
+  /** fixed poll interval in seconds; 0 = derive from the budget */
+  pollSeconds: number;
   mockBallSeconds: number;
   obs: { url: string; password: string; webcamSource: string };
 }
@@ -39,6 +41,7 @@ export function loadConfig(): Config {
     perMinuteLimit: num('RATE_LIMIT_PER_MINUTE', 0),
     apiBaseUrl: (process.env['CRICKET_API_BASE_URL'] ?? '').trim().replace(/\/+$/, ''),
     minPollSeconds: num('MIN_POLL_SECONDS', 3),
+    pollSeconds: num('POLL_SECONDS', 0),
     mockBallSeconds: num('MOCK_BALL_SECONDS', 3),
     obs: {
       url: process.env['OBS_WS_URL'] ?? 'ws://127.0.0.1:4455',

@@ -10,20 +10,20 @@ import { ObsBridge } from './obs';
 import { Poller } from './poller';
 import { createProvider } from './providers';
 import { SceneStore, validateScene } from './scenes';
-import { UsageCounter } from './usage';
+import { CallBudget } from './usage';
 
 const cfg = loadConfig();
 mkdirSync(UPLOADS_DIR, { recursive: true });
 
 const scenes = new SceneStore(SCENES_DIR);
-const usage = new UsageCounter(path.join(DATA_DIR, 'usage.json'));
+const budget = new CallBudget(path.join(DATA_DIR, 'usage.json'), cfg.dailyCallLimit, cfg.perMinuteLimit);
 const obs = new ObsBridge(cfg.obs, (status) => hub.broadcast({ type: 'obs:status', status }));
 const hub = new Hub(scenes, obs);
 const provider = createProvider(cfg);
 const poller = new Poller(
   provider,
-  usage,
-  { dailyLimit: cfg.dailyCallLimit, minSeconds: cfg.minPollSeconds, perMinute: cfg.perMinuteLimit },
+  budget,
+  { minSeconds: cfg.minPollSeconds, fixedSeconds: cfg.pollSeconds },
   {
     onState: (state) => hub.broadcast({ type: 'match:state', state }),
     onEvent: (event) => hub.broadcast({ type: 'match:event', event }),
@@ -120,7 +120,7 @@ console.log(`  Output  http://localhost:${cfg.port}/output   (OBS Browser Source
 
 const shutdown = () => {
   scenes.flushAll();
-  usage.flush();
+  budget.flush();
   process.exit(0);
 };
 process.on('SIGINT', shutdown);

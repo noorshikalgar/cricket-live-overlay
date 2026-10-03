@@ -83,10 +83,21 @@ Set `CRICKET_PROVIDER` in `.env`:
 | Provider | Status |
 | --- | --- |
 | `mock` | Default. Replays `apps/server/data/recordings/demo-t20.json`. Regenerate with `npm run record -w apps/server [seed]` |
-| `cricketliveapi` | Adapter scaffolded in `apps/server/src/providers/cricketliveapi.ts`. Endpoint paths and field names are **placeholders** (`TODO(confirm)`) until real response samples from their dashboard docs are pasted in. Auth via `X-API-Key` |
+| `cricketliveapi` | Mapped from the samples in their docs (Bearer auth). Combines `/cricket/commentary` (ball feed, every poll), `/cricket/matches/live` (score line, ≥15 s), `/cricket/scorecard` (figures, ≥30 s) and `/cricket/match-facts` (once). FOUR / SIX / WICKET banners fire from the ball feed. Fields beyond the doc samples are read defensively (`TODO(verify)`) |
 | `sportmonks` | Stub mapped from Sportmonks Cricket v2 public docs, not yet verified against a live response |
 
-The poll interval spreads your daily quota over a match: `max(MIN_POLL_SECONDS, matchSeconds / (DAILY_CALL_LIMIT × 0.9))` with T20 = 4 h, ODI = 8.5 h, Test = 7 h/day. On 5,000 calls that is ~3.2 s for a T20 and ~6.8 s for an ODI. Breaks back off to 60 s, a finished match stops polling, and the top bar shows calls used today (amber from 80 %). On errors or HTTP 429 the last good state keeps showing; after 30 s it is flagged stale in the Studio only, never on the Output.
+### API budget (hard caps)
+
+`DAILY_CALL_LIMIT` and `RATE_LIMIT_PER_MINUTE` are hard caps: every HTTP call (server and `npm run probe`) must acquire budget first, and a refused call is never sent. The count lives in `apps/server/data/usage.json`, saved on every call, so restarts can't double-spend. Optional sources always leave one call free for the ball feed. When the day's calls are gone, polling stops with a message in the Studio until 00:00 UTC.
+
+On small plans (daily limit under 1,000) the match list is only fetched when you press ↻ in the Studio.
+
+| Plan | `.env` |
+| --- | --- |
+| Free (100/day, 5/min) — testing | `DAILY_CALL_LIMIT=100`, `RATE_LIMIT_PER_MINUTE=5`, `POLL_SECONDS=60` → ~3 calls/min, ~30 min of live data a day |
+| Paid | raise both limits and set `POLL_SECONDS=0` to spread the daily budget across a whole match |
+
+With `POLL_SECONDS=0` the interval is `max(min, matchSeconds / (daily × 0.9), 60 / (perMinute × 0.75)) × callsPerPoll` with T20 = 4 h, ODI = 8.5 h, Test = 7 h/day, never faster than 10 s for CricketLiveApi (their cache). Breaks back off to at least 60 s, a finished match stops polling, and the top bar shows calls used today (amber from 80 %). On errors or HTTP 429 the last good state keeps showing; after 30 s it is flagged stale in the Studio only, never on the Output.
 
 ### Adding a provider
 

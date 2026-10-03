@@ -1,5 +1,10 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { CricketLiveApiProvider, shortCode } from '../src/providers/cricketliveapi';
+import { mkdtempSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import path from 'node:path';
+import { detectEvents } from '../src/events';
+import { CricketLiveApiProvider, ballKind, mapCommentary, parseScoreLine, shortCode } from '../src/providers/cricketliveapi';
+import { CallBudget } from '../src/usage';
 
 // Sample response from the CricketLiveApi docs for GET /cricket/matches/live
 const LIVE_SAMPLE = {
@@ -47,5 +52,95 @@ describe('CricketLiveApiProvider', () => {
     expect(shortCode('Mumbai Indians')).toBe('MI');
     expect(shortCode('Chennai Super Kings')).toBe('CSK');
     expect(shortCode('India')).toBe('IND');
+  });
+});
+
+// Doc samples for scorecard and commentary
+const SCORECARD = {
+  success: true,
+  data: {
+    match_id: 155409,
+    innings: [
+      {
+        team: 'Mumbai Indians',
+        runs: 187,
+        wickets: 4,
+        overs: '18.2',
+        batters: [
+          { name: 'Rohit Sharma', runs: 67, balls: 42, fours: 6, sixes: 3, sr: 159.5 },
+          { name: 'Tilak Varma', runs: 30, balls: 20, fours: 2, sixes: 1, sr: 150 },
+        ],
+        bowlers: [{ name: 'Jadeja', overs: '4.0', wickets: 1, runs: 32, econ: 8.0 }],
+      },
+    ],
+  },
+};
+const commentary = (balls: { over: string; runs: number; type: string; batsman?: string }[]) => ({
+  success: true,
+  data: balls.map((b) => ({ ball: b.over.split('.')[1], text: '', bowler: 'Jadeja', batsman: b.batsman ?? 'Rohit Sharma', ...b })),
+});
+
+function routed(responses: Record<string, () => unknown>) {
+  return vi.fn(async (url: string) => {
+    const key = Object.keys(responses).find((k) => url.includes(k));
+    if (!key) return new Response('{}', { status: 404 });
+    return new Response(JSON.stringify(responses[key]()), { status: 200 });
+  });
+}
+
+describe('CricketLiveApi parsing', () => {
+  it('parses score lines', () => {
+    expect(parseScoreLine('MI 187/4 (18.2 ov)')).toEqual({ code: 'MI', runs: 187, wickets: 4, balls: 110 });
+    expect(parseScoreLine('PBKS 162/8 (20 ov) & RCB 163/4 (18.3 ov)')?.code).toBe('RCB');
+  });
+
+  it('classifies balls', () => {
+    expect(ballKind('SIX', 6, '')).toBe('six');
+    expect(ballKind('FOUR', 4, '')).toBe('four');
+    expect(ballKind('WICKET', 0, '')).toBe('wicket');
+    expect(ballKind('', 1, 'Wide down leg')).toBe('wide');
+    expect(ballKind('', 0, 'no run')).toBe('dot');
+  });
+
+  it('orders the feed newest first', () => {
+    const feed = mapCommentary(commentary([{ over: '18.1', runs: 1, type: 'RUN' }, { over: '18.2', runs: 6, type: 'SIX' }]));
+    expect(feed.map((b) => b.over)).toEqual(['18.2', '18.1']);
+  });
+});
+
+describe('CricketLiveApiProvider.getMatchState', () => {
+  it('combines feed, live list and scorecard within budget', async () => {
+    let balls = [{ over: '18.1', runs: 1, type: 'RUN' }];
+    vi.stubGlobal(
+      'fetch',
+      routed({
+        '/cricket/matches/live': () => LIVE_SAMPLE,
+        '/cricket/scorecard/': () => SCORECARD,
+        '/cricket/match-facts/': () => ({ success: true, data: { toss: 'MI won the toss', venue: 'Wankhede' } }),
+        '/cricket/commentary/': () => commentary(balls),
+      }),
+    );
+    const budget = new CallBudget(path.join(mkdtempSync(path.join(tmpdir(), 'cos-')), 'u.json'), 100, 5);
+    const p = new CricketLiveApiProvider('secret');
+    p.attachBudget(budget);
+    const first = await p.getMatchState('155409');
+    expect(budget.calls).toBe(4);
+    expect(first.innings.at(-1)).toMatchObject({ battingTeam: 'MI', runs: 187, wickets: 4, overs: '18.2' });
+    expect(first.batters[0]).toMatchObject({ name: 'Rohit Sharma', onStrike: true });
+    expect(first.bowler?.name).toBe('Jadeja');
+    expect(first.toss).toBe('MI won the toss');
+    expect(first.phase).toBe('live');
+
+    // next ball is a six: only the feed is due, and it fires a SIX banner
+    balls = [...balls, { over: '18.2', runs: 6, type: 'SIX' }];
+    const second = await p.getMatchState('155409');
+    expect(budget.calls).toBe(5);
+    expect(second.thisOver.map((c) => c.label)).toEqual(['1', '6']);
+    const events = detectEvents(first, second, new Set());
+    expect(events.map((e) => e.type)).toEqual(['SIX']);
+
+    // budget for this minute is spent: nothing is sent
+    await expect(p.getMatchState('155409')).rejects.toThrow(/Per-minute/);
+    expect(budget.calls).toBe(5);
   });
 });
