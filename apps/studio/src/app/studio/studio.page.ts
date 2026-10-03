@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, ViewEncapsulation, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, ViewEncapsulation, inject, signal } from '@angular/core';
 import { LiveStore } from '../core/live.store';
 import { CanvasToolbarComponent } from './canvas-toolbar.component';
 import { CanvasComponent } from './canvas.component';
@@ -260,6 +260,13 @@ export default class StudioPage {
 
   constructor() {
     this.live.connect('studio');
+    // closing or reloading the Studio must not leave the pointer stuck on air
+    const hide = () => this.live.send({ type: 'pointer', x: 0, y: 0, visible: false });
+    window.addEventListener('pagehide', hide);
+    inject(DestroyRef).onDestroy(() => {
+      hide();
+      window.removeEventListener('pagehide', hide);
+    });
   }
 
   protected onKey(e: KeyboardEvent): void {

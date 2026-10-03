@@ -34,7 +34,6 @@ export const WIDGET_DND_TYPE = 'application/x-cos-widget';
       [class.pointer-mode]="editor.pointerMode()"
       (pointerdown)="onBackgroundPointer($event)"
       (pointermove)="onPointerMove($event)"
-      (pointerleave)="sendPointer(null)"
       (dragover)="onDragOver($event)"
       (drop)="onDrop($event)"
     >
@@ -443,10 +442,14 @@ export class CanvasComponent {
   private lastPointerSend = 0;
   private pendingPointer: ReturnType<typeof setTimeout> | null = null;
 
+  /**
+   * Leaving the canvas (e.g. to look at the Output) keeps the pointer where it was:
+   * it only hides when pointer mode is switched off.
+   */
   protected onPointerMove(e: PointerEvent): void {
     if (!this.editor.pointerMode()) return;
     const p = this.toCanvas(e);
-    this.sendPointer(p);
+    if (p) this.sendPointer(p);
   }
 
   /** ~40 updates a second is plenty: the Output eases between them */

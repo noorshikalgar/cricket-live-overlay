@@ -118,7 +118,7 @@ Length is adjustable (0.3–2.5 s, scaled by the global Speed). With **Reduce mo
 
 ### On-air pointer
 
-OBS never sees your real mouse, so the pointer is driven from the Studio: press **◎ Pointer** in the canvas toolbar (this also switches the pointer on for the on-air scene; per-scene settings live in the scene panel → *On-air pointer*) and move over the canvas. The Output draws it live, eased and with motion blur (a short fading trail plus a stretch along the direction of travel). Click for a ripple; **Esc** leaves pointer mode. While pointer mode is on, the canvas doesn't edit widgets.
+OBS never sees your real mouse, so the pointer is driven from the Studio: press **◎ Pointer** in the canvas toolbar (this also switches the pointer on for the on-air scene; per-scene settings live in the scene panel → *On-air pointer*) and move over the canvas. The Output draws it live, eased and with motion blur (a short fading trail plus a stretch along the direction of travel). Click for a ripple. The pointer stays at its last spot when your mouse leaves the canvas (so you can look at OBS or the Output), and hides when you switch **◎ Pointer** off or press **Esc** (or close the Studio). While pointer mode is on, the canvas doesn't edit widgets.
 
 Testing in a browser instead of OBS: keep the Output window visible. Browsers pause animation for background tabs and (on macOS) windows fully covered by another window; OBS always renders.
 
