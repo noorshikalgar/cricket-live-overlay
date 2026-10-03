@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Overlay Studio">
+  <defs>
+    <linearGradient id="os-bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#121a2a"/>
+      <stop offset="1" stop-color="#070a10"/>
+    </linearGradient>
+    <radialGradient id="os-ball" cx="0.36" cy="0.32" r="0.75">
+      <stop offset="0" stop-color="#f87171"/>
+      <stop offset="0.55" stop-color="#dc2626"/>
+      <stop offset="1" stop-color="#7f1d1d"/>
+    </radialGradient>
+  </defs>
+  <!-- app tile -->
+  <rect width="64" height="64" rx="15" fill="url(#os-bg)"/>
+  <!-- broadcast safe-area brackets: the overlay frame -->
+  <g fill="none" stroke="#22C55E" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M10 21 V12 H19"/>
+    <path d="M45 12 H54 V21"/>
+    <path d="M54 43 V52 H45"/>
+    <path d="M19 52 H10 V43"/>
+  </g>
+  <!-- the ball -->
+  <circle cx="29" cy="35" r="12.5" fill="url(#os-ball)"/>
+  <!-- seam: stitches that become a live signal leaving the ball -->
+  <path d="M21 26.5 C 27 31, 27 39, 21 43.5" fill="none" stroke="#fde7c7" stroke-width="1.6" stroke-dasharray="2.2 2" stroke-linecap="round"/>
+  <path d="M25 24 C 31.5 29.5, 31.5 40.5, 25 46" fill="none" stroke="#fde7c7" stroke-width="1.6" stroke-dasharray="2.2 2" stroke-linecap="round"/>
+  <g fill="none" stroke="#F5F7FA" stroke-linecap="round">
+    <path d="M40.5 27.5 A 9.5 9.5 0 0 1 40.5 42.5" stroke-width="2.6"/>
+    <path d="M45.5 23 A 15.5 15.5 0 0 1 45.5 47" stroke-width="2.6" opacity="0.6"/>
+  </g>
+  <ellipse cx="24.5" cy="29" rx="4" ry="2.2" fill="#fff" opacity="0.28" transform="rotate(-32 24.5 29)"/>
+</svg>
