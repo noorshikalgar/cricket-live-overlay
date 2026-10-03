@@ -10,6 +10,7 @@ import {
 } from '@angular/core';
 import { CANVAS_H, CANVAS_W, type WidgetType } from '@cos/shared';
 import { LiveStore } from '../core/live.store';
+import { SceneBackgroundComponent } from '../widgets/scene-background.component';
 import { SceneRendererComponent } from '../widgets/scene-renderer.component';
 import { CanvasContext } from './canvas-context';
 import { EditBoxDirective } from './edit-box.directive';
@@ -21,7 +22,7 @@ export const WIDGET_DND_TYPE = 'application/x-cos-widget';
 /** The scaled 16:9 editing surface: rendered widgets underneath, edit boxes on top. */
 @Component({
   selector: 'cos-canvas',
-  imports: [SceneRendererComponent, EditBoxDirective],
+  imports: [SceneBackgroundComponent, SceneRendererComponent, EditBoxDirective],
   providers: [CanvasContext],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
@@ -34,10 +35,11 @@ export const WIDGET_DND_TYPE = 'application/x-cos-widget';
     >
       @if (editor.scene(); as scene) {
         <div class="frame" [style.width.px]="W * ctx.scale()" [style.height.px]="H * ctx.scale()">
-          <div class="stage" #stage [class]="'stage bg-' + editor.background()"
+          <div class="stage bg-checker" #stage
             [style.transform]="'scale(' + ctx.scale() + ')'"
             [style.--inv]="1 / ctx.scale()"
           >
+            <cos-scene-background [background]="scene.background" />
             <cos-scene-renderer
               class="render"
               [scene]="scene"
@@ -127,12 +129,6 @@ export const WIDGET_DND_TYPE = 'application/x-cos-widget';
         linear-gradient(-45deg, transparent 75%, #262b35 75%);
       background-size: 48px 48px;
       background-position: 0 0, 0 24px, 24px -24px, -24px 0;
-    }
-    .bg-sample {
-      background: #0d1a12 url('/sample-bg.svg') center / cover no-repeat;
-    }
-    .bg-dark {
-      background: #05070a;
     }
     .render {
       pointer-events: none;

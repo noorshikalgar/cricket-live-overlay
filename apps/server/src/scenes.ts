@@ -3,7 +3,10 @@ import path from 'node:path';
 import {
   CANVAS_H,
   CANVAS_W,
+  BACKGROUND_KINDS,
+  DEFAULT_BACKGROUND,
   DEFAULT_SETTINGS,
+  type SceneBackground,
   WIDGET_TYPES,
   createStarterScenes,
   newId,
@@ -31,6 +34,19 @@ function isWidget(v: unknown): v is WidgetInstance {
   );
 }
 
+const HEX = /^#[0-9a-f]{3,8}$/i;
+
+function validBackground(v: unknown): SceneBackground {
+  const b = typeof v === 'object' && v !== null ? (v as Record<string, unknown>) : {};
+  const kind = BACKGROUND_KINDS.some((k) => k.value === b['kind']) ? (b['kind'] as SceneBackground['kind']) : 'transparent';
+  const color = typeof b['color'] === 'string' && HEX.test(b['color']) ? b['color'] : DEFAULT_BACKGROUND.color;
+  const color2 = typeof b['color2'] === 'string' && HEX.test(b['color2']) ? b['color2'] : DEFAULT_BACKGROUND.color2;
+  // only our own uploads or the bundled pitch: never an arbitrary remote URL on air
+  const image = typeof b['image'] === 'string' && /^\/uploads\/[\w.-]+$/.test(b['image']) ? b['image'] : '';
+  const dim = typeof b['dim'] === 'number' && Number.isFinite(b['dim']) ? Math.min(0.8, Math.max(0, b['dim'])) : 0;
+  return { kind, color, color2, image, dim };
+}
+
 /** Loose structural check for scenes arriving over the socket or from an import. */
 export function validateScene(v: unknown): Scene | null {
   if (typeof v !== 'object' || v === null) return null;
@@ -43,6 +59,7 @@ export function validateScene(v: unknown): Scene | null {
     name: s['name'].slice(0, 80) || 'Untitled',
     canvas: { w: CANVAS_W, h: CANVAS_H },
     theme,
+    background: validBackground(s['background']),
     widgets: s['widgets'] as WidgetInstance[],
     updatedAt: Date.now(),
   };
