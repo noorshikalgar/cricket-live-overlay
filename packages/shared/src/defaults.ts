@@ -161,6 +161,22 @@ export const WIDGET_DEFAULTS: Record<WidgetType, WidgetDefaults> = {
     props: { playerId: '', playerName: '', showPhoto: false, minimized: false, display: 'window' },
     animation: { enter: 'slideUp', exit: 'fade' },
   },
+  timer: {
+    label: 'Timer',
+    icon: '⏱',
+    w: 600,
+    h: 240,
+    props: {
+      title: 'STARTING IN',
+      mode: 'duration',
+      target: '19:30',
+      minutes: 5,
+      startedAt: null,
+      elapsed: 0,
+      endText: 'STARTING NOW',
+      panel: true,
+    },
+  },
   clock: {
     label: 'Clock',
     icon: '◷',

@@ -74,6 +74,16 @@ curl -X POST http://localhost:4300/api/events/SIX
 
 Types: `FOUR SIX WICKET FIFTY HUNDRED MAIDEN DRS DRINKS INNINGS_BREAK INNINGS_END MATCH_RESULT`.
 
+### Timer
+
+The **Timer** widget (library → Studio) shows a title such as *STARTING IN* or *BACK IN* above a big countdown:
+
+- **Countdown for a length** (e.g. 5 minutes): **▶ Start**, **⏸ Pause**, **↺ Reset** and **+1m** in the settings panel; it keeps running on the Output even if the Studio closes.
+- **Countdown to a time** (e.g. 19:30, rolls to tomorrow once well past).
+- **Stopwatch** (counts up, same controls).
+
+At zero it shows the *Text at zero* (e.g. *STARTING NOW*) with one short pop, no looping motion.
+
 ### Live cards (scorecard, team, player)
 
 Open the **Live cards** tab in the Studio's left panel while you talk:

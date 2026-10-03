@@ -8,7 +8,7 @@ const GROUPS: { title: string; types: WidgetType[] }[] = [
   { title: 'Live data', types: ['scorebug', 'batters', 'bowler', 'thisOver', 'partnership', 'recentOvers', 'matchInfo'] },
   { title: 'Moments', types: ['banner', 'ticker'] },
   { title: 'Cards', types: ['scorecard', 'teamCard', 'playerCard'] },
-  { title: 'Studio', types: ['camera', 'text', 'image', 'clock'] },
+  { title: 'Studio', types: ['camera', 'text', 'timer', 'image', 'clock'] },
 ];
 
 /** Left panel: click to add at canvas centre, or drag onto the canvas. */

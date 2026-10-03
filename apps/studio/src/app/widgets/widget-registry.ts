@@ -16,6 +16,7 @@ import { ScorebugWidget } from './scorebug/scorebug.widget';
 import { TextWidget } from './text/text.widget';
 import { ThisOverWidget } from './this-over/this-over.widget';
 import { TickerWidget } from './ticker/ticker.widget';
+import { TimerWidget } from './timer/timer.widget';
 
 export interface SelectOption {
   value: string;
@@ -174,6 +175,19 @@ export const WIDGET_REGISTRY: Record<WidgetType, WidgetDef> = {
     { kind: 'toggle', key: 'showPhoto', label: 'Show photo (check rights for public streams)' },
     { kind: 'select', key: 'display', label: 'Display', options: opts(['window', 'Floating window'], ['widget', 'Widget']) },
     { kind: 'toggle', key: 'minimized', label: 'Minimized (floating window only)' },
+  ]),
+  timer: def('timer', TimerWidget, 'Starting in / back in countdown, or a stopwatch', [
+    { kind: 'text', key: 'title', label: 'Title (e.g. STARTING IN, BACK IN)' },
+    {
+      kind: 'select',
+      key: 'mode',
+      label: 'Mode',
+      options: opts(['duration', 'Countdown for a length'], ['until', 'Countdown to a time'], ['stopwatch', 'Stopwatch (counts up)']),
+    },
+    { kind: 'number', key: 'minutes', label: 'Length in minutes (countdown for a length)', min: 0.5, max: 600, step: 0.5 },
+    { kind: 'text', key: 'target', label: 'Time to count to, HH:MM (countdown to a time)', placeholder: '19:30' },
+    { kind: 'text', key: 'endText', label: 'Text at zero' },
+    { kind: 'toggle', key: 'panel', label: 'Panel background' },
   ]),
   clock: def('clock', ClockWidget, 'Local time or countdown', [
     { kind: 'select', key: 'mode', label: 'Mode', options: opts(['time', 'Local time'], ['countdown', 'Countdown']) },

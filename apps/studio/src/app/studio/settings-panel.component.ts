@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, computed, inject, signal } from '@angular/core';
 import {
   ANIM_PRESETS,
   BACKGROUND_KINDS,
@@ -24,6 +24,7 @@ import {
 } from '@cos/shared';
 import { LiveStore } from '../core/live.store';
 import { STYLE_SCHEMA, WIDGET_REGISTRY, type FieldDef } from '../widgets/widget-registry';
+import { formatClock, timerValue, type TimerProps } from '../widgets/timer/timer.widget';
 import { exportCameraMask, obsTransformText } from './camera-tools';
 import { EditorStore } from './editor.store';
 import { FieldComponent } from './field.component';
@@ -97,6 +98,20 @@ const ANIM_LABELS: Record<AnimPreset, string> = {
       @if (def.settingsSchema.length) {
         <section>
           <h3>{{ def.label }}</h3>
+          @if (w.type === 'timer' && w.props['mode'] !== 'until') {
+            <div class="timer-ctl">
+              <span class="readout">{{ timerText(w) }}</span>
+              @if (w.props['startedAt']) {
+                <button type="button" (click)="timerPause(w)">⏸ Pause</button>
+              } @else {
+                <button type="button" class="primary" (click)="timerStart(w)">▶ {{ w.props['elapsed'] ? 'Resume' : 'Start' }}</button>
+              }
+              <button type="button" (click)="timerReset(w)">↺ Reset</button>
+              @if (w.props['mode'] === 'duration') {
+                <button type="button" (click)="timerAdd(w, 1)" title="Add a minute">+1m</button>
+              }
+            </div>
+          }
           @if (w.type === 'scorecard' || w.type === 'teamCard' || w.type === 'playerCard') {
             <div class="row-btns top">
               <button type="button" (click)="reloadCards(w.type)" title="Fetch fresh card data (1 API call)">⟳ Reload card data</button>
@@ -298,6 +313,18 @@ const ANIM_LABELS: Record<AnimPreset, string> = {
       width: 100%;
       font-variant-numeric: tabular-nums;
     }
+    .timer-ctl {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+      margin-bottom: 12px;
+    }
+    .readout {
+      font: 700 20px/1 Inter, sans-serif;
+      font-variant-numeric: tabular-nums;
+      margin-right: auto;
+    }
     .row-btns.top {
       margin: 0 0 12px;
     }
@@ -409,6 +436,39 @@ export class SettingsPanelComponent {
     if (!w || !s) return resolveStyle({ showTitle: false }, 'night', null);
     return resolveStyle(w.style, s.theme, this.live.teamColor());
   });
+
+  /** ticks the timer readout */
+  private readonly now = signal(Date.now());
+  private readonly clock = setInterval(() => this.now.set(Date.now()), 250);
+
+  constructor() {
+    inject(DestroyRef).onDestroy(() => clearInterval(this.clock));
+  }
+
+  protected timerText(w: WidgetInstance): string {
+    return formatClock(timerValue(w.props as unknown as TimerProps, this.now()).ms);
+  }
+
+  protected timerStart(w: WidgetInstance): void {
+    // a finished countdown starts over
+    const v = timerValue(w.props as unknown as TimerProps, Date.now());
+    const elapsed = v.done ? 0 : Number(w.props['elapsed']) || 0;
+    this.editor.updateWidget(w.id, { props: { ...w.props, startedAt: Date.now(), elapsed } });
+  }
+
+  protected timerPause(w: WidgetInstance): void {
+    const started = Number(w.props['startedAt']) || Date.now();
+    const elapsed = (Number(w.props['elapsed']) || 0) + (Date.now() - started);
+    this.editor.updateWidget(w.id, { props: { ...w.props, startedAt: null, elapsed } });
+  }
+
+  protected timerReset(w: WidgetInstance): void {
+    this.editor.updateWidget(w.id, { props: { ...w.props, startedAt: null, elapsed: 0 } });
+  }
+
+  protected timerAdd(w: WidgetInstance, minutes: number): void {
+    this.editor.updateWidget(w.id, { props: { ...w.props, minutes: (Number(w.props['minutes']) || 0) + minutes } }, `timer-add:${w.id}`);
+  }
 
   protected reloadCards(type: string): void {
     this.live.send({ type: 'cards:fetch', kind: 'scorecard', force: true });
