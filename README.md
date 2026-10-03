@@ -120,7 +120,7 @@ Length is adjustable (0.3–2.5 s, scaled by the global Speed). With **Reduce mo
 
 OBS never sees your real mouse, so the pointer is driven from the Studio: press **◎ Pointer** in the canvas toolbar (this also switches the pointer on for the on-air scene; per-scene settings live in the scene panel → *On-air pointer*) and move over the canvas. The Output draws it live, eased and with motion blur (a short fading trail plus a stretch along the direction of travel). Click for a ripple. The pointer stays at its last spot when your mouse leaves the canvas (so you can look at OBS or the Output), and hides when you switch **◎ Pointer** off or press **Esc** (or close the Studio). While pointer mode is on, the canvas doesn't edit widgets.
 
-Testing in a browser instead of OBS: keep the Output window visible. Browsers pause animation for background tabs and (on macOS) windows fully covered by another window; OBS always renders.
+Testing in a browser instead of OBS: press **⧉** next to *Output connected* in the top bar to open the Output in its own window and place it beside the Studio. Browsers pause animation for background tabs and (on macOS) windows fully covered by another window, so a Studio tab + Output tab in one window can't show the pointer moving; OBS always renders.
 
 Styles: **Dot**, **Laser ring**, **Cricket ball** (spins as it moves) and **Bat** (tilts with movement), with colour and size per scene. The ball and bat are drawn in-app, no external assets.
 

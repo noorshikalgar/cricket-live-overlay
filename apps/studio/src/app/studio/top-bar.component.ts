@@ -123,6 +123,14 @@ import { PromptService } from './prompt-dialog.component';
       <i class="dot" [class.live]="live.clients().outputs > 0"></i>
       Output {{ live.clients().outputs > 0 ? 'connected' + (live.clients().outputs > 1 ? ' ×' + live.clients().outputs : '') : 'not connected' }}
     </a>
+    <button
+      type="button"
+      class="icon"
+      (click)="popOutput()"
+      title="Open the Output in its own window to place beside the Studio (browsers pause animation in hidden tabs, so a separate visible window shows the live pointer and motion)"
+    >
+      ⧉
+    </button>
     @if (!live.connected()) {
       <span class="offline">Server offline · reconnecting…</span>
     }
@@ -382,6 +390,17 @@ export class TopBarComponent {
   });
 
   protected readonly outputUrl = computed(() => `${location.origin}/output`);
+
+  /** A separate, visible window keeps animating while you work in the Studio (a background tab doesn't). */
+  protected popOutput(): void {
+    const w = Math.round(Math.min(960, screen.availWidth / 2));
+    const h = Math.round((w * 9) / 16);
+    window.open(
+      this.outputUrl(),
+      'cos-output',
+      `popup=yes,width=${w},height=${h},left=${screen.availWidth - w - 20},top=60`,
+    );
+  }
 
   protected pickScene(e: Event): void {
     this.editor.editScene((e.target as HTMLSelectElement).value);
