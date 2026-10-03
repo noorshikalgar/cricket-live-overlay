@@ -95,6 +95,14 @@ Set `CRICKET_PROVIDER` in `.env`:
 | `cricketliveapi` | Mapped from the samples in their docs (Bearer auth). Combines `/cricket/commentary` (ball feed, every poll), `/cricket/matches/live` (score line, ≥15 s), `/cricket/scorecard` (figures, ≥30 s) and `/cricket/match-facts` (once). FOUR / SIX / WICKET banners fire from the ball feed. Fields beyond the doc samples are read defensively (`TODO(verify)`) |
 | `sportmonks` | Stub mapped from Sportmonks Cricket v2 public docs, not yet verified against a live response |
 
+### Score updates: auto or manual
+
+The Studio top bar controls how often the score is fetched:
+
+- **Auto** with an interval: *Default* (`POLL_SECONDS` from `.env`), *Budget* (spread the day's calls over a whole match), or every 10 s – 5 min. A countdown shows the next update.
+- **Manual**: the score only updates when you press **⟳ Update now** (selecting a match fetches it once).
+- **Update now** works in both modes (1 API call), and is briefly disabled right after an update.
+
 ### API budget (hard caps)
 
 `DAILY_CALL_LIMIT` and `RATE_LIMIT_PER_MINUTE` are hard caps: every HTTP call (server and `npm run probe`) must acquire budget first, and a refused call is never sent. The count lives in `apps/server/data/usage.json`, saved on every call, so restarts can't double-spend. Optional sources always leave one call free for the ball feed. When the day's calls are gone, polling stops with a message in the Studio until 00:00 UTC.

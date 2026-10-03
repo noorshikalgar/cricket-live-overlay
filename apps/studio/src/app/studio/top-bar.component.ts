@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, computed, inject, signal } from '@angular/core';
 import type { Scene } from '@cos/shared';
 import { LiveStore } from '../core/live.store';
 import { EditorStore } from './editor.store';
@@ -47,18 +47,50 @@ import { PromptService } from './prompt-dialog.component';
     <div class="group match">
       <select [value]="live.settings().selectedMatchId ?? ''" (change)="pickMatch($event)" aria-label="Match">
         <option value="">No match (design mode)</option>
+        @if (selectedMissing(); as sel) {
+          <option [value]="sel.id" selected>{{ sel.label }}</option>
+        }
         @for (m of live.matches(); track m.id) {
           <option [value]="m.id" [selected]="m.id === live.settings().selectedMatchId">
             {{ m.title }} · {{ m.scoreLine }}
           </option>
         }
       </select>
-      <button type="button" class="icon" title="Refresh live matches" (click)="live.send({ type: 'matches:refresh' })">↻</button>
+      <button type="button" class="icon" title="Refresh the list of live matches (1 API call)" (click)="live.send({ type: 'matches:refresh' })">↻</button>
+    </div>
+
+    <div class="group pollctl" role="group" aria-label="Score updates">
+      <div class="seg">
+        <button type="button" [class.on]="mode() === 'auto'" (click)="setMode('auto')" title="Update the score on a timer">Auto</button>
+        <button type="button" [class.on]="mode() === 'manual'" (click)="setMode('manual')" title="Update only when you press Update now">Manual</button>
+      </div>
+      @if (mode() === 'auto') {
+        <select [value]="intervalValue()" (change)="setInterval($event)" aria-label="Update interval" title="How often the score is fetched">
+          @for (o of intervals; track o.value) {
+            <option [value]="o.value" [selected]="o.value === intervalValue()">{{ o.label }}</option>
+          }
+        </select>
+      }
+      <button
+        type="button"
+        class="primary update"
+        [disabled]="!canPollNow()"
+        (click)="pollNow()"
+        title="Fetch the latest score now (1 API call)"
+      >
+        ⟳ Update now
+      </button>
+      @if (countdown(); as c) {
+        <span class="next">next {{ c }}</span>
+      }
+    </div>
+
+    <div class="group">
       @if (live.poll(); as p) {
         <span class="poll" [class.warn]="usageWarn()" [class.err]="p.phase === 'error' || p.stale" [title]="p.lastError ?? ''">
           @switch (p.phase) {
-            @case ('live') { <i class="dot live"></i> every {{ p.intervalSeconds }}s }
-            @case ('break') { <i class="dot brk"></i> break · {{ p.intervalSeconds }}s }
+            @case ('live') { <i class="dot live"></i> {{ p.mode === 'manual' ? 'manual' : 'live' }} }
+            @case ('break') { <i class="dot brk"></i> break }
             @case ('stopped') { <i class="dot"></i> finished }
             @case ('error') { <i class="dot bad"></i> {{ p.stale ? 'stale' : 'error' }} }
             @default { <i class="dot"></i> idle }
@@ -170,6 +202,31 @@ import { PromptService } from './prompt-dialog.component';
     .danger-text {
       color: #f87171 !important;
     }
+    .seg {
+      display: inline-flex;
+      border: 1px solid var(--ui-border);
+      border-radius: 6px;
+      overflow: hidden;
+    }
+    .seg button {
+      border: 0;
+      border-radius: 0;
+      padding: 5px 10px;
+      background: transparent;
+    }
+    .seg button.on {
+      background: var(--ui-accent-soft);
+      color: var(--ui-accent);
+      font-weight: 600;
+    }
+    .pollctl select {
+      max-width: 120px;
+    }
+    .next {
+      color: var(--ui-muted);
+      font-variant-numeric: tabular-nums;
+      min-width: 56px;
+    }
     .poll {
       display: inline-flex;
       align-items: center;
@@ -230,6 +287,65 @@ export class TopBarComponent {
   protected readonly editor = inject(EditorStore);
   private readonly prompt = inject(PromptService);
   protected readonly menuOpen = signal(false);
+
+  constructor() {
+    inject(DestroyRef).onDestroy(() => clearInterval(this.clock));
+  }
+
+  protected readonly intervals = [
+    { value: 'env', label: 'Default (.env)' },
+    { value: '0', label: 'Budget (whole match)' },
+    ...[10, 15, 20, 30, 45, 60, 90, 120, 300].map((s) => ({
+      value: String(s),
+      label: s < 60 ? `Every ${s}s` : `Every ${s / 60} min`.replace('1.5 min', '90s'),
+    })),
+  ];
+
+  /** the polled match isn't in the (manually refreshed) list: still show it as selected */
+  protected readonly selectedMissing = computed(() => {
+    const id = this.live.settings().selectedMatchId;
+    if (!id || this.live.matches().some((m) => m.id === id)) return null;
+    const m = this.live.match();
+    const label = m ? `${m.teams[0].shortCode} v ${m.teams[1].shortCode}` : `Match ${id}`;
+    return { id, label: `${label} (press ↻ for the list)` };
+  });
+
+  protected readonly mode = computed(() => this.live.settings().pollMode ?? 'auto');
+  protected readonly intervalValue = computed(() => {
+    const s = this.live.settings().pollSeconds;
+    return s === null || s === undefined ? 'env' : String(s);
+  });
+
+  /** ticks once a second for the countdown */
+  private readonly now = signal(Date.now());
+  private readonly clock = setInterval(() => this.now.set(Date.now()), 1000);
+
+  protected readonly countdown = computed(() => {
+    const next = this.live.poll()?.nextPollAt;
+    if (!next || this.mode() !== 'auto') return null;
+    const s = Math.max(0, Math.round((next - this.now()) / 1000));
+    return s >= 60 ? `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}` : `${s}s`;
+  });
+
+  /** a match is selected and the last poll wasn't in the last 5 s (their cache is 10 s anyway) */
+  protected readonly canPollNow = computed(() => {
+    const p = this.live.poll();
+    if (!this.live.settings().selectedMatchId || !p) return false;
+    return !p.lastPollAt || this.now() - p.lastPollAt > 5000;
+  });
+
+  protected setMode(mode: 'auto' | 'manual'): void {
+    this.live.send({ type: 'settings:update', settings: { pollMode: mode } });
+  }
+
+  protected setInterval(e: Event): void {
+    const v = (e.target as HTMLSelectElement).value;
+    this.live.send({ type: 'settings:update', settings: { pollSeconds: v === 'env' ? null : Number(v) } });
+  }
+
+  protected pollNow(): void {
+    this.live.send({ type: 'poll:now' });
+  }
 
   protected readonly usageWarn = computed(() => {
     const p = this.live.poll();

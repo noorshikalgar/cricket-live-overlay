@@ -143,6 +143,11 @@ export class Hub {
         poller?.select(msg.matchId);
         return;
       }
+      case 'poll:now': {
+        if (c.role !== 'studio') return;
+        poller?.pollNow();
+        return;
+      }
       case 'matches:refresh': {
         void poller?.refreshMatches();
         return;
@@ -153,6 +158,7 @@ export class Hub {
         const before = this.scenes.getSettings().obsBridge;
         const next = this.scenes.updateSettings(rest);
         this.broadcastSettings();
+        poller?.setControl(next.pollMode, next.pollSeconds);
         if (next.obsBridge !== before) {
           void this.obs.setEnabled(next.obsBridge).then(() => {
             if (next.obsBridge && next.activeSceneId) this.obs.placeFor(this.scenes.get(next.activeSceneId));
@@ -193,5 +199,7 @@ function emptyPoll() {
     lastPollAt: null,
     lastError: null,
     stale: false,
+    mode: 'auto' as const,
+    nextPollAt: null,
   };
 }

@@ -148,6 +148,9 @@ export interface PollStatus {
   lastPollAt: number | null;
   lastError: string | null;
   stale: boolean;
+  mode: 'auto' | 'manual';
+  /** epoch ms of the next scheduled auto poll, null when none is scheduled */
+  nextPollAt: number | null;
 }
 
 /** Convert legal balls to "overs.balls" notation. */

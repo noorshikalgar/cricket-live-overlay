@@ -42,6 +42,8 @@ export type ClientMessage =
   | { type: 'event:manual'; eventType: MatchEventType }
   | { type: 'match:select'; matchId: string | null }
   | { type: 'matches:refresh' }
+  /** poll the selected match right now (manual mode or an impatient commentator) */
+  | { type: 'poll:now' }
   | { type: 'settings:update'; settings: Partial<AppSettings> };
 
 export function isClientMessage(v: unknown): v is ClientMessage {
