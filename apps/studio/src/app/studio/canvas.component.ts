@@ -106,8 +106,7 @@ export const WIDGET_DND_TYPE = 'application/x-cos-widget';
                       <span class="tag">{{ w.name }}{{ w.locked ? ' · locked' : '' }}</span>
                     }
                     @if (!w.locked) {
-                      <!-- cards scale by width (their height follows the content), so no top/bottom-only handles -->
-                      @for (h of isCard(w) ? cardHandles : handles; track h) {
+                      @for (h of handles; track h) {
                         <span [class]="'rh rh-' + h"></span>
                       }
                     }
@@ -344,7 +343,6 @@ export class CanvasComponent {
   protected readonly W = CANVAS_W;
   protected readonly H = CANVAS_H;
   protected readonly handles = ['nw', 'n', 'ne', 'e', 'se', 's', 'sw', 'w'];
-  protected readonly cardHandles = ['nw', 'ne', 'e', 'se', 'sw', 'w'];
 
   protected readonly previewMatch = computed(() => this.live.match() ?? SAMPLE_MATCH);
   protected readonly previewTeamColor = computed(() => {
@@ -372,7 +370,7 @@ export class CanvasComponent {
     this.ctx.scale.set(Math.max(0.1, Math.round(s * 1000) / 1000));
   }
 
-  /** Cards follow their content height; keep the widget box (and the Output) in step. */
+  /** Minimised cards report their title-strip height so the outline can shrink to it. */
   /** minimised cards: outline height of just the title strip (the stored height is kept for restore) */
   protected readonly minimizedH = signal<Record<string, number>>({});
 
@@ -388,11 +386,7 @@ export class CanvasComponent {
         return next;
       });
     }
-    if (this.ctx.activeBox() || Math.abs(e.h - (this.editor.scene()?.widgets.find((x) => x.id === e.id)?.h ?? e.h)) <= 1) return;
-    const scene = this.editor.scene();
-    const w = scene?.widgets.find((x) => x.id === e.id);
-    if (!scene || !w || w.h === e.h) return;
-    this.live.pushScene({ ...scene, widgets: scene.widgets.map((x) => (x.id === e.id ? { ...x, h: e.h } : x)), updatedAt: Date.now() });
+    // expanded cards fill their box: width and height are the user's, nothing to sync
   }
 
   protected readonly registry = WIDGET_REGISTRY;
