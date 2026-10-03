@@ -1,0 +1,133 @@
+# Cricket Live Overlay Studio
+
+Broadcast-style live cricket overlays for OBS, with a drag-and-drop editor.
+
+- **Studio** (`/studio`) — arrange widgets on a 1920×1080 canvas, style them, save named scenes, fire event banners.
+- **Output** (`/output`) — a transparent 1080p page for an OBS Browser Source. It mirrors the Studio live.
+- **Server** — the only thing that talks to the cricket API. Polls once for every screen, detects FOUR / SIX / WICKET / milestones, stores scenes as JSON, pushes everything over one WebSocket.
+
+```
+cricket API ──► server (poll · diff events · scenes) ──ws──► Studio (edits ↑, state ↓)
+                                                     └─ws──► Output ──► OBS Browser Source (webcam below it)
+```
+
+## Quick start
+
+Needs Node 22+.
+
+```bash
+npm install
+cp .env.example .env      # mock provider works with no API key
+npm run dev
+```
+
+- Studio: http://localhost:4200/studio
+- Output: http://localhost:4200/output
+
+Pick **MUM v CHE (fast replay)** in the match picker to watch the mock match play one ball a second, with fours, sixes, wickets, two fifties, an innings break and a last-ball finish. **(chase)** jumps straight into the second innings.
+
+For streaming, use the built version: one process, one port, smaller pages.
+
+```bash
+npm run build
+npm start                 # http://localhost:4300/studio and /output
+```
+
+## OBS setup
+
+1. Settings → Video: canvas and output resolution **1920×1080**.
+2. Add a **Video Capture Device** for your webcam.
+3. Add a **Browser Source** *above* it:
+   - URL `http://localhost:4300/output` (follows the scene you put on air from the Studio), or `http://localhost:4300/output/<sceneId>` to pin one scene
+   - Width **1920**, height **1080**, FPS **60**
+   - Leave **Shutdown source when not visible** unchecked and **Custom CSS** empty
+4. Optional: Docks → Custom Browser Docks → `http://localhost:4300/studio` to edit without leaving OBS.
+5. Line up the webcam with the **Camera frame** widget: select it in the Studio, copy the transform it shows, and enter it in OBS's Edit Transform (Ctrl+E). Set Bounding Box Type *Scale to outer bounds* with the frame's size and tick *Crop to Bounding Box* (OBS 30.1+; on older versions crop the overflow by hand).
+   - Rounded or circle frames: **Mask PNG (frame size)** goes on the webcam as an *Image Mask/Blend → Alpha Mask (Alpha Channel)* filter after cropping it to the frame's aspect ratio. **Mask PNG (1920×1080)** is for a nested scene that holds the webcam positioned on the full canvas.
+   - Or tick **OBS auto-place** in the Studio toolbar (needs obs-websocket: Tools → WebSocket Server Settings, enable, and put the password in `.env`). The server then moves, scales and crops the source named `OBS_WEBCAM_SOURCE` whenever the frame moves or the scene changes.
+6. One Browser Source switched from the Studio's **Put on air** button is simplest. If you prefer OBS hotkeys, make one OBS scene per layout, each with a Browser Source pinned to a different `/output/<sceneId>`.
+
+The `<sceneId>` is the file name in `apps/server/data/scenes/`.
+
+## Using the Studio
+
+| Action | How |
+| --- | --- |
+| Add a widget | Click it in the library (adds at centre) or drag it onto the canvas |
+| Move / resize | Drag; corner and edge handles. 8 px snap and alignment guides to canvas centre/edges and other widgets |
+| Skip snapping / keep aspect | Hold **Alt** / **Shift** while dragging |
+| Nudge | Arrow keys 1 px, Shift+arrow 10 px |
+| Duplicate / delete | Ctrl/⌘+D, Delete |
+| Undo / redo | Ctrl/⌘+Z, Ctrl/⌘+Shift+Z |
+| Banners by hand | Event pad, or hotkeys **4** **6** **W** **D** (DRS) **K** (drinks) **B** (break) when no field is focused |
+| Scenes | Scene menu (⋯): new, duplicate, rename, export/import as file, delete. **Put on air** sends the scene to `/output` |
+
+Duplicated scenes keep widget ids, so shared widgets glide to their new positions (GSAP Flip) when you switch between them.
+
+Manual moments also work over HTTP, which is handy for a Stream Deck or Touch Portal button:
+
+```bash
+curl -X POST http://localhost:4300/api/events/SIX
+```
+
+Types: `FOUR SIX WICKET FIFTY HUNDRED MAIDEN DRS DRINKS INNINGS_BREAK INNINGS_END MATCH_RESULT`.
+
+### Themes and styling
+
+A scene has a theme: **Night** (dark glass, default), **Clean** (white panels for daytime) or **Team** (accent follows the batting team's colour). Every widget style field starts as "theme"; changing it on a widget overrides just that widget, ↺ resets it. Global **Reduce motion** and **Speed** live in the canvas toolbar and apply to every Output.
+
+## Data providers
+
+Set `CRICKET_PROVIDER` in `.env`:
+
+| Provider | Status |
+| --- | --- |
+| `mock` | Default. Replays `apps/server/data/recordings/demo-t20.json`. Regenerate with `npm run record -w apps/server [seed]` |
+| `cricketliveapi` | Adapter scaffolded in `apps/server/src/providers/cricketliveapi.ts`. Endpoint paths and field names are **placeholders** (`TODO(confirm)`) until real response samples from their dashboard docs are pasted in. Auth via `X-API-Key` |
+| `sportmonks` | Stub mapped from Sportmonks Cricket v2 public docs, not yet verified against a live response |
+
+The poll interval spreads your daily quota over a match: `max(MIN_POLL_SECONDS, matchSeconds / (DAILY_CALL_LIMIT × 0.9))` with T20 = 4 h, ODI = 8.5 h, Test = 7 h/day. On 5,000 calls that is ~3.2 s for a T20 and ~6.8 s for an ODI. Breaks back off to 60 s, a finished match stops polling, and the top bar shows calls used today (amber from 80 %). On errors or HTTP 429 the last good state keeps showing; after 30 s it is flagged stale in the Studio only, never on the Output.
+
+### Adding a provider
+
+Implement `CricketProvider` (`listLiveMatches`, `getMatchState`) in `apps/server/src/providers/`, map the response into `MatchState` from `packages/shared`, and add a case to `providers/index.ts`.
+
+## Adding a widget
+
+1. Defaults: add the type to `WidgetType` in `packages/shared/src/scene.ts` and an entry to `WIDGET_DEFAULTS` in `packages/shared/src/defaults.ts` (label, icon, default size and props).
+2. Component: create `apps/studio/src/app/widgets/<name>/<name>.widget.ts` extending `WidgetBase<YourProps>`. It receives `match`, `style`, `props` and `editing` as signal inputs and is used unchanged in the Studio canvas and the Output. Use the shared classes in `theme/widgets.css` (`.panel`, `.num`, `.label`, `.chip`) and size text from `--wh` so resizing scales it.
+3. Registry: add one entry to `WIDGET_REGISTRY` in `widgets/widget-registry.ts` with its `settingsSchema` (text, number, slider, toggle, select, color, image, checks). The settings panel is generated from it.
+
+## Project layout
+
+```
+packages/shared        TypeScript types + theme tokens + widget defaults (used by both apps)
+apps/server            Fastify + ws; providers/, poller.ts, events.ts, scenes.ts, obs.ts
+apps/server/data       scenes/*.json, settings.json, usage.json, recordings/, uploads/
+apps/studio            Angular 22 (standalone, signals, zoneless)
+  src/app/core         WebSocket service + LiveStore (signals mirror of server state)
+  src/app/output       /output — transparent renderer, Flip scene transitions
+  src/app/studio       /studio — editor shell, canvas (interact.js), panels, event pad
+  src/app/widgets      one folder per widget + widget-registry.ts
+  src/app/motion       GSAP setup, enter/exit presets, odometer directive
+  src/app/theme        tokens.css, widgets.css
+```
+
+The Output route lazy-loads only widgets and GSAP; interact.js and editor code stay in the Studio chunk.
+
+## Scripts
+
+| Command | Does |
+| --- | --- |
+| `npm run dev` | Server (tsx watch, :4300) + Angular dev server (:4200, proxies `/api`, `/ws`, `/uploads`) |
+| `npm run build` | Production Angular build + bundled server |
+| `npm start` | Built app on :4300 |
+| `npm test` | Server tests (event detection, replay engine, poll budget) |
+| `npm run typecheck` | Shared + server type checks |
+
+`SERVER_PORT` overrides `PORT` for the server when something else already sets `PORT` in your environment.
+
+## Notes
+
+- No team or broadcaster logos ship with the app: use team short codes, colours and your own logo unless you hold the rights.
+- Everything runs locally; the API key stays in `.env` on the server and never reaches a browser.

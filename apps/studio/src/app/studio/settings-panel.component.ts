@@ -72,8 +72,8 @@ const ANIM_LABELS: Record<AnimPreset, string> = {
             <button type="button" (click)="copy(transformText(w))">{{ copied() ? 'Copied ✓' : 'Copy transform' }}</button>
           </div>
           <p class="hint">
-            In OBS select the webcam, press Ctrl+E (Edit Transform), set Position and a Bounding Box of
-            this size with "Scale to outer bounds", then crop the overflow.
+            In OBS select the webcam, press Ctrl+E (Edit Transform), set Position, Bounding Box type
+            "Scale to outer bounds" with this size, and tick "Crop to Bounding Box".
           </p>
           <div class="row-btns">
             <button type="button" (click)="mask(w, 'frame')">Mask PNG (frame size)</button>
