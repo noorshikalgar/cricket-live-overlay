@@ -85,7 +85,9 @@ app.post('/api/uploads', async (req, reply) => {
 
 await app.register(fastifyStatic, { root: UPLOADS_DIR, prefix: '/uploads/', decorateReply: false });
 
-const hasStudioBuild = existsSync(path.join(STUDIO_DIST, 'index.html'));
+// in dev the Angular dev server (:4200) serves the UI; never serve a stale production build
+const devMode = process.argv.includes('--dev');
+const hasStudioBuild = !devMode && existsSync(path.join(STUDIO_DIST, 'index.html'));
 if (hasStudioBuild) {
   await app.register(fastifyStatic, { root: STUDIO_DIST, prefix: '/', wildcard: false });
 }
@@ -115,8 +117,9 @@ if (selected) poller.select(selected);
 if (scenes.getSettings().obsBridge) void obs.setEnabled(true);
 
 console.log(`\n  Cricket Overlay Studio server  ·  provider: ${provider.name}`);
-console.log(`  Studio  http://localhost:${cfg.port}/studio${hasStudioBuild ? '' : '  (not built — use :4200 in dev)'}`);
-console.log(`  Output  http://localhost:${cfg.port}/output   (OBS Browser Source, 1920×1080)\n`);
+const uiPort = devMode ? 4200 : cfg.port;
+console.log(`  Studio  http://localhost:${uiPort}/studio${hasStudioBuild || devMode ? '' : '  (not built — run npm run build)'}`);
+console.log(`  Output  http://localhost:${uiPort}/output   (OBS Browser Source, 1920×1080)\n`);
 
 const shutdown = () => {
   scenes.flushAll();
