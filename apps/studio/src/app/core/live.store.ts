@@ -91,11 +91,51 @@ export class LiveStore {
     this.pendingScenes.clear();
   }
 
+  /**
+   * Called with every scene that arrives. An Output page that has been open since
+   * before an update (e.g. an OBS Browser Source) may not know a newer widget type;
+   * reloading picks up the new code instead of silently skipping the widget.
+   */
+  knownWidgetTypes: ReadonlySet<string> | null = null;
+  private reloading = false;
+
+  /** run the check against everything already received (called once the renderer knows its types) */
+  recheckWidgetTypes(): void {
+    this.checkWidgetTypes(Object.values(this.scenes()));
+  }
+
+  private checkWidgetTypes(scenes: Scene[]): void {
+    const known = this.knownWidgetTypes;
+    if (!known || this.reloading) return;
+    const unknown = scenes.flatMap((s) => s.widgets).find((w) => !known.has(w.type));
+    if (!unknown) return;
+    // at most one reload per 5 minutes: a genuinely stale build must not reload in a loop
+    let last = 0;
+    try {
+      last = Number(sessionStorage.getItem('cos-reload-at')) || 0;
+    } catch {
+      // storage blocked: fall through and reload once
+    }
+    if (Date.now() - last < 5 * 60_000) {
+      console.warn(`[overlay] unknown widget type "${unknown.type}"; reload or rebuild to show it`);
+      return;
+    }
+    this.reloading = true;
+    try {
+      sessionStorage.setItem('cos-reload-at', String(Date.now()));
+    } catch {
+      // ignore
+    }
+    console.warn(`[overlay] unknown widget type "${unknown.type}": reloading to get the latest code`);
+    setTimeout(() => location.reload(), 500);
+  }
+
   private handle(m: ServerMessage): void {
     switch (m.type) {
       case 'hello':
         this.clientId.set(m.clientId);
         this.scenes.set(Object.fromEntries(m.scenes.map((s) => [s.id, s])));
+        this.checkWidgetTypes(m.scenes);
         this.settings.set(m.settings);
         this.match.set(m.match);
         this.poll.set(m.poll);
@@ -113,6 +153,7 @@ export class LiveStore {
       case 'scene:update':
         // never let an echo overwrite an edit we still have queued
         if (this.pendingScenes.has(m.scene.id)) return;
+        this.checkWidgetTypes([m.scene]);
         this.scenes.update((all) => ({ ...all, [m.scene.id]: m.scene }));
         return;
       case 'scene:deleted':

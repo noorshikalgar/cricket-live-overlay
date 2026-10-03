@@ -1,4 +1,6 @@
-import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, input, output } from '@angular/core';
+import { LiveStore } from '../core/live.store';
+import { WIDGET_REGISTRY } from './widget-registry';
 import type { MatchState, Scene } from '@cos/shared';
 import { WidgetHostComponent } from './widget-host.component';
 
@@ -29,6 +31,15 @@ import { WidgetHostComponent } from './widget-host.component';
   `,
 })
 export class SceneRendererComponent {
+  constructor() {
+    // let the store spot scenes made with widget types this page's code doesn't have
+    const store = inject(LiveStore);
+    if (!store.knownWidgetTypes) {
+      store.knownWidgetTypes = new Set(Object.keys(WIDGET_REGISTRY));
+      store.recheckWidgetTypes();
+    }
+  }
+
   readonly scene = input.required<Scene>();
   readonly match = input<MatchState | null>(null);
   readonly teamColor = input<string | null>(null);

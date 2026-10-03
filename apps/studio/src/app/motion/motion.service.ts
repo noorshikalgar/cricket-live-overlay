@@ -23,7 +23,23 @@ export class MotionService {
     return seconds / this.speed();
   }
 
+  /**
+   * Enter animation with a safety net: if the browser pauses animation frames
+   * (hidden tab, covered window) the tween is forced to its end state, so a widget
+   * can never be left invisible.
+   */
   enter(el: HTMLElement, preset: AnimPreset, delayMs = 0): Tween | null {
+    const t = this.enterTween(el, preset, delayMs);
+    if (t) {
+      const ms = (t.delay() + t.duration()) * 1000 + 400;
+      setTimeout(() => {
+        if (t.progress() < 1) t.progress(1);
+      }, ms);
+    }
+    return t;
+  }
+
+  private enterTween(el: HTMLElement, preset: AnimPreset, delayMs: number): Tween | null {
     gsap.killTweensOf(el);
     const delay = this.d(delayMs / 1000);
     if (preset === 'none') {
