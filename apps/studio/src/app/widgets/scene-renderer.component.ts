@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
 import type { MatchState, Scene } from '@cos/shared';
 import { WidgetHostComponent } from './widget-host.component';
 
@@ -15,6 +15,7 @@ import { WidgetHostComponent } from './widget-host.component';
         [match]="match()"
         [teamColor]="teamColor()"
         [mode]="mode()"
+        (contentHeight)="heightChange.emit({ id: w.id, h: $event.h, minimized: $event.minimized })"
       />
     }
   `,
@@ -32,4 +33,6 @@ export class SceneRendererComponent {
   readonly match = input<MatchState | null>(null);
   readonly teamColor = input<string | null>(null);
   readonly mode = input<'output' | 'editor'>('output');
+  /** a card's content height changed (editor only) */
+  readonly heightChange = output<{ id: string; h: number; minimized: boolean }>();
 }

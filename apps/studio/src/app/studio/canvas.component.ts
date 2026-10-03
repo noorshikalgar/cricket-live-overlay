@@ -13,6 +13,7 @@ import { CANVAS_H, CANVAS_W, type WidgetInstance, type WidgetType } from '@cos/s
 import { LiveStore } from '../core/live.store';
 import { SceneBackgroundComponent } from '../widgets/scene-background.component';
 import { SceneRendererComponent } from '../widgets/scene-renderer.component';
+import { WIDGET_REGISTRY } from '../widgets/widget-registry';
 import { CanvasContext } from './canvas-context';
 import { EditBoxDirective } from './edit-box.directive';
 import { EditorStore } from './editor.store';
@@ -47,6 +48,7 @@ export const WIDGET_DND_TYPE = 'application/x-cos-widget';
               [match]="previewMatch()"
               [teamColor]="previewTeamColor()"
               mode="editor"
+              (heightChange)="fitHeight($event)"
             />
             <div class="edit-layer">
               @for (w of scene.widgets; track w.id) {
@@ -59,22 +61,44 @@ export const WIDGET_DND_TYPE = 'application/x-cos-widget';
                   [style.left.px]="w.x"
                   [style.top.px]="w.y"
                   [style.width.px]="w.w"
-                  [style.height.px]="w.h"
+                  [style.height.px]="w.props['minimized'] && minimizedH()[w.id] ? minimizedH()[w.id] : w.h"
                   [style.z-index]="w.z"
                   (pointerdown)="select($event, w.id)"
                 >
                   @if (isCard(w)) {
-                    <button
-                      type="button"
-                      class="card-reload"
-                      title="Reload this card's data (1 API call). Cards never refresh on their own."
-                      (pointerdown)="$event.stopPropagation()"
-                      (click)="reloadCard(w)"
-                    >
-                      ⟳ <span>{{ cardAge() }}</span>
-                    </button>
+                    <!-- window title bar for cards: Studio only, never on /output -->
+                    <div class="win-bar" [class.sel]="w.id === editor.selectedId()">
+                      <span class="win-title">{{ registry[w.type].icon }} {{ cardTitle(w) }}</span>
+                      <button
+                        type="button"
+                        class="win-btn reload"
+                        title="Reload this card's data (1 API call). Cards never refresh on their own."
+                        (pointerdown)="$event.stopPropagation()"
+                        (click)="reloadCard(w)"
+                      >
+                        ⟳ <span>{{ cardAge() }}</span>
+                      </button>
+                      <button
+                        type="button"
+                        class="win-btn"
+                        [title]="w.props['minimized'] ? 'Restore' : 'Minimize'"
+                        (pointerdown)="$event.stopPropagation()"
+                        (click)="toggleMinimized(w)"
+                      >
+                        {{ w.props['minimized'] ? '▢' : '–' }}
+                      </button>
+                      <button
+                        type="button"
+                        class="win-btn close"
+                        title="Close (hide on air; reopen from Live cards or Layers)"
+                        (pointerdown)="$event.stopPropagation()"
+                        (click)="editor.updateWidget(w.id, { visible: false })"
+                      >
+                        ✕
+                      </button>
+                    </div>
                   }
-                  @if (w.id === editor.selectedId()) {
+                  @if (w.id === editor.selectedId() && !isCard(w)) {
                     <span class="tag">{{ w.name }}{{ w.locked ? ' · locked' : '' }}</span>
                     @if (!w.locked) {
                       @for (h of handles; track h) {
@@ -212,40 +236,65 @@ export const WIDGET_DND_TYPE = 'application/x-cos-widget';
     .rh-s { left: 50%; top: 100%; cursor: ns-resize; }
     .rh-sw { left: 0; top: 100%; cursor: nesw-resize; }
     .rh-w { left: 0; top: 50%; cursor: ew-resize; }
-    .card-reload {
+    /* card window chrome, sized in screen px whatever the zoom */
+    .win-bar {
       position: absolute;
-      right: 0;
-      top: 0;
-      transform-origin: 100% 0;
+      left: 0;
+      bottom: 100%;
+      width: calc(100% / var(--inv));
+      transform-origin: 0 100%;
       transform: scale(var(--inv));
-      display: inline-flex;
+      height: 26px;
+      display: flex;
       align-items: center;
-      gap: 6px;
-      padding: 5px 9px;
-      border: 0;
-      border-radius: 0 0 0 6px;
-      background: rgba(11, 15, 23, 0.85);
-      color: #fff;
-      font: 600 13px/1 Inter, sans-serif;
-      cursor: pointer;
-      opacity: 0;
-      transition: opacity 0.12s;
+      gap: 2px;
+      padding: 0 2px 0 8px;
+      background: rgba(30, 38, 52, 0.92);
+      border: 1px solid #2c3647;
+      border-bottom: 0;
+      border-radius: 6px 6px 0 0;
+      color: #cfd6e2;
+      font: 600 12px/1 Inter, sans-serif;
+      cursor: move;
       z-index: 2;
     }
-    .card-reload span {
+    .win-bar.sel {
+      background: #2563eb;
+      border-color: #3b82f6;
+      color: #fff;
+    }
+    .win-title {
+      flex: 1;
+      min-width: 0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .win-btn {
+      height: 22px;
+      min-width: 24px;
+      padding: 0 6px;
+      border: 0;
+      border-radius: 4px;
+      background: transparent;
+      color: inherit;
+      font: 600 12px/1 Inter, sans-serif;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+    }
+    .win-btn span {
       font-weight: 500;
-      color: #9aa4b2;
+      opacity: 0.75;
     }
-    .edit-box:hover .card-reload,
-    .edit-box.selected .card-reload {
-      opacity: 1;
+    .win-btn:hover {
+      background: rgba(255, 255, 255, 0.16);
     }
-    .card-reload:hover {
-      background: #22c55e;
-      color: #06240f;
-    }
-    .card-reload:hover span {
-      color: #06240f;
+    .win-btn.close:hover {
+      background: #ef4444;
+      color: #fff;
     }
     .guide {
       position: absolute;
@@ -304,6 +353,41 @@ export class CanvasComponent {
     const pad = 32;
     const s = Math.min((el.clientWidth - pad) / CANVAS_W, (el.clientHeight - pad) / CANVAS_H);
     this.ctx.scale.set(Math.max(0.1, Math.round(s * 1000) / 1000));
+  }
+
+  /** Cards follow their content height; keep the widget box (and the Output) in step. */
+  /** minimised cards: outline height of just the title strip (the stored height is kept for restore) */
+  protected readonly minimizedH = signal<Record<string, number>>({});
+
+  protected fitHeight(e: { id: string; h: number; minimized: boolean }): void {
+    if (e.minimized) {
+      if (this.minimizedH()[e.id] !== e.h) this.minimizedH.update((m) => ({ ...m, [e.id]: e.h }));
+      return;
+    }
+    if (this.minimizedH()[e.id] !== undefined) {
+      this.minimizedH.update((m) => {
+        const next = { ...m };
+        delete next[e.id];
+        return next;
+      });
+    }
+    if (this.ctx.activeBox() || Math.abs(e.h - (this.editor.scene()?.widgets.find((x) => x.id === e.id)?.h ?? e.h)) <= 1) return;
+    const scene = this.editor.scene();
+    const w = scene?.widgets.find((x) => x.id === e.id);
+    if (!scene || !w || w.h === e.h) return;
+    this.live.pushScene({ ...scene, widgets: scene.widgets.map((x) => (x.id === e.id ? { ...x, h: e.h } : x)), updatedAt: Date.now() });
+  }
+
+  protected readonly registry = WIDGET_REGISTRY;
+
+  protected cardTitle(w: WidgetInstance): string {
+    if (w.type === 'playerCard') return String(w.props['playerName'] || 'Player card');
+    if (w.type === 'teamCard') return 'Team card';
+    return 'Scorecard';
+  }
+
+  protected toggleMinimized(w: WidgetInstance): void {
+    this.editor.updateWidget(w.id, { props: { ...w.props, minimized: !w.props['minimized'] } });
   }
 
   protected isCard(w: WidgetInstance): boolean {

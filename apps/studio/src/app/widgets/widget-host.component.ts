@@ -1,8 +1,22 @@
 import { NgComponentOutlet } from '@angular/common';
-import { ChangeDetectionStrategy, Component, ElementRef, computed, effect, inject, input, untracked } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  DestroyRef,
+  ElementRef,
+  afterNextRender,
+  computed,
+  effect,
+  inject,
+  input,
+  output,
+  untracked,
+} from '@angular/core';
 import { hexToRgba, resolveStyle, type MatchState, type ThemeId, type WidgetInstance } from '@cos/shared';
 import { MotionService } from '../motion/motion.service';
 import { WIDGET_REGISTRY } from './widget-registry';
+
+const CARD_TYPES = new Set<string>(['scorecard', 'teamCard', 'playerCard']);
 
 /**
  * Positions one widget on the 1920×1080 canvas, turns its resolved style into
@@ -35,6 +49,9 @@ export class WidgetHostComponent {
   private readonly el = inject<ElementRef<HTMLElement>>(ElementRef).nativeElement;
   private readonly motion = inject(MotionService);
   private shown: boolean | null = null;
+
+  /** cards size their height to their content; the editor syncs the widget box to it */
+  readonly contentHeight = output<{ h: number; minimized: boolean }>();
 
   protected readonly component = computed(() => WIDGET_REGISTRY[this.widget().type].component);
   protected readonly resolved = computed(() => resolveStyle(this.widget().style, this.theme(), this.teamColor()));
@@ -83,11 +100,36 @@ export class WidgetHostComponent {
   });
 
   constructor() {
+    afterNextRender(() => this.reportHeight());
+    inject(DestroyRef).onDestroy(() => this.ro.disconnect());
+    effect(() => {
+      // re-measure after any change to the widget (props such as minimized, size, style)
+      this.widget();
+      this.match();
+      queueMicrotask(() => this.reportHeight());
+    });
     effect(() => {
       const visible = this.widget().visible;
       const mode = this.mode();
       untracked(() => this.applyVisibility(visible, mode));
     });
+  }
+
+  private readonly ro = new ResizeObserver(() => this.reportHeight());
+  private observed: HTMLElement | null = null;
+
+  private reportHeight(): void {
+    const w = untracked(() => this.widget());
+    if (untracked(() => this.mode()) !== 'editor' || !CARD_TYPES.has(w.type)) return;
+    const card = this.el.querySelector<HTMLElement>('.card');
+    if (!card) return;
+    if (card !== this.observed) {
+      if (this.observed) this.ro.unobserve(this.observed);
+      this.ro.observe(card);
+      this.observed = card;
+    }
+    const h = Math.round(card.offsetHeight);
+    if (h > 24) this.contentHeight.emit({ h, minimized: w.props['minimized'] === true });
   }
 
   private applyVisibility(visible: boolean, mode: 'output' | 'editor'): void {

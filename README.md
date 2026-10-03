@@ -80,9 +80,9 @@ Open the **Live cards** tab in the Studio's left panel while you talk:
 - **Teams**: a team's playing XI with what each player has done: runs (balls), batting now, yet to bat, bowling figures. Roles, captain and keeper.
 - **Players**: one tap for the two batters and the bowler, or pick from each team's list (team tabs, search). The list comes from the cached playing XIs, or from the scorecard when the XIs aren't loaded, so it costs no extra call. Shows role, batting and bowling style and this match's figures. *Show photo* is off by default; check you have the rights before showing player photos on a public stream.
 
-Cards open on the **on-air scene** with their enter animation. In the panel's *On air* list each card can be minimised to a title strip or closed (and reopened). They are normal widgets, so you can also move, resize and restyle them on the canvas.
+Cards open on the **on-air scene** with their enter animation. In the Studio each card gets a small **window title bar** (never shown on `/output`) with ⟳ reload (and data age), – minimise / ▢ restore, and ✕ close; the *On air* list in the panel has the same controls. Card text scales with the card's **width**, and the height follows the content, so there is never empty space below a card. They are normal widgets otherwise: move, resize and restyle them on the canvas.
 
-Data cost and caching: card data is **never refreshed automatically**. The scorecard and the playing XIs are each fetched once per match (1 call each) the first time a card needs them, saved to `apps/server/data/cards/` and reused across restarts. Press **⟳** on a card's top-right corner in the Studio (shown on hover; never on `/output`) or in the Live cards panel to reload on demand.
+Data cost and caching: card data is **never refreshed automatically**. The scorecard and the playing XIs are each fetched once per match (1 call each) the first time a card needs them, saved to `apps/server/data/cards/` and reused across restarts. Press **⟳** in a card's title bar or in the Live cards panel to reload on demand.
 
 ### Scene background
 
