@@ -15,6 +15,7 @@ export type WidgetType =
   | 'text'
   | 'image'
   | 'clock'
+  | 'timer'
   | 'scorecard'
   | 'teamCard'
   | 'playerCard';
