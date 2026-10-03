@@ -79,24 +79,27 @@ export class Poller {
       lastError: null,
       stale: false,
       mode: 'auto',
+      paused: false,
       nextPollAt: null,
     };
   }
 
   private mode: 'auto' | 'manual' = 'auto';
+  private paused = false;
   /** runtime override from the Studio; null = opts.fixedSeconds (.env) */
   private overrideSeconds: number | null = null;
   private inFlight = false;
 
   /** Studio controls: auto/manual and the auto interval. Takes effect immediately. */
-  setControl(mode: 'auto' | 'manual', seconds: number | null): void {
-    const changed = mode !== this.mode || seconds !== this.overrideSeconds;
+  setControl(mode: 'auto' | 'manual', seconds: number | null, paused = false): void {
+    const changed = mode !== this.mode || seconds !== this.overrideSeconds || paused !== this.paused;
     this.mode = mode;
     this.overrideSeconds = seconds;
+    this.paused = paused;
     if (!changed) return;
-    this.patchStatus({ mode });
+    this.patchStatus({ mode, paused });
     if (!this.matchId || this.status.phase === 'stopped') return;
-    if (mode === 'manual') {
+    if (mode === 'manual' || paused) {
       this.clearTimer();
       this.patchStatus({ nextPollAt: null });
     } else if (this.last) {
@@ -118,7 +121,7 @@ export class Poller {
 
   private schedule(seconds: number): void {
     this.clearTimer();
-    if (this.mode === 'manual') {
+    if (this.mode === 'manual' || this.paused) {
       this.patchStatus({ nextPollAt: null, intervalSeconds: seconds });
       return;
     }
@@ -173,6 +176,7 @@ export class Poller {
     this.hooks.onState(null);
     if (matchId) {
       this.provider.onSelect?.(matchId);
+      // one fetch so the overlay has data, even when paused
       void this.tick();
     }
   }
@@ -262,7 +266,7 @@ export class Poller {
   /** Keep serving the last good state; flag it stale when a couple of polls have been missed. */
   private checkStale(): void {
     // in manual mode the commentator decides when data refreshes; old data isn't "stale"
-    if (!this.last || !this.lastGoodAt || this.mode === 'manual') return;
+    if (!this.last || !this.lastGoodAt || this.mode === 'manual' || this.paused) return;
     const limit = Math.max(STALE_AFTER_MS, this.baseInterval() * 2500);
     const stale =
       Date.now() - this.lastGoodAt > limit && this.status.phase !== 'stopped' && this.status.phase !== 'break';

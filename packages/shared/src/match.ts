@@ -149,6 +149,7 @@ export interface PollStatus {
   lastError: string | null;
   stale: boolean;
   mode: 'auto' | 'manual';
+  paused: boolean;
   /** epoch ms of the next scheduled auto poll, null when none is scheduled */
   nextPollAt: number | null;
 }

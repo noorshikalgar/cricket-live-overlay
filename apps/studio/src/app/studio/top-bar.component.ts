@@ -64,7 +64,17 @@ import { PromptService } from './prompt-dialog.component';
         <button type="button" [class.on]="mode() === 'auto'" (click)="setMode('auto')" title="Update the score on a timer">Auto</button>
         <button type="button" [class.on]="mode() === 'manual'" (click)="setMode('manual')" title="Update only when you press Update now">Manual</button>
       </div>
-      @if (mode() === 'auto') {
+      <button
+        type="button"
+        class="pause"
+        [class.on]="paused()"
+        [attr.aria-pressed]="paused()"
+        (click)="togglePause()"
+        [title]="paused() ? 'Resume automatic score updates' : 'Pause all automatic API calls (e.g. during a break)'"
+      >
+        {{ paused() ? '▶ Resume' : '⏸ Pause' }}
+      </button>
+      @if (mode() === 'auto' && !paused()) {
         <select [value]="intervalValue()" (change)="setInterval($event)" aria-label="Update interval" title="How often the score is fetched">
           @for (o of intervals; track o.value) {
             <option [value]="o.value" [selected]="o.value === intervalValue()">{{ o.label }}</option>
@@ -80,7 +90,9 @@ import { PromptService } from './prompt-dialog.component';
       >
         ⟳ Update now
       </button>
-      @if (countdown(); as c) {
+      @if (paused()) {
+        <span class="paused-chip">paused · no API calls</span>
+      } @else if (countdown(); as c) {
         <span class="next">next {{ c }}</span>
       }
     </div>
@@ -223,6 +235,16 @@ import { PromptService } from './prompt-dialog.component';
     .pollctl select {
       max-width: 120px;
     }
+    .pause.on {
+      background: #f59e0b;
+      border-color: #f59e0b;
+      color: #1f1300;
+      font-weight: 600;
+    }
+    .paused-chip {
+      color: #fbbf24;
+      font-size: 12px;
+    }
     .next {
       color: var(--ui-muted);
       font-variant-numeric: tabular-nums;
@@ -323,7 +345,7 @@ export class TopBarComponent {
 
   protected readonly countdown = computed(() => {
     const next = this.live.poll()?.nextPollAt;
-    if (!next || this.mode() !== 'auto') return null;
+    if (!next || this.mode() !== 'auto' || this.paused()) return null;
     const s = Math.max(0, Math.round((next - this.now()) / 1000));
     return s >= 60 ? `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}` : `${s}s`;
   });
@@ -334,6 +356,12 @@ export class TopBarComponent {
     if (!this.live.settings().selectedMatchId || !p) return false;
     return !p.lastPollAt || this.now() - p.lastPollAt > 5000;
   });
+
+  protected readonly paused = computed(() => this.live.settings().pollPaused === true);
+
+  protected togglePause(): void {
+    this.live.send({ type: 'settings:update', settings: { pollPaused: !this.paused() } });
+  }
 
   protected setMode(mode: 'auto' | 'manual'): void {
     this.live.send({ type: 'settings:update', settings: { pollMode: mode } });
