@@ -188,3 +188,68 @@ describe('CricketLiveApi real live response (2026-10-03)', () => {
     expect(s.venue).toBe('Takashinga Sports Club, Harare');
   });
 });
+
+import COMMENTARY_REAL from './fixtures/commentary-real.json';
+import { composeFromMiniscore, parseBallText, resultKind, thisOverChips, tokenChip } from '../src/providers/cricketliveapi-miniscore';
+
+describe('CricketLiveApi real commentary response (miniscore shape)', () => {
+  const s = composeFromMiniscore('173107', COMMENTARY_REAL, { teamColor: () => '#123456', venue: 'Takashinga Sports Club, Harare' }, 0);
+
+  it('reads batters, bowler, partnership and innings from miniscore', () => {
+    expect(s.teams.map((t) => t.shortCode)).toEqual(['ZIMW', 'WIW']);
+    expect(s.innings.map((i) => `${i.battingTeam} ${i.runs}/${i.wickets} (${i.overs})`)).toEqual([
+      'ZIMW 97/9 (20.0)',
+      'WIW 37/0 (3.5)',
+    ]);
+    expect(s.batters[0]).toMatchObject({ name: 'Eboni Brathwaite', runs: 22, balls: 12, fours: 2, sixes: 2, onStrike: true });
+    expect(s.batters[1]).toMatchObject({ name: 'Jahzara Claxton', runs: 8, onStrike: false });
+    expect(s.bowler).toMatchObject({ name: 'Nyasha Gwanzura', overs: '1.5', runs: 10, wickets: 0 });
+    expect(s.partnership).toMatchObject({ runs: 37, balls: 23 });
+    expect(s.target).toBe(98);
+    expect(s.statusText).toBe('West Indies Women need 61 runs from 97 balls');
+    expect(s.toss).toBe('West Indies Women won the toss and chose to bowl');
+    expect(s.venue).toBe('Takashinga Sports Club, Harare');
+  });
+
+  it('builds this over and recent overs', () => {
+    expect(s.thisOver.map((c) => c.label)).toEqual(['•', '4', '•', '1', '•']);
+    expect(s.recentOvers).toEqual([14, 6, 12]);
+  });
+
+  it('turns entries into a ball feed with boundaries', () => {
+    const feed = s.ballFeed ?? [];
+    expect(feed[0]).toMatchObject({ over: '3.5', kind: 'dot', batter: 'Eboni Brathwaite', bowler: 'Nyasha Gwanzura' });
+    expect(feed.filter((b) => b.kind === 'four').length).toBe(3);
+    expect(feed.filter((b) => b.kind === 'six').length).toBe(1);
+    // "X comes into the attack" notes are not balls
+    expect(feed.some((b) => /comes into the attack/.test(b.text))).toBe(false);
+  });
+
+  it('parses result text and over tokens', () => {
+    expect(parseBallText('Nyasha Gwanzura to Eboni Brathwaite, <b>FOUR</b>')).toEqual({
+      bowler: 'Nyasha Gwanzura',
+      batter: 'Eboni Brathwaite',
+      result: 'FOUR',
+    });
+    expect(resultKind('leg byes, 1 run')).toEqual({ kind: 'bye', runs: 1 });
+    expect(resultKind('2 runs')).toEqual({ kind: 'run', runs: 2 });
+    expect(resultKind('out Caught by Smith!!')).toMatchObject({ kind: 'wicket' });
+    expect(resultKind('wide')).toEqual({ kind: 'wide', runs: 1 });
+    expect(thisOverChips('Wd5 Wd 0 6 1 1 0 0').map((c) => c.label)).toEqual(['5wd', 'wd', '•', '6', '1', '1', '•', '•']);
+    expect(tokenChip('L1')).toMatchObject({ kind: 'bye', label: '1lb' });
+    expect(tokenChip('W')).toMatchObject({ kind: 'wicket' });
+  });
+
+  it('fires a SIX from a new feed entry', () => {
+    const next = structuredClone(COMMENTARY_REAL) as typeof COMMENTARY_REAL;
+    next.data.commentary.unshift({
+      timestamp: 1791032399999,
+      text: 'Nyasha Gwanzura to Eboni Brathwaite, <b>SIX</b>',
+      ball_metric: 3.6,
+      innings_id: 2,
+      over_separator: null,
+    });
+    const s2 = composeFromMiniscore('173107', next, { teamColor: () => '#123456' }, 1);
+    expect(detectEvents(s, s2, new Set()).map((e) => e.type)).toEqual(['SIX']);
+  });
+});

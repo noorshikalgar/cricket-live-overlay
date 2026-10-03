@@ -15,6 +15,7 @@ import {
 } from '@cos/shared';
 import { arr, getJson, num, obj, oversToBalls, str, type Json } from './http';
 import { BudgetExceededError, type CallBudget } from '../usage';
+import { composeFromMiniscore, isMiniscoreResponse } from './cricketliveapi-miniscore';
 import type { CricketProvider } from './types';
 
 /**
@@ -336,8 +337,8 @@ export class CricketLiveApiProvider implements CricketProvider {
   readonly countsTowardQuota = true;
   /** their commentary cache refreshes every 10 s */
   readonly minIntervalSeconds = 10;
-  /** ball feed + live list + scorecard when polls are ≥30 s apart */
-  readonly callsPerPoll = 3;
+  /** the real commentary response carries the whole state in one call */
+  readonly callsPerPoll = 1;
 
   private readonly baseUrl: string;
   private budget: CallBudget | null = null;
@@ -386,7 +387,17 @@ export class CricketLiveApiProvider implements CricketProvider {
     const now = Date.now();
 
     // required: the ball feed (10 s cache on their side)
-    const feed = mapCommentary(await this.get(PATHS.commentary(id)));
+    const commentaryRaw = await this.get(PATHS.commentary(id));
+
+    if (isMiniscoreResponse(commentaryRaw)) {
+      // real API shape: one call has everything; the live list is only read for the
+      // venue, from the copy the match picker already fetched (no extra call)
+      const item = this.liveList?.value.find((m) => str(m['match_id']) === id);
+      return composeFromMiniscore(id, commentaryRaw, { teamColor, venue: str(item?.['venue']) }, now);
+    }
+
+    // doc shape (flat commentary array): combine with live list, scorecard and facts
+    const feed = mapCommentary(commentaryRaw);
 
     // optional sources: refreshed when stale and the per-minute budget allows
     const due = (x: Cached<unknown> | undefined, ms: number) => !x || now - x.at >= ms;

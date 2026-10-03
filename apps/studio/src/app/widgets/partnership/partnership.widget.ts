@@ -20,7 +20,7 @@ export interface PartnershipProps {
         <span class="num big" [cosOdo]="match()?.partnership?.runs ?? 0"></span>
         <span class="num balls">(<span [cosOdo]="match()?.partnership?.balls ?? 0"></span>)</span>
       </div>
-      @if (p().showBar) {
+      @if (p().showBar && contrib()[0] + contrib()[1] > 0) {
         <div class="bar">
           <span class="a" [style.transform]="'scaleX(' + share()[0] + ')'"></span>
           <span class="b" [style.transform]="'scaleX(' + share()[1] + ')'"></span>

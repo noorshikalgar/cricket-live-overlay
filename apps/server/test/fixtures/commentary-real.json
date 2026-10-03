@@ -1,0 +1,279 @@
+{
+  "success": true,
+  "data": {
+    "match_id": 173107,
+    "miniscore": {
+      "innings_id": 2,
+      "bat_team_id": 257,
+      "bat_team_score": 37,
+      "bat_team_wickets": 0,
+      "status": "West Indies Women need 61 runs",
+      "overs": 3.5,
+      "target": 98,
+      "crr": 9.65,
+      "rrr": 3.77,
+      "ovs_rem": "$undefined",
+      "recent_overs": "0 4 0 1 0",
+      "last_wicket": "",
+      "last_10_overs": null,
+      "partnership": {
+        "runs": 37,
+        "balls": 23
+      },
+      "striker": {
+        "id": 1469216,
+        "name": "Eboni Brathwaite",
+        "runs": 22,
+        "balls": 12,
+        "fours": 2,
+        "sixes": 2,
+        "strike_rate": "183.33",
+        "url": "/profiles/1469216/eboni-brathwaite"
+      },
+      "non_striker": {
+        "id": 38279,
+        "name": "Jahzara Claxton",
+        "runs": 8,
+        "balls": 11,
+        "fours": 1,
+        "sixes": 0,
+        "strike_rate": "72.73",
+        "url": "/profiles/38279/jahzara-claxton"
+      },
+      "bowler_striker": {
+        "id": 20112,
+        "name": "Nyasha Gwanzura",
+        "overs": 1.5,
+        "maidens": 0,
+        "runs": 10,
+        "wickets": 0,
+        "economy": 5.5,
+        "url": "/profiles/20112/nyasha-gwanzura"
+      },
+      "bowler_non_striker": {
+        "id": 38517,
+        "name": "Michelle Mavunga",
+        "overs": 1,
+        "maidens": 0,
+        "runs": 12,
+        "wickets": 0,
+        "economy": 12,
+        "url": "/profiles/38517/michelle-mavunga"
+      },
+      "innings_scores": [
+        {
+          "innings_id": 1,
+          "bat_team": "ZIMW",
+          "score": 97,
+          "wickets": 9,
+          "overs": 20,
+          "is_declared": false,
+          "is_follow_on": false
+        },
+        {
+          "innings_id": 2,
+          "bat_team": "WIW",
+          "score": 37,
+          "wickets": 0,
+          "overs": 3.5,
+          "is_declared": false,
+          "is_follow_on": false
+        }
+      ],
+      "match_format": "T20",
+      "custom_status": "West Indies Women need 61 runs",
+      "state": "In Progress"
+    },
+    "match_header": {
+      "match_id": 173107,
+      "description": "1st T20I",
+      "format": "T20",
+      "status": "West Indies Women need 61 runs",
+      "state": "In Progress",
+      "start_time_ist": "4:30 PM",
+      "start_time_gmt": "11:00 AM",
+      "start_time_local": "1:00 PM",
+      "toss_winner": "West Indies Women",
+      "toss_decision": "Bowling",
+      "team1": {
+        "id": 388,
+        "name": "Zimbabwe Women",
+        "short": "ZIMW"
+      },
+      "team2": {
+        "id": 257,
+        "name": "West Indies Women",
+        "short": "WIW"
+      },
+      "series_name": "West Indies Women tour of Zimbabwe, 2026",
+      "venue": ""
+    },
+    "win_probability": null,
+    "commentary": [
+      {
+        "timestamp": 1791032369671,
+        "text": "Nyasha Gwanzura to Eboni Brathwaite, no run",
+        "ball_metric": 3.5,
+        "innings_id": 2,
+        "over_separator": null
+      },
+      {
+        "timestamp": 1791032364090,
+        "text": "Nyasha Gwanzura to Jahzara Claxton, 1 run",
+        "ball_metric": 3.4,
+        "innings_id": 2,
+        "over_separator": null
+      },
+      {
+        "timestamp": 1791032333847,
+        "text": "Nyasha Gwanzura to Jahzara Claxton, no run",
+        "ball_metric": 3.3,
+        "innings_id": 2,
+        "over_separator": null
+      },
+      {
+        "timestamp": 1791032301670,
+        "text": "Nyasha Gwanzura to Jahzara Claxton, <b>FOUR</b>",
+        "ball_metric": 3.2,
+        "innings_id": 2,
+        "over_separator": null
+      },
+      {
+        "timestamp": 1791032298773,
+        "text": "Nyasha Gwanzura to Jahzara Claxton, no run",
+        "ball_metric": 3.1,
+        "innings_id": 2,
+        "over_separator": null
+      },
+      {
+        "timestamp": 1791032260417,
+        "text": "Michelle Mavunga to Eboni Brathwaite, <b>FOUR</b>",
+        "ball_metric": 2.6,
+        "innings_id": 2,
+        "over_separator": {
+          "over_number": 3,
+          "over_summary": "0 1 0 1 6 4 ",
+          "over_runs": 12,
+          "bat_team_score": "32-0",
+          "striker": "22(11)",
+          "non_striker": "3(7)",
+          "bowler": "1-0-12-0"
+        }
+      },
+      {
+        "timestamp": 1791032181528,
+        "text": "Michelle Mavunga to Eboni Brathwaite, <b>SIX</b>",
+        "ball_metric": 2.5,
+        "innings_id": 2,
+        "over_separator": null
+      },
+      {
+        "timestamp": 1791032157172,
+        "text": "Michelle Mavunga to Jahzara Claxton, 1 run",
+        "ball_metric": 2.4,
+        "innings_id": 2,
+        "over_separator": null
+      },
+      {
+        "timestamp": 1791032136476,
+        "text": "Michelle Mavunga to Jahzara Claxton, no run",
+        "ball_metric": 2.3,
+        "innings_id": 2,
+        "over_separator": null
+      },
+      {
+        "timestamp": 1791032133902,
+        "text": "Michelle Mavunga to Eboni Brathwaite, 1 run",
+        "ball_metric": 2.2,
+        "innings_id": 2,
+        "over_separator": null
+      },
+      {
+        "timestamp": 1791032129808,
+        "text": "Michelle Mavunga to Eboni Brathwaite, no run",
+        "ball_metric": 2.1,
+        "innings_id": 2,
+        "over_separator": null
+      },
+      {
+        "timestamp": 1791032074725,
+        "text": "<b>Michelle Mavunga, right-arm medium, comes into the attack</b>",
+        "ball_metric": 1.6,
+        "innings_id": 2,
+        "over_separator": null
+      },
+      {
+        "timestamp": 1791031994595,
+        "text": "Nyasha Gwanzura to Jahzara Claxton, no run",
+        "ball_metric": 1.6,
+        "innings_id": 2,
+        "over_separator": {
+          "over_number": 2,
+          "over_summary": "0 0 1 4 L1 0 ",
+          "over_runs": 6,
+          "bat_team_score": "20-0",
+          "striker": "2(5)",
+          "non_striker": "11(7)",
+          "bowler": "1-0-5-0"
+        }
+      },
+      {
+        "timestamp": 1791031993470,
+        "text": "Nyasha Gwanzura to Eboni Brathwaite, leg byes, 1 run",
+        "ball_metric": 1.5,
+        "innings_id": 2,
+        "over_separator": null
+      },
+      {
+        "timestamp": 1791031918130,
+        "text": "Nyasha Gwanzura to Eboni Brathwaite, <b>FOUR</b>",
+        "ball_metric": 1.4,
+        "innings_id": 2,
+        "over_separator": null
+      },
+      {
+        "timestamp": 1791031866139,
+        "text": "Nyasha Gwanzura to Jahzara Claxton, 1 run",
+        "ball_metric": 1.3,
+        "innings_id": 2,
+        "over_separator": null
+      },
+      {
+        "timestamp": 1791031863193,
+        "text": "Nyasha Gwanzura to Jahzara Claxton, no run",
+        "ball_metric": 1.2,
+        "innings_id": 2,
+        "over_separator": null
+      },
+      {
+        "timestamp": 1791031838225,
+        "text": "Nyasha Gwanzura to Jahzara Claxton, no run",
+        "ball_metric": 1.1,
+        "innings_id": 2,
+        "over_separator": null
+      },
+      {
+        "timestamp": 1791031835718,
+        "text": "<b>Nyasha Gwanzura, right-arm medium, comes into the attack</b>",
+        "ball_metric": 0.6,
+        "innings_id": 2,
+        "over_separator": null
+      },
+      {
+        "timestamp": 1791031750835,
+        "text": "Kudzai Chigora to Eboni Brathwaite, no run",
+        "ball_metric": 0.6,
+        "innings_id": 2,
+        "over_separator": {
+          "over_number": 1,
+          "over_summary": "Wd5 Wd 0 6 1 1 0 0 ",
+          "over_runs": 14,
+          "bat_team_score": "14-0",
+          "striker": "7(5)",
+          "non_striker": "1(1)",
+          "bowler": "1-0-14-0"
+        }
+      }
+    ]
+  }
+}
