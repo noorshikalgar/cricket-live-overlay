@@ -3,6 +3,7 @@ import type { Duplex } from 'node:stream';
 import { WebSocket, WebSocketServer } from 'ws';
 import { isClientMessage, newId, summarize, type ClientMessage, type ClientRole, type ServerMessage } from '@cos/shared';
 import { manualEvent } from './events';
+import type { CardService } from './cards';
 import type { ObsBridge } from './obs';
 import type { Poller } from './poller';
 import { validateScene, type SceneStore } from './scenes';
@@ -21,6 +22,7 @@ export class Hub {
   private readonly wss = new WebSocketServer({ noServer: true, maxPayload: 4 * 1024 * 1024 });
   private readonly clients = new Map<string, Client>();
   private poller: Poller | null = null;
+  private cards: CardService | null = null;
 
   constructor(
     private readonly scenes: SceneStore,
@@ -41,8 +43,9 @@ export class Hub {
     }, 15_000).unref();
   }
 
-  attach(poller: Poller): void {
+  attach(poller: Poller, cards: CardService): void {
     this.poller = poller;
+    this.cards = cards;
   }
 
   handleUpgrade(req: IncomingMessage, socket: Duplex, head: Buffer): void {
@@ -97,6 +100,10 @@ export class Hub {
         });
         if (poller) this.send(c, { type: 'matches:list', matches: poller.liveMatches });
         this.send(c, { type: 'obs:status', status: this.obs.status });
+        if (this.cards) {
+          this.send(c, { type: 'cards:scorecard', scorecard: this.cards.current.scorecard });
+          this.send(c, { type: 'cards:squads', squads: this.cards.current.squads });
+        }
         this.broadcastClients();
         return;
       }
@@ -140,12 +147,18 @@ export class Hub {
         if (c.role !== 'studio') return;
         this.scenes.updateSettings({ selectedMatchId: msg.matchId });
         this.broadcastSettings();
+        this.cards?.reset(msg.matchId);
         poller?.select(msg.matchId);
         return;
       }
       case 'poll:now': {
         if (c.role !== 'studio') return;
         poller?.pollNow();
+        return;
+      }
+      case 'cards:fetch': {
+        if (c.role !== 'studio') return;
+        void this.cards?.fetch(msg.kind === 'squads' ? 'squads' : 'scorecard', msg.force === true);
         return;
       }
       case 'matches:refresh': {

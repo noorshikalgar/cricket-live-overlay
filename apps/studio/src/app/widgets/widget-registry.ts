@@ -4,7 +4,10 @@ import { BannerWidget } from './banner/banner.widget';
 import { BattersWidget } from './batters/batters.widget';
 import { BowlerWidget } from './bowler/bowler.widget';
 import { CameraWidget } from './camera/camera.widget';
+import { PlayerCardWidget } from './cards/player-card.widget';
+import { TeamCardWidget } from './cards/team-card.widget';
 import { ClockWidget } from './clock/clock.widget';
+import { ScorecardWidget } from './scorecard/scorecard.widget';
 import { ImageWidget } from './image/image.widget';
 import { MatchInfoWidget } from './match-info/match-info.widget';
 import { PartnershipWidget } from './partnership/partnership.widget';
@@ -139,6 +142,35 @@ export const WIDGET_REGISTRY: Record<WidgetType, WidgetDef> = {
     { kind: 'image', key: 'src', label: 'Image' },
     { kind: 'select', key: 'fit', label: 'Fit', options: opts(['contain', 'Contain'], ['cover', 'Cover']) },
     { kind: 'toggle', key: 'panel', label: 'Panel background' },
+  ]),
+  scorecard: def('scorecard', ScorecardWidget, 'Full batting and bowling card, yet to bat, fall of wickets', [
+    {
+      kind: 'select',
+      key: 'innings',
+      label: 'Innings',
+      options: opts(['current', 'Current'], ['1', '1st'], ['2', '2nd'], ['3', '3rd'], ['4', '4th']),
+    },
+    { kind: 'toggle', key: 'showBatting', label: 'Batting' },
+    { kind: 'toggle', key: 'showBowling', label: 'Bowling' },
+    { kind: 'toggle', key: 'showYetToBat', label: 'Yet to bat' },
+    { kind: 'toggle', key: 'showFow', label: 'Fall of wickets' },
+    { kind: 'toggle', key: 'minimized', label: 'Minimized' },
+  ]),
+  teamCard: def('teamCard', TeamCardWidget, 'Playing XI with who batted, who is in and who is yet to bat', [
+    {
+      kind: 'select',
+      key: 'side',
+      label: 'Team',
+      options: opts(['batting', 'Batting side'], ['bowling', 'Bowling side'], ['0', 'First team'], ['1', 'Second team']),
+    },
+    { kind: 'toggle', key: 'showRoles', label: 'Roles' },
+    { kind: 'toggle', key: 'showScores', label: 'Team score' },
+    { kind: 'toggle', key: 'minimized', label: 'Minimized' },
+  ]),
+  playerCard: def('playerCard', PlayerCardWidget, 'One player: role, styles and this match’s figures', [
+    { kind: 'text', key: 'playerName', label: 'Player (pick from the Cards panel)' },
+    { kind: 'toggle', key: 'showPhoto', label: 'Show photo (check rights for public streams)' },
+    { kind: 'toggle', key: 'minimized', label: 'Minimized' },
   ]),
   clock: def('clock', ClockWidget, 'Local time or countdown', [
     { kind: 'select', key: 'mode', label: 'Mode', options: opts(['time', 'Local time'], ['countdown', 'Countdown']) },

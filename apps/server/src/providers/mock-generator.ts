@@ -135,6 +135,15 @@ function playInnings(
   return { deliveries: out, runs };
 }
 
+function roleFor(i: number): string {
+  if (i === 0) return 'Batter (c)';
+  if (i < 5) return 'Batter';
+  if (i === 5) return 'Batting Allrounder';
+  if (i === 6) return 'WK-Batter';
+  if (i === 7) return 'Bowling Allrounder';
+  return 'Bowler';
+}
+
 export function generateRecording(seed = 20261003, overs = 20): Recording {
   const r = rng(seed);
   const first = playInnings(r, 0, HOME, AWAY, overs, null);
@@ -149,6 +158,10 @@ export function generateRecording(seed = 20261003, overs = 20): Recording {
       oversPerInnings: overs,
       teams: [HOME.team, AWAY.team],
       battingFirst: HOME.team.shortCode,
+      squads: {
+        [HOME.team.shortCode]: HOME.batters.map((name, i) => ({ name, role: roleFor(i) })),
+        [AWAY.team.shortCode]: AWAY.batters.map((name, i) => ({ name, role: roleFor(i) })),
+      },
     },
     deliveries: [...first.deliveries, ...second.deliveries],
   };

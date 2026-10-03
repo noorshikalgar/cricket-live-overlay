@@ -11,10 +11,13 @@ import {
   type MatchPhase,
   type MatchState,
   type MatchSummary,
+  type Scorecard,
+  type Squads,
   type Team,
 } from '@cos/shared';
 import { arr, getJson, num, obj, oversToBalls, str, type Json } from './http';
 import { BudgetExceededError, type CallBudget } from '../usage';
+import { mapScorecardReal, mapSquadsReal } from './cricketliveapi-cards';
 import { composeFromMiniscore, isMiniscoreResponse } from './cricketliveapi-miniscore';
 import type { CricketProvider } from './types';
 
@@ -46,6 +49,7 @@ const PATHS = {
   commentary: (id: string) => `/cricket/commentary/${encodeURIComponent(id)}`,
   scorecard: (id: string) => `/cricket/scorecard/${encodeURIComponent(id)}`,
   facts: (id: string) => `/cricket/match-facts/${encodeURIComponent(id)}`,
+  squads: (id: string) => `/cricket/squads/${encodeURIComponent(id)}`,
 };
 
 const REFRESH_MS = { live: 15_000, scorecard: 30_000, facts: 10 * 60_000 };
@@ -375,6 +379,14 @@ export class CricketLiveApiProvider implements CricketProvider {
     const raw = await this.get(PATHS.live, optional);
     this.liveList = { at: Date.now(), value: arr(obj(raw)['data']).map(obj) };
     return this.liveList.value;
+  }
+
+  async getScorecard(id: string): Promise<Scorecard> {
+    return mapScorecardReal(await this.get(PATHS.scorecard(id), true), id, Date.now());
+  }
+
+  async getSquads(id: string): Promise<Squads> {
+    return mapSquadsReal(await this.get(PATHS.squads(id), true), id, Date.now());
   }
 
   async listLiveMatches(): Promise<MatchSummary[]> {

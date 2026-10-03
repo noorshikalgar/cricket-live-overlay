@@ -1,10 +1,11 @@
-import { ChangeDetectionStrategy, Component, ViewEncapsulation, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, ViewEncapsulation, inject, signal } from '@angular/core';
 import { LiveStore } from '../core/live.store';
 import { CanvasToolbarComponent } from './canvas-toolbar.component';
 import { CanvasComponent } from './canvas.component';
 import { EditorStore } from './editor.store';
 import { EventPadComponent, PAD_BUTTONS } from './event-pad.component';
 import { LayersPanelComponent } from './layers-panel.component';
+import { CardsPanelComponent } from './cards-panel.component';
 import { LibraryPanelComponent } from './library-panel.component';
 import { PromptDialogComponent, PromptService } from './prompt-dialog.component';
 import { SettingsPanelComponent } from './settings-panel.component';
@@ -24,6 +25,7 @@ function typingInField(e: KeyboardEvent): boolean {
     CanvasToolbarComponent,
     CanvasComponent,
     LibraryPanelComponent,
+    CardsPanelComponent,
     SettingsPanelComponent,
     LayersPanelComponent,
     EventPadComponent,
@@ -36,7 +38,15 @@ function typingInField(e: KeyboardEvent): boolean {
   template: `
     <cos-top-bar class="top" />
     <aside class="left">
-      <cos-library-panel class="lib" />
+      <div class="tabs" role="tablist">
+        <button type="button" role="tab" [class.on]="leftTab() === 'widgets'" (click)="leftTab.set('widgets')">Widgets</button>
+        <button type="button" role="tab" [class.on]="leftTab() === 'cards'" (click)="leftTab.set('cards')">Live cards</button>
+      </div>
+      @if (leftTab() === 'widgets') {
+        <cos-library-panel class="lib" />
+      } @else {
+        <cos-cards-panel class="lib" />
+      }
     </aside>
     <main class="center">
       <cos-canvas-toolbar />
@@ -86,6 +96,26 @@ function typingInField(e: KeyboardEvent): boolean {
       display: flex;
       flex-direction: column;
       min-height: 0;
+    }
+    .studio-root .tabs {
+      display: flex;
+      gap: 4px;
+      padding: 8px 10px 0;
+      border-bottom: 1px solid var(--ui-border);
+      flex: none;
+    }
+    .studio-root .tabs button {
+      flex: 1;
+      justify-content: center;
+      border-radius: 6px 6px 0 0;
+      border-bottom: 0;
+      background: transparent;
+      color: var(--ui-muted);
+    }
+    .studio-root .tabs button.on {
+      background: var(--ui-chip);
+      color: var(--ui-text);
+      font-weight: 600;
     }
     .studio-root .lib {
       flex: 1;
@@ -225,6 +255,8 @@ export default class StudioPage {
   private readonly live = inject(LiveStore);
   private readonly editor = inject(EditorStore);
   private readonly prompt = inject(PromptService);
+
+  protected readonly leftTab = signal<'widgets' | 'cards'>('widgets');
 
   constructor() {
     this.live.connect('studio');

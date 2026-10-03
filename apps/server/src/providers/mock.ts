@@ -1,8 +1,8 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
-import type { MatchState, MatchSummary } from '@cos/shared';
+import type { MatchState, MatchSummary, Scorecard, Squads } from '@cos/shared';
 import { generateRecording } from './mock-generator';
-import { buildState, toSummary, type Recording } from './recording';
+import { buildScorecard, buildSquads, buildState, toSummary, type Recording } from './recording';
 import type { CricketProvider } from './types';
 
 interface Replay {
@@ -61,6 +61,21 @@ export class MockProvider implements CricketProvider {
     const r = this.replays.find((x) => x.id === id);
     if (!r) throw new Error(`Unknown mock match ${id}`);
     return this.stateFor(r, Date.now());
+  }
+
+  async getScorecard(id: string): Promise<Scorecard> {
+    const r = this.replay(id);
+    return { ...buildScorecard(this.rec, this.ballsAt(r, Date.now()), Date.now()), matchId: r.id };
+  }
+
+  async getSquads(id: string): Promise<Squads> {
+    return { ...buildSquads(this.rec, Date.now()), matchId: this.replay(id).id };
+  }
+
+  private replay(id: string): Replay {
+    const r = this.replays.find((x) => x.id === id);
+    if (!r) throw new Error(`Unknown mock match ${id}`);
+    return r;
   }
 
   private stateFor(r: Replay, now: number): MatchState {
