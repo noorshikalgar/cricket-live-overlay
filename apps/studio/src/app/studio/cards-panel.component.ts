@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, DestroyRef, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, computed, effect, inject, signal, untracked } from '@angular/core';
 import {
   CANVAS_H,
   CANVAS_W,
@@ -11,6 +11,7 @@ import {
 } from '@cos/shared';
 import { LiveStore } from '../core/live.store';
 import { WIDGET_REGISTRY } from '../widgets/widget-registry';
+import { findTeam, sameName } from '../widgets/cards/card-data';
 import { EditorStore } from './editor.store';
 
 type CardType = 'scorecard' | 'teamCard' | 'playerCard';
@@ -74,23 +75,34 @@ const ORDINAL = ['1st', '2nd', '3rd', '4th'];
           <button type="button" class="card-btn" (click)="openPlayer('', w.name)">⚾ {{ last(w.name) }} <small>{{ w.wickets }}-{{ w.runs }}</small></button>
         }
       </div>
-      @if (live.squads(); as sq) {
-        <input class="search" type="search" placeholder="Find a player…" [value]="query()" (input)="query.set(asValue($event))" />
-        @for (t of sq.teams; track t.code) {
-          <div class="team">{{ t.name }}</div>
+      <div class="tabs2" role="tablist">
+        @for (t of live.match()!.teams; track t.shortCode; let i = $index) {
+          <button type="button" role="tab" [class.on]="teamTab() === i" [style.--c]="t.primaryColor" (click)="teamTab.set(i)">
+            <i class="sw"></i>{{ t.shortCode }}
+          </button>
+        }
+      </div>
+      <input class="search" type="search" placeholder="Find a player…" [value]="query()" (input)="query.set(asValue($event))" />
+      @if (roster(); as r) {
+        @if (r.players.length) {
           <ul class="players">
-            @for (p of filtered(t.playingXI); track p.id) {
+            @for (p of filtered(r.players); track p.name) {
               <li>
-                <button type="button" (click)="openPlayer(p.id, p.name)">
-                  {{ p.name }}@if (p.captain) { <span class="tag">C</span> }@if (p.keeper) { <span class="tag">WK</span> }
-                  <small>{{ p.role }}</small>
+                <button type="button" (click)="openPlayer(p.id, p.name)" [class.now]="p.state === 'batting'">
+                  <span class="pn">{{ p.name }}@if (p.captain) { <span class="tag">C</span> }@if (p.keeper) { <span class="tag">WK</span> }</span>
+                  <small>{{ p.note || p.role }}</small>
                 </button>
               </li>
             }
           </ul>
+        } @else {
+          <p class="hint">No players yet for this team.</p>
         }
-      } @else {
-        <button type="button" class="load" (click)="fetch('squads', true)">Load playing XIs (1 API call)</button>
+        @if (r.source !== 'squads') {
+          <button type="button" class="load" (click)="fetch('squads', true)" title="Roles, captain and keeper for both teams; cached, 1 API call">
+            Load full playing XIs (1 API call)
+          </button>
+        }
       }
 
       <h3>On air</h3>
@@ -174,6 +186,30 @@ const ORDINAL = ['1st', '2nd', '3rd', '4th'];
       background: var(--c);
       flex: none;
     }
+    .tabs2 {
+      display: flex;
+      gap: 4px;
+      margin-top: 4px;
+    }
+    .tabs2 button {
+      flex: 1;
+      justify-content: center;
+      background: transparent;
+    }
+    .tabs2 button.on {
+      background: var(--ui-chip-strong);
+      border-color: var(--c, var(--ui-accent));
+      font-weight: 600;
+    }
+    .players button.now .pn {
+      color: var(--ui-accent);
+    }
+    .pn {
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
     .search {
       width: 100%;
       margin: 10px 0 4px;
@@ -255,6 +291,11 @@ export class CardsPanelComponent {
   private readonly now = signal(Date.now());
 
   constructor() {
+    // first look at a match: load its scorecard once if nothing is cached (no-op otherwise)
+    effect(() => {
+      const id = this.live.match()?.matchId;
+      if (id && !untracked(() => this.live.scorecard())) untracked(() => this.fetch('scorecard'));
+    });
     const t = setInterval(() => this.now.set(Date.now()), 5000);
     inject(DestroyRef).onDestroy(() => clearInterval(t));
   }
@@ -269,6 +310,45 @@ export class CardsPanelComponent {
   protected readonly inningsList = computed(() =>
     (this.live.match()?.innings ?? []).map((i, n) => `${i.battingTeam} ${ORDINAL[n] ?? `${n + 1}th`}`),
   );
+
+  protected readonly teamTab = signal(0);
+
+  /**
+   * The chosen team's players: the cached playing XI when loaded, otherwise built from
+   * the scorecard (batters, yet to bat, bowlers) so the list never needs an extra call.
+   */
+  protected readonly roster = computed(() => {
+    const m = this.live.match();
+    const team = m?.teams[this.teamTab()];
+    if (!m || !team) return null;
+    const sc = this.live.scorecard();
+    const batInns = (sc?.innings ?? []).filter((i) => i.team.toLowerCase() === team.shortCode.toLowerCase() || sameName(i.teamName, team.name));
+    const bowlInns = (sc?.innings ?? []).filter((i) => !batInns.includes(i));
+    const note = (name: string): { note: string; state: string } => {
+      const bat = batInns.flatMap((i) => i.batters).filter((b) => sameName(b.name, name)).at(-1);
+      if (bat) return { note: `${bat.runs}${bat.status !== 'out' ? '*' : ''} (${bat.balls})`, state: bat.status };
+      const bowl = bowlInns.flatMap((i) => i.bowlers).filter((b) => sameName(b.name, name)).at(-1);
+      if (bowl) return { note: `${bowl.wickets}-${bowl.runs} (${bowl.overs})`, state: 'bowled' };
+      return { note: '', state: '' };
+    };
+    const squad = findTeam(this.live.squads(), team.shortCode) ?? findTeam(this.live.squads(), team.name);
+    if (squad?.playingXI.length) {
+      return {
+        source: 'squads' as const,
+        players: squad.playingXI.map((p) => ({ id: p.id, name: p.name, role: p.role, captain: p.captain, keeper: p.keeper, ...note(p.name) })),
+      };
+    }
+    const names = new Map<string, { captain: boolean; keeper: boolean }>();
+    for (const i of batInns) {
+      for (const b of i.batters) names.set(b.name, { captain: b.captain, keeper: b.keeper });
+      for (const n of i.yetToBat) if (!names.has(n)) names.set(n, { captain: false, keeper: false });
+    }
+    for (const i of bowlInns) for (const b of i.bowlers) if (![...names.keys()].some((n) => sameName(n, b.name))) names.set(b.name, { captain: false, keeper: false });
+    return {
+      source: 'scorecard' as const,
+      players: [...names.entries()].map(([name, f]) => ({ id: '', name, role: '', ...f, ...note(name) })),
+    };
+  });
 
   private readonly onAirScene = computed<Scene | null>(() => this.live.activeScene());
 

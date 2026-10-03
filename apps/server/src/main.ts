@@ -21,7 +21,7 @@ const budget = new CallBudget(path.join(DATA_DIR, 'usage.json'), cfg.dailyCallLi
 const obs = new ObsBridge(cfg.obs, (status) => hub.broadcast({ type: 'obs:status', status }));
 const hub = new Hub(scenes, obs);
 const provider = createProvider(cfg);
-const cards = new CardService(provider, {
+const cards = new CardService(provider, path.join(DATA_DIR, 'cards'), {
   onScorecard: (scorecard) => hub.broadcast({ type: 'cards:scorecard', scorecard }),
   onSquads: (squads) => hub.broadcast({ type: 'cards:squads', squads }),
   onError: (message) => hub.broadcast({ type: 'error', message }),
@@ -44,7 +44,8 @@ const poller = new Poller(
   {
     onState: (state) => {
       hub.broadcast({ type: 'match:state', state });
-      if (state && !state.isStale) cards.onPoll(cardsOnAir());
+      // cards only fetch when they have nothing yet; reloads are manual (⟳)
+      if (state) cards.ensure(cardsOnAir());
     },
     onEvent: (event) => hub.broadcast({ type: 'match:event', event }),
     onStatus: (status) => hub.broadcast({ type: 'poll:status', status }),
