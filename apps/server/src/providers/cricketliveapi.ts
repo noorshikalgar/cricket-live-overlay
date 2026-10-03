@@ -51,21 +51,80 @@ const REFRESH_MS = { live: 15_000, scorecard: 30_000, facts: 10 * 60_000 };
 /** optional sources leave this many calls for the next ball-feed request */
 const OPTIONAL_KEEP_FREE = 1;
 
-/** One item of /cricket/matches/live, as documented. */
-function mapLiveItem(m: unknown): MatchSummary {
+interface LiveInnings {
+  id: number;
+  runs: number;
+  wickets: number;
+  /** cricket notation; "19.6" is how they write a completed 20th over */
+  overs: string;
+}
+
+interface LiveTeam {
+  name: string;
+  code: string;
+  innings: LiveInnings[];
+}
+
+/**
+ * Teams of one live-list item. The real API nests them as
+ * `first_team` / `second_team` ({ name: "INDCH", full_name, innings[] }); their
+ * docs show flat `team_a` / `team_b` strings instead, kept as a fallback.
+ */
+export function liveTeams(o: Json): [LiveTeam, LiveTeam] {
+  const nested = (t: unknown, fallback: string): LiveTeam => {
+    const x = obj(t);
+    const code = str(x['name']);
+    const name = str(x['full_name']) || code || fallback;
+    return {
+      name,
+      code: (code || shortCode(name)).toUpperCase(),
+      innings: arr(x['innings']).map((i) => {
+        const r = obj(i);
+        return { id: num(r['innings_id']), runs: num(r['runs']), wickets: num(r['wickets']), overs: str(r['overs'], '0') };
+      }),
+    };
+  };
+  if (o['first_team'] || o['second_team']) return [nested(o['first_team'], 'Team A'), nested(o['second_team'], 'Team B')];
+  const a = str(o['team_a'], 'Team A');
+  const b = str(o['team_b'], 'Team B');
+  return [
+    { name: a, code: shortCode(a), innings: [] },
+    { name: b, code: shortCode(b), innings: [] },
+  ];
+}
+
+/** Every innings of the match in batting order, from the live list. */
+function liveInnings(teams: [LiveTeam, LiveTeam]): Innings[] {
+  return teams
+    .flatMap((t) => t.innings.map((i) => ({ ...i, code: t.code })))
+    .sort((x, y) => x.id - y.id)
+    .map((i) => {
+      const balls = oversToBalls(i.overs);
+      return {
+        battingTeam: i.code,
+        runs: i.runs,
+        wickets: i.wickets,
+        overs: ballsToOvers(balls),
+        balls,
+        runRate: balls ? round2((i.runs / balls) * 6) : 0,
+      };
+    });
+}
+
+/** One item of /cricket/matches/live. */
+export function mapLiveItem(m: unknown): MatchSummary {
   const o = obj(m);
-  const teamA = str(o['team_a'], 'Team A');
-  const teamB = str(o['team_b'], 'Team B');
+  const teams = liveTeams(o);
   const desc = str(o['match_desc']);
-  const series = str(o['series_name']);
+  const last = liveInnings(teams).at(-1);
   return {
     id: str(o['match_id']),
-    title: `${teamA} v ${teamB}${desc ? ` · ${desc}` : ''}`,
-    teams: [shortCode(teamA), shortCode(teamB)],
+    title: `${teams[0].code} v ${teams[1].code}${desc ? ` · ${desc}` : ''}`,
+    teams: [teams[0].code, teams[1].code],
     format: formatFrom(str(o['format'])),
-    phase: phaseFrom(str(o['state'])),
-    statusText: [str(o['live_inning']), series].filter(Boolean).join(' · '),
-    scoreLine: str(o['score']),
+    phase: phaseFrom(str(o['state'] ?? o['status'])),
+    statusText: str(o['status_detail']) || str(o['short_status']) || str(o['live_inning']),
+    scoreLine: last ? `${last.battingTeam} ${last.runs}/${last.wickets} (${last.overs})` : str(o['score']),
   };
 }
 
@@ -362,14 +421,21 @@ export function composeState(id: string, c: MatchCache, feed: BallEvent[], now: 
   const facts = c.facts?.value ?? {};
   const card = c.scorecard?.value ?? [];
 
-  const nameA = str(live?.['team_a']) || card[0]?.team || 'Team A';
-  const nameB = str(live?.['team_b']) || card.find((i) => i.team && i.team !== nameA)?.team || 'Team B';
+  const lt = live ? liveTeams(live) : null;
+  const nameA = lt?.[0].name || card[0]?.team || 'Team A';
+  const nameB = lt?.[1].name || card.find((i) => i.team && i.team !== nameA)?.team || 'Team B';
   const teams: [Team, Team] = [team(nameA), team(nameB)];
+  if (lt) {
+    teams[0].shortCode = lt[0].code;
+    teams[1].shortCode = lt[1].code;
+  }
   const codeOf = (teamName: string) =>
     teams.find((t) => sameName(t.name, teamName) || t.shortCode === teamName.toUpperCase())?.shortCode ??
     shortCode(teamName);
 
-  const innings: Innings[] = card.map((i) => {
+  // the live list carries every innings and refreshes faster than the scorecard
+  const fromLive = lt ? liveInnings(lt) : [];
+  const innings: Innings[] = fromLive.length ? fromLive : card.map((i) => {
     const balls = oversToBalls(i.overs);
     return {
       battingTeam: codeOf(i.team),
@@ -381,8 +447,8 @@ export function composeState(id: string, c: MatchCache, feed: BallEvent[], now: 
     };
   });
 
-  // the live list's score line refreshes faster than the scorecard: prefer it for the current innings
-  const line = parseScoreLine(str(live?.['score']));
+  // doc-shape fallback: a flat "MI 187/4 (18.2 ov)" score line for the current innings
+  const line = fromLive.length ? null : parseScoreLine(str(live?.['score']));
   if (line) {
     const code = teams.find((t) => t.shortCode === line.code || sameName(t.name, line.code))?.shortCode ?? line.code;
     const cur = innings.at(-1);
@@ -431,7 +497,7 @@ export function composeState(id: string, c: MatchCache, feed: BallEvent[], now: 
 
   // a match that drops off the live list after being live has finished
   const phase: MatchPhase = live
-    ? phaseFrom(str(live['state']))
+    ? phaseFrom(str(live['state'] ?? live['status']))
     : c.everLive
       ? 'complete'
       : feed.length
@@ -443,7 +509,11 @@ export function composeState(id: string, c: MatchCache, feed: BallEvent[], now: 
   const statusText =
     phase === 'live' && need !== null && need > 0 && ballsRemaining !== null
       ? `${chasing} need ${need} run${need === 1 ? '' : 's'} from ${ballsRemaining} ball${ballsRemaining === 1 ? '' : 's'}`
-      : str(live?.['result']) || str(live?.['live_inning']) || str(live?.['state']);
+      : str(live?.['status_detail']) ||
+        str(live?.['result']) ||
+        str(live?.['live_inning']) ||
+        str(live?.['short_status']) ||
+        str(live?.['state']);
 
   // runs per completed over, as far back as the feed reaches
   const perOver = new Map<string, number>();
@@ -474,7 +544,7 @@ export function composeState(id: string, c: MatchCache, feed: BallEvent[], now: 
     ballsRemaining,
     statusText,
     toss: str(facts['toss']),
-    venue: str(facts['venue']),
+    venue: str(facts['venue']) || str(live?.['venue']),
     series: str(facts['series']) || str(live?.['series_name']),
     lastUpdated: now,
     isStale: false,

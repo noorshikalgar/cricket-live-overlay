@@ -5,6 +5,7 @@ import path from 'node:path';
 import { detectEvents } from '../src/events';
 import { CricketLiveApiProvider, ballKind, mapCommentary, parseScoreLine, shortCode } from '../src/providers/cricketliveapi';
 import { CallBudget } from '../src/usage';
+import LIVE_REAL from './fixtures/live-real.json';
 
 // Sample response from the CricketLiveApi docs for GET /cricket/matches/live
 const LIVE_SAMPLE = {
@@ -36,11 +37,11 @@ describe('CricketLiveApiProvider', () => {
     const [m] = await p.listLiveMatches();
     expect(m).toEqual({
       id: '155409',
-      title: 'Mumbai Indians v Chennai Super Kings · Final',
+      title: 'MI v CSK · Final',
       teams: ['MI', 'CSK'],
       format: 'T20',
       phase: 'live',
-      statusText: 'MI Batting · Indian Premier League 2026',
+      statusText: 'MI Batting',
       scoreLine: 'MI 187/4 (18.2 ov)',
     });
     const [url, init] = fetchMock.mock.calls[0] as unknown as [string, RequestInit];
@@ -142,5 +143,48 @@ describe('CricketLiveApiProvider.getMatchState', () => {
     // budget for this minute is spent: nothing is sent
     await expect(p.getMatchState('155409')).rejects.toThrow(/Per-minute/);
     expect(budget.calls).toBe(5);
+  });
+});
+
+describe('CricketLiveApi real live response (2026-10-03)', () => {
+  it('maps nested first_team / second_team items', async () => {
+    vi.stubGlobal('fetch', vi.fn(async () => new Response(JSON.stringify(LIVE_REAL), { status: 200 })));
+    const [legends, women] = await new CricketLiveApiProvider('secret').listLiveMatches();
+    expect(legends).toEqual({
+      id: '174313',
+      title: 'INDCH v AUSCH · 1st Match',
+      teams: ['INDCH', 'AUSCH'],
+      format: 'T20',
+      phase: 'live',
+      statusText: 'Australia Champions opt to bowl',
+      scoreLine: 'INDCH 192/7 (19.5)',
+    });
+    // "19.6" is their notation for 20 completed overs; "21/" means no wickets
+    expect(women.scoreLine).toBe('WIW 21/0 (2.3)');
+  });
+
+  it('builds both innings and the chase from the live item', async () => {
+    vi.stubGlobal(
+      'fetch',
+      routed({
+        '/cricket/matches/live': () => LIVE_REAL,
+        '/cricket/commentary/': () => commentary([{ over: '2.3', runs: 4, type: 'FOUR', batsman: 'Hayley Matthews' }]),
+        '/cricket/scorecard/': () => ({ success: true, data: { innings: [] } }),
+        '/cricket/match-facts/': () => ({ success: true, data: {} }),
+      }),
+    );
+    const s = await new CricketLiveApiProvider('secret').getMatchState('173107');
+    expect(s.teams.map((t) => [t.shortCode, t.name])).toEqual([
+      ['ZIMW', 'Zimbabwe Women'],
+      ['WIW', 'West Indies Women'],
+    ]);
+    expect(s.innings).toEqual([
+      { battingTeam: 'ZIMW', runs: 97, wickets: 9, overs: '20.0', balls: 120, runRate: 4.85 },
+      { battingTeam: 'WIW', runs: 21, wickets: 0, overs: '2.3', balls: 15, runRate: 8.4 },
+    ]);
+    expect(s.target).toBe(98);
+    expect(s.ballsRemaining).toBe(105);
+    expect(s.statusText).toBe('West Indies Women need 77 runs from 105 balls');
+    expect(s.venue).toBe('Takashinga Sports Club, Harare');
   });
 });
