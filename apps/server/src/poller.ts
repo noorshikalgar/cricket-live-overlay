@@ -16,10 +16,14 @@ export const STALE_AFTER_MS = 30_000;
 /** how often to refresh the live-matches list (match picker, ticker) */
 const LIST_REFRESH_MS = 5 * 60_000;
 
-/** interval = max(min, matchSeconds / (dailyCalls × 0.9)) */
-export function budgetInterval(format: MatchFormat, dailyLimit: number, minSeconds: number): number {
+/**
+ * interval = max(min, matchSeconds / (dailyCalls × 0.9), 60 / (perMinute × 0.75))
+ * The per-minute term keeps a quarter of the minute's calls spare for the match list and retries.
+ */
+export function budgetInterval(format: MatchFormat, dailyLimit: number, minSeconds: number, perMinute = 0): number {
   const spread = MATCH_SECONDS[format] / Math.max(1, dailyLimit * 0.9);
-  return Math.max(minSeconds, Math.round(spread * 10) / 10);
+  const perMinuteFloor = perMinute > 0 ? 60 / (perMinute * 0.75) : 0;
+  return Math.max(minSeconds, Math.round(Math.max(spread, perMinuteFloor) * 10) / 10);
 }
 
 export interface PollerHooks {
@@ -44,7 +48,7 @@ export class Poller {
   constructor(
     private readonly provider: CricketProvider,
     private readonly usage: UsageCounter,
-    private readonly opts: { dailyLimit: number; minSeconds: number },
+    private readonly opts: { dailyLimit: number; minSeconds: number; perMinute: number },
     private readonly hooks: PollerHooks,
   ) {
     this.status = {
@@ -156,7 +160,7 @@ export class Poller {
 
   private baseInterval(): number {
     if (this.provider.fixedIntervalSeconds) return this.provider.fixedIntervalSeconds;
-    return budgetInterval(this.last?.format ?? 'T20', this.opts.dailyLimit, this.opts.minSeconds);
+    return budgetInterval(this.last?.format ?? 'T20', this.opts.dailyLimit, this.opts.minSeconds, this.opts.perMinute);
   }
 
   private intervalFor(state: MatchState): number {

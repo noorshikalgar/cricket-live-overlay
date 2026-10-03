@@ -7,9 +7,9 @@ import type { CricketProvider } from './types';
  *
  * TODO(confirm): their docs sit behind the dashboard login, so every path and
  * field name below is a placeholder until real response samples are pasted in.
- * All guesses live in BASE_URL, PATHS and FIELDS so fixing them is a one-file job.
+ * All guesses live in DEFAULT_BASE_URL, PATHS and FIELDS so fixing them is a one-file job.
  */
-const BASE_URL = 'https://api.cricketliveapi.com/v1'; // TODO(confirm)
+const DEFAULT_BASE_URL = 'https://api.cricketliveapi.com/v1'; // TODO(confirm); CRICKET_API_BASE_URL overrides
 
 const PATHS = {
   live: '/matches/live', // TODO(confirm)
@@ -170,7 +170,13 @@ export class CricketLiveApiProvider implements CricketProvider {
   readonly name = 'cricketliveapi';
   readonly countsTowardQuota = true;
 
-  constructor(private readonly apiKey: string) {
+  private readonly baseUrl: string;
+
+  constructor(
+    private readonly apiKey: string,
+    baseUrl = '',
+  ) {
+    this.baseUrl = baseUrl || DEFAULT_BASE_URL;
     if (!apiKey) throw new Error('CRICKET_API_KEY is empty; set it in .env or use CRICKET_PROVIDER=mock');
   }
 
@@ -179,7 +185,7 @@ export class CricketLiveApiProvider implements CricketProvider {
   }
 
   async listLiveMatches(): Promise<MatchSummary[]> {
-    const raw = await getJson(BASE_URL + PATHS.live, this.headers);
+    const raw = await getJson(this.baseUrl + PATHS.live, this.headers);
     return arr(at(raw, FIELDS.list)).map((m) => {
       const id = str(at(m, FIELDS.id));
       const s = mapMatchState(m, id);
@@ -197,6 +203,6 @@ export class CricketLiveApiProvider implements CricketProvider {
   }
 
   async getMatchState(id: string): Promise<MatchState> {
-    return mapMatchState(await getJson(BASE_URL + PATHS.match(id), this.headers), id);
+    return mapMatchState(await getJson(this.baseUrl + PATHS.match(id), this.headers), id);
   }
 }

@@ -23,7 +23,7 @@ const provider = createProvider(cfg);
 const poller = new Poller(
   provider,
   usage,
-  { dailyLimit: cfg.dailyCallLimit, minSeconds: cfg.minPollSeconds },
+  { dailyLimit: cfg.dailyCallLimit, minSeconds: cfg.minPollSeconds, perMinute: cfg.perMinuteLimit },
   {
     onState: (state) => hub.broadcast({ type: 'match:state', state }),
     onEvent: (event) => hub.broadcast({ type: 'match:event', event }),

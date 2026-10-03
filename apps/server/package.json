@@ -9,7 +9,8 @@
     "start": "node --env-file-if-exists=../../.env dist/main.js",
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "test": "vitest run",
-    "record": "tsx scripts/generate-recording.ts"
+    "record": "tsx scripts/generate-recording.ts",
+    "probe": "tsx --env-file-if-exists=../../.env scripts/probe.ts"
   },
   "dependencies": {
     "@fastify/static": "^8.2.0",

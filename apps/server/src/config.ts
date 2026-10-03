@@ -21,6 +21,10 @@ export interface Config {
   provider: string;
   apiKey: string;
   dailyCallLimit: number;
+  /** free plans limit per minute too; 0 = no per-minute limit */
+  perMinuteLimit: number;
+  /** overrides the provider's default base URL */
+  apiBaseUrl: string;
   minPollSeconds: number;
   mockBallSeconds: number;
   obs: { url: string; password: string; webcamSource: string };
@@ -32,6 +36,8 @@ export function loadConfig(): Config {
     provider: (process.env['CRICKET_PROVIDER'] ?? 'mock').trim().toLowerCase(),
     apiKey: process.env['CRICKET_API_KEY'] ?? '',
     dailyCallLimit: num('DAILY_CALL_LIMIT', 5000),
+    perMinuteLimit: num('RATE_LIMIT_PER_MINUTE', 0),
+    apiBaseUrl: (process.env['CRICKET_API_BASE_URL'] ?? '').trim().replace(/\/+$/, ''),
     minPollSeconds: num('MIN_POLL_SECONDS', 3),
     mockBallSeconds: num('MOCK_BALL_SECONDS', 3),
     obs: {
