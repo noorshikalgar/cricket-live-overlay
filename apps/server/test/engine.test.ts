@@ -14,6 +14,9 @@ describe('budgetInterval', () => {
   it('gives ~6.8 s for an ODI', () => {
     expect(budgetInterval('ODI', 5000, 2)).toBeCloseTo(6.8, 1);
   });
+  it('respects a 20/min free plan', () => {
+    expect(budgetInterval('T20', 5000, 3, 20)).toBe(4);
+  });
   it('never goes below the minimum', () => {
     expect(budgetInterval('T20', 1_000_000, 3)).toBe(3);
   });

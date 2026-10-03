@@ -56,6 +56,19 @@ export interface BallChip {
   runs: number;
 }
 
+/** One delivery from a ball-by-ball feed, newest first in MatchState.ballFeed. */
+export interface BallEvent {
+  /** stable per delivery, used to dedupe events */
+  id: string;
+  /** "18.2" */
+  over: string;
+  kind: BallKind;
+  runs: number;
+  batter: string;
+  bowler: string;
+  text: string;
+}
+
 export interface MatchState {
   matchId: string;
   format: MatchFormat;
@@ -79,6 +92,12 @@ export interface MatchState {
   /** epoch ms of the provider data */
   lastUpdated: number;
   isStale: boolean;
+  /**
+   * Recent deliveries, newest first, when the provider has a ball-by-ball feed.
+   * When present, FOUR / SIX / WICKET fire from it instead of from scorecard counts,
+   * because the feed usually updates sooner.
+   */
+  ballFeed?: BallEvent[];
 }
 
 export interface MatchSummary {

@@ -1,0 +1,52 @@
+{
+  "success": true,
+  "type": "live",
+  "count": 2,
+  "data": [
+    {
+      "match_id": 174313,
+      "series_id": 13300,
+      "series_name": "World Championship of Legends 2026",
+      "match_desc": "1st Match",
+      "title": "World Championship of Legends 2026 - 1st Match",
+      "format": "T20",
+      "match_type": "League",
+      "date": "Oct 03, 11:30 GMT",
+      "venue": "Sharjah Cricket Stadium, Sharjah",
+      "status_detail": "Australia Champions opt to bowl",
+      "short_status": "AUSCH opt to bowl",
+      "state": "In Progress",
+      "first_team": {
+        "id": 2005,
+        "name": "INDCH",
+        "full_name": "India Champions",
+        "score": "192/7 (19.5 ov)",
+        "innings": [{ "innings_id": 1, "runs": 192, "wickets": 7, "overs": 19.5, "target": null }]
+      },
+      "second_team": { "id": 2039, "name": "AUSCH", "full_name": "Australia Champions", "score": "", "innings": [] },
+      "status": "In Progress"
+    },
+    {
+      "match_id": 173107,
+      "series_name": "West Indies Women tour of Zimbabwe, 2026",
+      "match_desc": "1st T20I",
+      "format": "T20",
+      "venue": "Takashinga Sports Club, Harare",
+      "status_detail": "West Indies Women need 77 runs",
+      "state": "In Progress",
+      "first_team": {
+        "name": "ZIMW",
+        "full_name": "Zimbabwe Women",
+        "score": "97/9 (19.6 ov)",
+        "innings": [{ "innings_id": 1, "runs": 97, "wickets": 9, "overs": 19.6 }]
+      },
+      "second_team": {
+        "name": "WIW",
+        "full_name": "West Indies Women",
+        "score": "21/ (2.3 ov)",
+        "innings": [{ "innings_id": 2, "runs": 21, "wickets": 0, "overs": 2.3 }]
+      },
+      "status": "In Progress"
+    }
+  ]
+}

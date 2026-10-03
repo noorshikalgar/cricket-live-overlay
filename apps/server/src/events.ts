@@ -42,6 +42,21 @@ export function detectEvents(prev: MatchState | null, next: MatchState, fired: S
   const inn = next.innings[idx];
   const prevInn = prev.innings[idx];
   // events are only meaningful within the same innings; a fresh innings has no baseline
+  const fromFeed = !!next.ballFeed && !!prev.ballFeed;
+  if (fromFeed) {
+    const seen = new Set(prev.ballFeed?.map((b) => b.id));
+    // oldest first so queued banners play in match order
+    for (const ball of [...(next.ballFeed ?? [])].reverse()) {
+      if (seen.has(ball.id)) continue;
+      const striker = next.batters.find((b) => b.name === ball.batter);
+      const before = prev.batters.find((b) => b.name === ball.batter);
+      const sub = striker ? figures(striker) : ball.batter;
+      if (ball.kind === 'six') emit(`SIX:${ball.id}`, 'SIX', 'SIX', sub);
+      else if (ball.kind === 'four') emit(`FOUR:${ball.id}`, 'FOUR', 'FOUR', sub);
+      else if (ball.kind === 'wicket') emit(`WICKET:${ball.id}`, 'WICKET', 'WICKET', before ? figures(before) : ball.batter);
+    }
+  }
+
   if (prevInn) {
     const prevBatters = new Map(prev.batters.map((b) => [b.name, b]));
 
@@ -51,13 +66,15 @@ export function detectEvents(prev: MatchState | null, next: MatchState, fired: S
       const pSixes = pb?.sixes ?? 0;
       const pRuns = pb?.runs ?? 0;
       // a missed poll can hide several boundaries; fire one per boundary, keyed by the count
-      for (let n = pSixes + 1; n <= b.sixes; n++) emit(`SIX:${idx}:${b.name}:${n}`, 'SIX', 'SIX', figures(b));
-      for (let n = pFours + 1; n <= b.fours; n++) emit(`FOUR:${idx}:${b.name}:${n}`, 'FOUR', 'FOUR', figures(b));
+      if (!fromFeed) {
+        for (let n = pSixes + 1; n <= b.sixes; n++) emit(`SIX:${idx}:${b.name}:${n}`, 'SIX', 'SIX', figures(b));
+        for (let n = pFours + 1; n <= b.fours; n++) emit(`FOUR:${idx}:${b.name}:${n}`, 'FOUR', 'FOUR', figures(b));
+      }
       if (pRuns < 100 && b.runs >= 100) emit(`HUNDRED:${idx}:${b.name}`, 'HUNDRED', 'HUNDRED', figures(b));
       else if (pRuns < 50 && b.runs >= 50) emit(`FIFTY:${idx}:${b.name}`, 'FIFTY', 'FIFTY', figures(b));
     }
 
-    if (inn.wickets > prevInn.wickets) {
+    if (!fromFeed && inn.wickets > prevInn.wickets) {
       const stillIn = new Set(next.batters.map((b) => b.name));
       const out_ = prev.batters.find((b) => !stillIn.has(b.name));
       for (let w = prevInn.wickets + 1; w <= inn.wickets; w++) {

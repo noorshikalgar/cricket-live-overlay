@@ -8,3 +8,4 @@ apps/server/data/usage.json
 .DS_Store
 apps/server/data/settings.json
 apps/server/data/uploads/
+apps/server/data/samples/

@@ -8,7 +8,7 @@ import type { CricketProvider } from './types';
 export function createProvider(cfg: Config): CricketProvider {
   switch (cfg.provider) {
     case 'cricketliveapi':
-      return new CricketLiveApiProvider(cfg.apiKey);
+      return new CricketLiveApiProvider(cfg.apiKey, cfg.apiBaseUrl);
     case 'sportmonks':
       return new SportmonksProvider(cfg.apiKey);
     case 'mock':
