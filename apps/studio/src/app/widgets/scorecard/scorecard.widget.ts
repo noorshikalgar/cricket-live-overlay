@@ -1,4 +1,15 @@
-import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  DestroyRef,
+  ElementRef,
+  afterNextRender,
+  computed,
+  effect,
+  inject,
+  signal,
+  untracked,
+} from '@angular/core';
 import type { CardInnings } from '@cos/shared';
 import { LiveStore } from '../../core/live.store';
 import { WidgetBase } from '../widget-base';
@@ -20,6 +31,7 @@ const ORDINAL = ['1st', '2nd', '3rd', '4th'];
 /** Full batting and bowling card for one innings, like a TV scorecard break. */
 @Component({
   selector: 'cos-scorecard',
+  host: { '[style.--u.px]': 'unit()' },
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="panel card" [class.minimized]="min()" [style.--team]="teamColor()">
@@ -108,10 +120,10 @@ const ORDINAL = ['1st', '2nd', '3rd', '4th'];
       display: block;
       width: 100%;
       height: 100%;
-      /* text fits whichever dimension is tighter, so width and height resize freely */
-      --u: min(calc(var(--ww) * 0.018), calc(var(--wh) * 0.0285));
+      /* --u is set from code: measured so the card fills the box (see fit()) */
     }
     .sc {
+      flex: 1;
       display: flex;
       flex-direction: column;
       gap: 0.5em;
@@ -147,6 +159,8 @@ const ORDINAL = ['1st', '2nd', '3rd', '4th'];
     }
     .foot {
       flex: none;
+      /* any height left after the width cap goes between the tables and the footer */
+      margin-top: auto;
       display: flex;
       flex-direction: column;
       gap: 0.15em;
@@ -190,6 +204,57 @@ export class ScorecardWidget extends WidgetBase<ScorecardProps> {
   /** minimising only applies to floating windows */
   protected readonly min = computed(() => this.p().minimized && this.p().display !== 'widget');
   private readonly store = inject(LiveStore);
+  private readonly host = inject<ElementRef<HTMLElement>>(ElementRef).nativeElement;
+
+  /**
+   * Text size in px. The number of rows changes through an innings, so instead of a
+   * fixed formula the card measures its content and scales the text until it fills
+   * the box height, capped by the width so wide boxes don't get huge text.
+   */
+  protected readonly unit = signal(22);
+  private fitQueued = false;
+
+  constructor() {
+    super();
+    const ro = new ResizeObserver(() => this.queueFit());
+    afterNextRender(() => ro.observe(this.host));
+    inject(DestroyRef).onDestroy(() => ro.disconnect());
+    effect(() => {
+      // refit whenever the content or settings change
+      this.inn();
+      this.p();
+      untracked(() => this.queueFit());
+    });
+  }
+
+  private queueFit(): void {
+    if (this.fitQueued) return;
+    this.fitQueued = true;
+    setTimeout(() => {
+      this.fitQueued = false;
+      this.fit();
+    });
+  }
+
+  private fit(): void {
+    const card = this.host.querySelector<HTMLElement>('.card');
+    const boxH = this.host.clientHeight;
+    const boxW = this.host.clientWidth;
+    if (!card || !boxH || !boxW || this.min()) return;
+    let u = this.unit();
+    // content height is (almost) linear in --u; two passes absorb the fixed px parts
+    for (let i = 0; i < 3; i++) {
+      card.style.height = 'auto';
+      const natural = card.offsetHeight;
+      card.style.height = '';
+      if (!natural) return;
+      const next = Math.max(10, Math.min(boxW * 0.03, (u * boxH) / natural));
+      if (Math.abs(next - u) < 0.25) break;
+      u = next;
+      this.host.style.setProperty('--u', `${u}px`);
+    }
+    this.unit.set(Math.floor(u * 4) / 4);
+  }
 
   private readonly index = computed(() => {
     const all = this.store.scorecard()?.innings ?? [];
