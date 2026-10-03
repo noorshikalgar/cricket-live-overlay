@@ -72,11 +72,11 @@ export interface PlayerCardProps {
       display: block;
       width: 100%;
       height: 100%;
-      /* sized by width: the box height follows the content */
-      --u: calc(var(--ww) * 0.037);
+      /* text fits whichever dimension is tighter, so width and height resize freely */
+      --u: min(calc(var(--ww) * 0.037), calc(var(--wh) * 0.068));
     }
-    .card {
-      height: auto;
+    .card:not(.minimized) {
+      height: 100%;
     }
     .pc {
       display: flex;

@@ -66,11 +66,15 @@ interface Row {
       display: block;
       width: 100%;
       height: 100%;
-      /* sized by width: the box height follows the content */
-      --u: calc(var(--ww) * 0.04);
+      /* text fits whichever dimension is tighter, so width and height resize freely */
+      --u: min(calc(var(--ww) * 0.04), calc(var(--wh) * 0.033));
     }
-    .card {
-      height: auto;
+    .card:not(.minimized) {
+      height: 100%;
+    }
+    /* rows spread over the box height instead of leaving a gap */
+    .card-body .tbl {
+      height: 100%;
     }
     td.name {
       width: 56%;
