@@ -68,4 +68,22 @@ describe('Poller control', () => {
     await vi.advanceTimersByTimeAsync(5 * 60_000);
     expect(getMatchState).toHaveBeenCalledTimes(1);
   });
+
+  it('pause stops automatic polling; Update now still works; resume restarts', async () => {
+    vi.useFakeTimers();
+    const { poller, getMatchState, statuses } = setup();
+    poller.setControl('auto', 30);
+    poller.select('m1');
+    await vi.advanceTimersByTimeAsync(0);
+    poller.setControl('auto', 30, true);
+    expect(statuses.at(-1)?.paused).toBe(true);
+    await vi.advanceTimersByTimeAsync(10 * 60_000);
+    expect(getMatchState).toHaveBeenCalledTimes(1);
+    poller.pollNow();
+    await vi.advanceTimersByTimeAsync(5 * 60_000);
+    expect(getMatchState).toHaveBeenCalledTimes(2);
+    poller.setControl('auto', 30, false);
+    await vi.advanceTimersByTimeAsync(31_000);
+    expect(getMatchState).toHaveBeenCalledTimes(3);
+  });
 });

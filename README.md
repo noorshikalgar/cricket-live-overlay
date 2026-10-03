@@ -144,7 +144,8 @@ The Studio top bar controls how often the score is fetched:
 
 - **Auto** with an interval: *Default* (`POLL_SECONDS` from `.env`), *Budget* (spread the day's calls over a whole match), or every 10 s – 5 min. A countdown shows the next update.
 - **Manual**: the score only updates when you press **⟳ Update now** (selecting a match fetches it once).
-- **Update now** works in both modes (1 API call), and is briefly disabled right after an update.
+- **⏸ Pause** stops every automatic API call (score polling) until **▶ Resume**, e.g. during an innings break or rain delay. The overlay keeps showing the last data; *Update now* still works for a one-off refresh.
+- **Update now** works in all modes (1 API call), and is briefly disabled right after an update.
 
 ### API budget (hard caps)
 

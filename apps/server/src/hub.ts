@@ -180,7 +180,7 @@ export class Hub {
         const before = this.scenes.getSettings().obsBridge;
         const next = this.scenes.updateSettings(rest);
         this.broadcastSettings();
-        poller?.setControl(next.pollMode, next.pollSeconds);
+        poller?.setControl(next.pollMode, next.pollSeconds, next.pollPaused);
         if (next.obsBridge !== before) {
           void this.obs.setEnabled(next.obsBridge).then(() => {
             if (next.obsBridge && next.activeSceneId) this.obs.placeFor(this.scenes.get(next.activeSceneId));
@@ -222,6 +222,7 @@ function emptyPoll() {
     lastError: null,
     stale: false,
     mode: 'auto' as const,
+    paused: false,
     nextPollAt: null,
   };
 }

@@ -212,6 +212,8 @@ export interface AppSettings {
   pollMode: 'auto' | 'manual';
   /** auto interval in seconds; null = .env POLL_SECONDS, 0 = spread the budget over a match */
   pollSeconds: number | null;
+  /** paused: no automatic API calls at all (breaks); "Update now" still works */
+  pollPaused: boolean;
 }
 
 export const DEFAULT_SETTINGS: AppSettings = {
@@ -222,6 +224,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   obsBridge: false,
   pollMode: 'auto',
   pollSeconds: null,
+  pollPaused: false,
 };
 
 export function newId(): string {
