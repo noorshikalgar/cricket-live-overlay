@@ -158,13 +158,16 @@ import { PromptService } from './prompt-dialog.component';
       align-items: center;
       gap: 14px;
       padding: 0 14px;
-      height: 52px;
+      min-height: 52px;
       border-bottom: 1px solid var(--ui-border);
       background: var(--ui-panel);
       font-size: 13px;
       white-space: nowrap;
-      overflow-x: auto;
-      overflow-y: visible;
+      /* narrower windows: controls wrap onto another row instead of being cut off */
+      flex-wrap: wrap;
+      row-gap: 8px;
+      padding-top: 8px;
+      padding-bottom: 8px;
     }
     .brand {
       font-weight: 700;

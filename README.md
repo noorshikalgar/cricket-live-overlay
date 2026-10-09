@@ -117,7 +117,7 @@ In OBS:
 - On a tablet or phone the library and settings slide in from the **☰ Widgets** / **⚙ Settings** buttons, so a phone works as a remote for the event pad.
 
 ### Widgets
-Click a widget in the library to add it, or drag it onto the canvas. Drag to move, handles to resize, **Shift** keeps the aspect ratio, **Alt** skips snapping. Arrow keys nudge (Shift = 10 px), **Ctrl/⌘+D** duplicates, **Delete** removes, **Ctrl/⌘+Z** / **Ctrl/⌘+Shift+Z** undo / redo.
+Left panel → **＋ Widgets**: search, or browse the groups (Score, Players, Overs, Moments, Match & cards, Your own); click a widget to add it, or drag it onto the canvas. Drag to move, handles to resize, **Shift** keeps the aspect ratio, **Alt** skips snapping. Arrow keys nudge (Shift = 10 px), **Ctrl/⌘+D** duplicates, **Delete** removes, **Ctrl/⌘+Z** / **Ctrl/⌘+Shift+Z** undo / redo.
 
 | Group | Widgets |
 | --- | --- |
@@ -149,7 +149,7 @@ Left panel → **Live cards**:
 - **Scorecard** for any innings: dismissals, who's batting, bowling, extras, yet to bat, fall of wickets.
 - **Team** cards: the playing XI with each player's match so far.
 - **Players**: the two batters and bowler in one tap, or pick from each team's list.
-- **Open as**: *Floating window* (title bar with ⟳ reload, minimise, close), *Widget* (plain), or *New scene* (a dedicated scene around the card, put on air).
+- **Show as**: *Floating window* (title bar with ⟳ reload, minimise, close), *Widget* (plain), or *New scene* (a dedicated scene around the card, put on air).
 
 Card data never refreshes on its own; press **⟳** on the card or in the panel when you want new data.
 
