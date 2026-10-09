@@ -48,7 +48,7 @@ export interface BattersProps {
       flex-direction: column;
       justify-content: center;
       gap: 0.1em;
-      font-size: calc(var(--wh) * 0.26 * var(--fs));
+      font-size: calc(var(--wh) * 0.3 * var(--fs));
       padding-top: 0;
       padding-bottom: 0;
     }

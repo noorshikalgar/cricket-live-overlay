@@ -26,11 +26,13 @@ export type WidgetType =
   | 'teamCard'
   | 'playerCard';
 
-export type AnimPreset = 'none' | 'fade' | 'slideUp' | 'slideDown' | 'slideLeft' | 'slideRight' | 'wipe';
+export type AnimPreset = 'none' | 'fade' | 'pop' | 'flip' | 'slideUp' | 'slideDown' | 'slideLeft' | 'slideRight' | 'wipe';
 
 export const ANIM_PRESETS: readonly AnimPreset[] = [
   'none',
   'fade',
+  'pop',
+  'flip',
   'slideUp',
   'slideDown',
   'slideLeft',

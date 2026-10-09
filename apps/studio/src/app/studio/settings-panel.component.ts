@@ -34,6 +34,8 @@ type StyleKey = keyof WidgetStyle;
 const ANIM_LABELS: Record<AnimPreset, string> = {
   none: 'None',
   fade: 'Fade',
+  pop: 'Pop (scale up with a bounce)',
+  flip: 'Flip down (3D)',
   slideUp: 'Slide up',
   slideDown: 'Slide down',
   slideLeft: 'Slide left',

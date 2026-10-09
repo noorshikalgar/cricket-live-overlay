@@ -242,7 +242,7 @@ export class MatchInfoWidget extends WidgetBase<MatchInfoProps> {
   protected readonly fontPx = computed(() => {
     const { w, h } = this.box();
     const row = this.layout() === 'row';
-    const byHeight = row ? (h * 0.34) / (this.p().labels === 'above' ? 1.5 : 1) : (h * 0.78) / (Math.max(1, this.rows()) * 1.45);
+    const byHeight = row ? (h * 0.34) / (this.p().labels === 'above' ? 1.5 : 1) : (h * 0.86) / (Math.max(1, this.rows()) * 1.38);
     // keep roughly 22 characters per line visible in narrow boxes
     const byWidth = row ? w / 50 : w / 22;
     return Math.max(14, Math.min(byHeight, byWidth)) * this.style().fontScale;

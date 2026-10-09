@@ -145,7 +145,7 @@ export const WIDGET_DEFAULTS: Record<WidgetType, WidgetDefaults> = {
       minimized: false,
       display: 'window',
     },
-    animation: { enter: 'slideUp', exit: 'fade' },
+    animation: { enter: 'pop', exit: 'pop' },
   },
   teamCard: {
     label: 'Team card',
@@ -161,7 +161,7 @@ export const WIDGET_DEFAULTS: Record<WidgetType, WidgetDefaults> = {
     w: 620,
     h: 330,
     props: { playerId: '', playerName: '', showPhoto: false, minimized: false, display: 'window' },
-    animation: { enter: 'slideUp', exit: 'fade' },
+    animation: { enter: 'pop', exit: 'pop' },
   },
   playerPanel: {
     label: 'Player panel',
@@ -248,7 +248,7 @@ export function createWidget(type: WidgetType, over: Partial<WidgetInstance> = {
     name: d.label,
     style: { showTitle: false, ...d.style },
     props: structuredClone(d.props),
-    animation: { enter: 'slideUp', exit: 'fade', delay: 0, ...d.animation },
+    animation: { enter: 'pop', exit: 'pop', delay: 0, ...d.animation },
     ...over,
   };
 }
