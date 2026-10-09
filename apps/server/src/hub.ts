@@ -118,7 +118,7 @@ export class Hub {
       }
       case 'scene:create': {
         if (c.role !== 'studio') return;
-        const scene = this.scenes.create(msg.name.slice(0, 80) || 'Untitled', msg.copyFrom);
+        const scene = this.scenes.create(msg.name.slice(0, 80) || 'Untitled', msg.copyFrom, msg.template === 'broadcast' ? 'broadcast' : undefined);
         this.broadcast({ type: 'scene:update', scene, origin: null });
         return;
       }

@@ -40,7 +40,7 @@ export type ServerMessage =
 export type ClientMessage =
   | { type: 'hello'; role: ClientRole }
   | { type: 'scene:update'; scene: Scene }
-  | { type: 'scene:create'; name: string; copyFrom?: string }
+  | { type: 'scene:create'; name: string; copyFrom?: string; template?: 'broadcast' }
   | { type: 'scene:delete'; sceneId: string }
   | { type: 'scene:switch'; sceneId: string }
   | { type: 'event:manual'; eventType: MatchEventType }

@@ -36,6 +36,9 @@ import { PromptService } from './prompt-dialog.component';
         @if (menuOpen()) {
           <div class="menu" (click)="menuOpen.set(false)">
             <button type="button" (click)="newScene()">New scene</button>
+            <button type="button" (click)="newBroadcast()" title="Score header, stat bar, overs strip, chase box, player panels and the event banner, ready to go">
+              New broadcast layout
+            </button>
             <button type="button" (click)="duplicateScene()">Duplicate</button>
             <button type="button" (click)="renameScene()">Rename</button>
             <hr />
@@ -491,6 +494,13 @@ export class TopBarComponent {
     if (name) this.createAndEdit({ type: 'scene:create', name });
   }
 
+  /** a ready-made TV-style scene; it is a normal scene afterwards, every widget editable */
+  protected async newBroadcast(): Promise<void> {
+    const name = await this.prompt.ask('Name for the broadcast layout', 'Broadcast', 'Create');
+    if (!name) return;
+    this.createAndEdit({ type: 'scene:create', name, template: 'broadcast' });
+  }
+
   protected async duplicateScene(): Promise<void> {
     const cur = this.editor.scene();
     if (!cur) return;
@@ -499,7 +509,7 @@ export class TopBarComponent {
   }
 
   /** Create on the server, then switch the editor to the new scene once it arrives. */
-  private createAndEdit(msg: { type: 'scene:create'; name: string; copyFrom?: string }): void {
+  private createAndEdit(msg: { type: 'scene:create'; name: string; copyFrom?: string; template?: 'broadcast' }): void {
     const before = new Set(Object.keys(this.live.scenes()));
     this.live.send(msg);
     const started = Date.now();
