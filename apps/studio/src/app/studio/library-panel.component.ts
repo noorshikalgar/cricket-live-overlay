@@ -5,7 +5,7 @@ import { WIDGET_DND_TYPE } from './canvas.component';
 import { EditorStore } from './editor.store';
 
 const GROUPS: { title: string; types: WidgetType[] }[] = [
-  { title: 'Broadcast', types: ['scoreHeader', 'statBar', 'oversStrip', 'playerPanel', 'chaseBox'] },
+  { title: 'Broadcast', types: ['infoRail', 'scoreHeader', 'statBar', 'oversStrip', 'playerPanel', 'chaseBox'] },
   { title: 'Live data', types: ['scorebug', 'batters', 'bowler', 'thisOver', 'partnership', 'recentOvers', 'matchInfo'] },
   { title: 'Moments', types: ['banner', 'ticker'] },
   { title: 'Cards', types: ['scorecard', 'teamCard', 'playerCard'] },

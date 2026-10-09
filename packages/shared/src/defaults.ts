@@ -199,6 +199,19 @@ export const WIDGET_DEFAULTS: Record<WidgetType, WidgetDefaults> = {
     h: 64,
     props: { showStatus: true },
   },
+  infoRail: {
+    label: 'Info rail',
+    icon: '⇋',
+    w: 1920,
+    h: 84,
+    props: {
+      slides: { thisOver: true, rates: true, batters: true, bowler: true, partnership: true, chase: true, recent: true, info: true },
+      seconds: 6,
+      followEvents: true,
+      showScore: true,
+      showProgress: true,
+    },
+  },
   video: {
     label: 'Video',
     icon: '▶',

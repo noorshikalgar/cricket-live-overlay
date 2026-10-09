@@ -121,7 +121,7 @@ Click a widget in the library to add it, or drag it onto the canvas. Drag to mov
 
 | Group | Widgets |
 | --- | --- |
-| Broadcast | Player panel, Score header, Overs strip, Chase box, Stat bar |
+| Broadcast | Info rail, Player panel, Score header, Overs strip, Chase box, Stat bar |
 | Live data | Score bug, Batters, Bowler, This over, Partnership, Recent overs, Match info |
 | Moments | Event banner, Ticker |
 | Cards | Full scorecard, Team card, Player card |
@@ -133,6 +133,7 @@ Every widget's look (colours, font, radius, blur, title, enter / exit motion suc
 - **Match info** layout: *Auto* (follows the box shape), *Stacked*, *Grid* or *Single row*; labels beside, above or hidden.
 - **Full scorecard** → *How out*: own column, under the name (more room at big sizes) or hidden.
 - **Video**: upload MP4 / WebM / MOV or paste a URL; ▶ / ⏸, ⏮ Restart and mute buttons in its settings.
+- **Info rail**: the TV-style bottom bar. The score stays on the left while the right side flips through this over, run rates, batters, bowler, partnership, chase / toss, last overs and series & venue (pick which, and how many seconds each). On a FOUR / SIX it jumps to the batters, on a WICKET to the bowler.
 
 ### Overlay language and player images
 Scene settings → **Overlay (all scenes)** (also **Labels** in the canvas toolbar):

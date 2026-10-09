@@ -22,6 +22,7 @@ import { OversStripWidget } from './broadcast/overs-strip.widget';
 import { PlayerPanelWidget } from './broadcast/player-panel.widget';
 import { ScoreHeaderWidget } from './broadcast/score-header.widget';
 import { StatBarWidget } from './broadcast/stat-bar.widget';
+import { InfoRailWidget, RAIL_SLIDES } from './broadcast/info-rail.widget';
 import { VideoWidget } from './video/video.widget';
 
 export interface SelectOption {
@@ -329,6 +330,13 @@ export const WIDGET_REGISTRY: Record<WidgetType, WidgetDef> = {
   ]),
   statBar: def('statBar', StatBarWidget, 'CRR, RRR, partnership and the chase sentence on one line', [
     { kind: 'toggle', key: 'showStatus', label: 'Status sentence' },
+  ]),
+  infoRail: def('infoRail', InfoRailWidget, 'Bottom bar: score stays put while this over, run rates, batters, bowler and more rotate', [
+    { kind: 'checks', key: 'slides', label: 'Slides', options: RAIL_SLIDES },
+    { kind: 'slider', key: 'seconds', group: 'Behaviour', label: 'Each slide', min: 3, max: 20, step: 1, unit: 's' },
+    { kind: 'toggle', key: 'followEvents', group: 'Behaviour', label: 'Jump to the right slide on FOUR / SIX / WICKET' },
+    { kind: 'toggle', key: 'showScore', group: 'Appearance', label: 'Score block on the left' },
+    { kind: 'toggle', key: 'showProgress', group: 'Appearance', label: 'Progress line' },
   ]),
   video: def('video', VideoWidget, 'A video clip: intro, sponsor loop, replay', [
     { kind: 'video', key: 'src', label: 'Video' },
