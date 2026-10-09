@@ -31,10 +31,14 @@ export interface SelectOption {
 
 type Props = Record<string, PropValue>;
 
+/** Inspector sections for widget fields, in display order. */
+export const FIELD_GROUPS = ['Content', 'Behaviour', 'Appearance', 'Window'] as const;
+export type FieldGroup = (typeof FIELD_GROUPS)[number];
+
 /** Shared by every field: an optional sub-section and a condition for showing it. */
 interface FieldExtras {
-  /** fields with the same group are shown together under that heading */
-  group?: string;
+  /** the section the field sits in; every widget uses the same sections, in the same order (default Content) */
+  group?: FieldGroup;
   /** hide the field unless this returns true for the widget's current props */
   showIf?: (props: Props) => boolean;
 }
@@ -179,7 +183,7 @@ const VIDEO_ACTIONS: WidgetAction[] = [
  */
 export const WIDGET_REGISTRY: Record<WidgetType, WidgetDef> = {
   scorebug: def('scorebug', ScorebugWidget, 'Team, score, overs, run rate and chase', [
-    { kind: 'select', key: 'layout', label: 'Layout', options: opts(['wide', 'Wide'], ['compact', 'Compact']) },
+    { kind: 'select', key: 'layout', group: 'Appearance', label: 'Layout', options: opts(['wide', 'Wide'], ['compact', 'Compact']) },
     { kind: 'toggle', key: 'showTeamColors', label: 'Team colour strip' },
     { kind: 'toggle', key: 'showRunRate', label: 'Run rate' },
     { kind: 'toggle', key: 'showChase', label: 'Chase equation' },
@@ -194,14 +198,14 @@ export const WIDGET_REGISTRY: Record<WidgetType, WidgetDef> = {
     { kind: 'toggle', key: 'showMaidens', label: 'Maidens' },
   ]),
   thisOver: def('thisOver', ThisOverWidget, 'Ball-by-ball chips for this over', [
-    { kind: 'select', key: 'chipStyle', label: 'Chip style', options: opts(['filled', 'Filled'], ['outline', 'Outline']) },
+    { kind: 'select', key: 'chipStyle', group: 'Appearance', label: 'Chip style', options: opts(['filled', 'Filled'], ['outline', 'Outline']) },
     { kind: 'toggle', key: 'showLabel', label: '"This over" label' },
   ]),
   partnership: def('partnership', PartnershipWidget, 'Current stand with contribution bar', [
     { kind: 'toggle', key: 'showBar', label: 'Contribution bar' },
   ]),
   recentOvers: def('recentOvers', RecentOversWidget, 'Runs in the last six overs', [
-    { kind: 'select', key: 'mode', label: 'Display', options: opts(['bars', 'Bars'], ['numbers', 'Numbers']) },
+    { kind: 'select', key: 'mode', group: 'Appearance', label: 'Display', options: opts(['bars', 'Bars'], ['numbers', 'Numbers']) },
   ]),
   matchInfo: def('matchInfo', MatchInfoWidget, 'Teams, series, venue, toss, status', [
     {
@@ -212,20 +216,20 @@ export const WIDGET_REGISTRY: Record<WidgetType, WidgetDef> = {
     },
     {
       kind: 'select',
-      key: 'layout', group: 'Layout',
+      key: 'layout', group: 'Appearance',
       label: 'Layout',
       options: opts(['auto', 'Auto (fits the box shape)'], ['stack', 'Stacked list'], ['grid', 'Grid (two or three per row)'], ['row', 'Single row']),
     },
-    { kind: 'select', key: 'labels', group: 'Layout', label: 'Labels', options: opts(['side', 'Beside the value'], ['above', 'Above the value'], ['hidden', 'Hidden']) },
-    { kind: 'select', key: 'align', group: 'Layout', label: 'Align', options: opts(['left', 'Left'], ['center', 'Centre']) },
-    { kind: 'toggle', key: 'showTeams', group: 'Layout', label: 'Team names line' },
+    { kind: 'select', key: 'labels', group: 'Appearance', label: 'Labels', options: opts(['side', 'Beside the value'], ['above', 'Above the value'], ['hidden', 'Hidden']) },
+    { kind: 'select', key: 'align', group: 'Appearance', label: 'Align', options: opts(['left', 'Left'], ['center', 'Centre']) },
+    { kind: 'toggle', key: 'showTeams', group: 'Appearance', label: 'Team names line' },
   ]),
   banner: def('banner', BannerWidget, 'Full-width FOUR / SIX / WICKET moments', [
-    { kind: 'checks', key: 'autoFire', label: 'Auto-fire on', options: AUTO_FIRE_EVENTS.map((e) => ({ value: e, label: EVENT_LABELS[e] ?? e })) },
-    { kind: 'select', key: 'look', group: 'Look', label: 'Look', options: opts(['blast', 'Blast (giant number, burst, particles)'], ['classic', 'Classic (clean wipe)']) },
-    { kind: 'slider', key: 'duration', group: 'Look', label: 'Hold', min: 1, max: 6, step: 0.5, unit: 's' },
-    { kind: 'select', key: 'direction', group: 'Look', label: 'Wipe from', options: opts(['left', 'Left'], ['right', 'Right']), showIf: (p) => p['look'] === 'classic' },
-    { kind: 'toggle', key: 'showSubtitle', group: 'Look', label: 'Subtitle line' },
+    { kind: 'checks', key: 'autoFire', group: 'Behaviour', label: 'Auto-fire on', options: AUTO_FIRE_EVENTS.map((e) => ({ value: e, label: EVENT_LABELS[e] ?? e })) },
+    { kind: 'select', key: 'look', group: 'Appearance', label: 'Look', options: opts(['blast', 'Blast (giant number, burst, particles)'], ['classic', 'Classic (clean wipe)']) },
+    { kind: 'slider', key: 'duration', group: 'Appearance', label: 'Hold', min: 1, max: 6, step: 0.5, unit: 's' },
+    { kind: 'select', key: 'direction', group: 'Appearance', label: 'Wipe from', options: opts(['left', 'Left'], ['right', 'Right']), showIf: (p) => p['look'] === 'classic' },
+    { kind: 'toggle', key: 'showSubtitle', group: 'Appearance', label: 'Subtitle line' },
   ]),
   ticker: def('ticker', TickerWidget, 'Scrolling scores or custom text', [
     {
@@ -236,32 +240,32 @@ export const WIDGET_REGISTRY: Record<WidgetType, WidgetDef> = {
     },
     { kind: 'text', key: 'label', label: 'Tag' },
     { kind: 'text', key: 'text', label: 'Custom text (· separates items)', multiline: true },
-    { kind: 'slider', key: 'speed', label: 'Speed', min: 30, max: 240, step: 10, unit: 'px/s' },
+    { kind: 'slider', key: 'speed', group: 'Behaviour', label: 'Speed', min: 30, max: 240, step: 10, unit: 'px/s' },
   ]),
   camera: def('camera', CameraWidget, 'Transparent cutout for your OBS webcam', [
     {
       kind: 'select',
-      key: 'shape',
+      key: 'shape', group: 'Appearance',
       label: 'Shape',
       options: opts(['rect', 'Rectangle'], ['rounded', 'Rounded'], ['circle', 'Circle'], ['pill', 'Pill']),
     },
-    { kind: 'slider', key: 'frameWidth', label: 'Frame width', min: 0, max: 16, step: 1, unit: 'px' },
+    { kind: 'slider', key: 'frameWidth', group: 'Appearance', label: 'Frame width', min: 0, max: 16, step: 1, unit: 'px' },
     { kind: 'toggle', key: 'showPlate', label: 'Name plate' },
     { kind: 'text', key: 'label', label: 'Name' },
     { kind: 'text', key: 'sublabel', label: 'Role' },
   ]),
   text: def('text', TextWidget, 'Free text, e.g. LIVE COMMENTARY', [
     { kind: 'text', key: 'text', label: 'Text', multiline: true },
-    { kind: 'slider', key: 'size', label: 'Size', min: 22, max: 120, step: 1, unit: 'px' },
-    { kind: 'select', key: 'align', label: 'Align', options: opts(['left', 'Left'], ['center', 'Centre'], ['right', 'Right']) },
+    { kind: 'slider', key: 'size', group: 'Appearance', label: 'Size', min: 22, max: 120, step: 1, unit: 'px' },
+    { kind: 'select', key: 'align', group: 'Appearance', label: 'Align', options: opts(['left', 'Left'], ['center', 'Centre'], ['right', 'Right']) },
     { kind: 'toggle', key: 'uppercase', label: 'Uppercase' },
-    { kind: 'toggle', key: 'panel', label: 'Panel background' },
+    { kind: 'toggle', key: 'panel', group: 'Appearance', label: 'Panel background' },
     { kind: 'toggle', key: 'liveDot', label: 'Red live dot' },
   ]),
   image: def('image', ImageWidget, 'Your channel logo', [
     { kind: 'image', key: 'src', label: 'Image' },
-    { kind: 'select', key: 'fit', label: 'Fit', options: opts(['contain', 'Contain'], ['cover', 'Cover']) },
-    { kind: 'toggle', key: 'panel', label: 'Panel background' },
+    { kind: 'select', key: 'fit', group: 'Appearance', label: 'Fit', options: opts(['contain', 'Contain'], ['cover', 'Cover']) },
+    { kind: 'toggle', key: 'panel', group: 'Appearance', label: 'Panel background' },
   ]),
   scorecard: def('scorecard', ScorecardWidget, 'Full batting and bowling card, yet to bat, fall of wickets', [
     {
@@ -276,7 +280,7 @@ export const WIDGET_REGISTRY: Record<WidgetType, WidgetDef> = {
     { kind: 'toggle', key: 'showFow', label: 'Fall of wickets' },
     {
       kind: 'select',
-      key: 'dismissal',
+      key: 'dismissal', group: 'Appearance',
       label: 'How out',
       options: opts(['column', 'Own column'], ['under', 'Under the name (more room)'], ['hidden', 'Hidden']),
     },
@@ -314,7 +318,7 @@ export const WIDGET_REGISTRY: Record<WidgetType, WidgetDef> = {
   ]),
   scoreHeader: def('scoreHeader', ScoreHeaderWidget, 'Both teams in big colour blocks; the centre flashes FOUR / SIX / WICKET / OVER', [
     { kind: 'text', key: 'centerText', label: 'Centre text between events (empty = VS)' },
-    { kind: 'toggle', key: 'showEvents', label: 'Flash events in the centre' },
+    { kind: 'toggle', key: 'showEvents', group: 'Behaviour', label: 'Flash events in the centre' },
   ]),
   oversStrip: def('oversStrip', OversStripWidget, 'Previous and current over, ball by ball, with totals', [
     { kind: 'text', key: 'label', label: 'Label on the left' },
@@ -328,31 +332,31 @@ export const WIDGET_REGISTRY: Record<WidgetType, WidgetDef> = {
   ]),
   video: def('video', VideoWidget, 'A video clip: intro, sponsor loop, replay', [
     { kind: 'video', key: 'src', label: 'Video' },
-    { kind: 'select', key: 'fit', label: 'Fit', options: opts(['cover', 'Fill (crop)'], ['contain', 'Fit (letterbox)']) },
-    { kind: 'toggle', key: 'loop', label: 'Loop' },
-    { kind: 'toggle', key: 'muted', label: 'Muted' },
-    { kind: 'toggle', key: 'panel', label: 'Panel background' },
+    { kind: 'select', key: 'fit', group: 'Appearance', label: 'Fit', options: opts(['cover', 'Fill (crop)'], ['contain', 'Fit (letterbox)']) },
+    { kind: 'toggle', key: 'loop', group: 'Behaviour', label: 'Loop' },
+    { kind: 'toggle', key: 'muted', group: 'Behaviour', label: 'Muted' },
+    { kind: 'toggle', key: 'panel', group: 'Appearance', label: 'Panel background' },
   ], { actions: VIDEO_ACTIONS }),
   timer: def('timer', TimerWidget, 'Starting in / back in countdown, or a stopwatch', [
     { kind: 'text', key: 'title', label: 'Title (e.g. STARTING IN, BACK IN)' },
     {
       kind: 'select',
-      key: 'mode',
+      key: 'mode', group: 'Behaviour',
       label: 'Mode',
       options: opts(['duration', 'Countdown for a length'], ['until', 'Countdown to a time'], ['stopwatch', 'Stopwatch (counts up)']),
     },
-    { kind: 'number', key: 'minutes', label: 'Length in minutes', min: 0.5, max: 600, step: 0.5, showIf: (p) => p['mode'] === 'duration' },
-    { kind: 'text', key: 'target', label: 'Time to count to, HH:MM', placeholder: '19:30', showIf: (p) => p['mode'] === 'until' },
+    { kind: 'number', key: 'minutes', group: 'Behaviour', label: 'Length in minutes', min: 0.5, max: 600, step: 0.5, showIf: (p) => p['mode'] === 'duration' },
+    { kind: 'text', key: 'target', group: 'Behaviour', label: 'Time to count to, HH:MM', placeholder: '19:30', showIf: (p) => p['mode'] === 'until' },
     { kind: 'text', key: 'endText', label: 'Text at zero', showIf: (p) => p['mode'] !== 'stopwatch' },
-    { kind: 'toggle', key: 'panel', label: 'Panel background' },
+    { kind: 'toggle', key: 'panel', group: 'Appearance', label: 'Panel background' },
   ], {
     actions: TIMER_ACTIONS,
     readout: (c) => (c.props['mode'] === 'until' ? '' : formatClock(timerValue(timerProps(c), c.now).ms)),
   }),
   clock: def('clock', ClockWidget, 'Local time or countdown', [
-    { kind: 'select', key: 'mode', label: 'Mode', options: opts(['time', 'Local time'], ['countdown', 'Countdown']) },
-    { kind: 'toggle', key: 'hour24', label: '24-hour', showIf: (p) => p['mode'] !== 'countdown' },
-    { kind: 'text', key: 'target', label: 'Countdown to (HH:MM)', placeholder: '19:30', showIf: (p) => p['mode'] === 'countdown' },
+    { kind: 'select', key: 'mode', group: 'Behaviour', label: 'Mode', options: opts(['time', 'Local time'], ['countdown', 'Countdown']) },
+    { kind: 'toggle', key: 'hour24', group: 'Appearance', label: '24-hour', showIf: (p) => p['mode'] !== 'countdown' },
+    { kind: 'text', key: 'target', group: 'Behaviour', label: 'Countdown to (HH:MM)', placeholder: '19:30', showIf: (p) => p['mode'] === 'countdown' },
     { kind: 'text', key: 'label', label: 'Countdown label', showIf: (p) => p['mode'] === 'countdown' },
   ]),
 };

@@ -113,7 +113,7 @@ In OBS:
 - The scene dropdown picks which scene you are **editing**. **Put on air** sends it to the Output; **● ON AIR** shows it's live.
 - **⋯** creates, duplicates, renames, deletes, exports and imports scenes. **New broadcast layout** makes a ready TV-style scene (score header, stat bar, overs strip, chase box, three player panels, event banner); every piece stays editable.
 - With no widget selected, the right panel shows the scene's **Theme**, **Overlay (all scenes)**, **Transition in**, **On-air pointer** and **Background**.
-- Right-panel sections fold open / closed with a click; the Studio remembers which.
+- Every widget's settings use the same sections in the same order: **Controls** (buttons such as ▶ Start or ⟳ Reload), **Content**, **Behaviour**, **Appearance**, **Window**, **Style**, **Motion**, **Position & size**; Hide / Lock / Copy / Delete sit under the widget name. Sections fold open / closed with a click and the Studio remembers which.
 - On a tablet or phone the library and settings slide in from the **☰ Widgets** / **⚙ Settings** buttons, so a phone works as a remote for the event pad.
 
 ### Widgets

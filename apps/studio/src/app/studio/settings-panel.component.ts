@@ -23,7 +23,7 @@ import {
   type WidgetStyle,
 } from '@cos/shared';
 import { LiveStore } from '../core/live.store';
-import { STYLE_SCHEMA, WIDGET_REGISTRY, type ActionContext, type FieldDef, type WidgetAction } from '../widgets/widget-registry';
+import { FIELD_GROUPS, STYLE_SCHEMA, WIDGET_REGISTRY, type ActionContext, type FieldDef, type FieldGroup, type WidgetAction } from '../widgets/widget-registry';
 import { exportCameraMask, obsTransformText } from './camera-tools';
 import { EditorStore } from './editor.store';
 import { FieldComponent } from './field.component';
@@ -44,7 +44,7 @@ const ANIM_LABELS: Record<AnimPreset, string> = {
 
 const OPEN_KEY = 'cos.inspector.open';
 /** sections that start folded so the panel stays short */
-const CLOSED_BY_DEFAULT = new Set(['look', 'motion', 'tips', 'obs-webcam-placement']);
+const CLOSED_BY_DEFAULT = new Set(['style', 'motion', 'position', 'tips', 'obs']);
 
 function readOpenState(): Record<string, boolean> {
   try {
@@ -62,56 +62,30 @@ function readOpenState(): Record<string, boolean> {
   template: `
     @if (editor.selected(); as w) {
       @let def = registry[w.type];
+      @let ctx = actionCtx(w);
+      <!-- every widget: the same header, layer actions and sections, in the same order -->
       <header class="head">
         <span class="icon">{{ def.icon }}</span>
-        <input class="name" [value]="w.name" (input)="rename(w, $event)" aria-label="Layer name" />
+        <div class="titles">
+          <input class="name" [value]="w.name" (input)="rename(w, $event)" aria-label="Layer name" />
+          <span class="kind">{{ def.label }}</span>
+        </div>
       </header>
       <p class="desc">{{ def.description }}</p>
+      <div class="btn-group layer-bar" role="group" aria-label="Layer">
+        <button type="button" (click)="editor.updateWidget(w.id, { visible: !w.visible })" [title]="w.visible ? 'Hide on air' : 'Show on air'">
+          {{ w.visible ? '◉ Hide' : '○ Show' }}
+        </button>
+        <button type="button" (click)="editor.updateWidget(w.id, { locked: !w.locked })" [title]="w.locked ? 'Allow moving' : 'Stop accidental moves'">
+          {{ w.locked ? '🔓 Unlock' : '🔒 Lock' }}
+        </button>
+        <button type="button" (click)="editor.duplicate(w.id)" title="Duplicate (Ctrl/⌘+D)">⧉ Copy</button>
+        <button type="button" class="danger" (click)="editor.remove(w.id)" title="Delete (Del)">✕ Delete</button>
+      </div>
 
-      <details class="sec" [open]="isOpen('position')" (toggle)="onToggle('position', $event)">
-        <summary>Position</summary>
-        <div class="grid4">
-          @for (k of posKeys; track k) {
-            <label>
-              <span>{{ k.toUpperCase() }}</span>
-              <input type="number" [value]="w[k]" (change)="setPos(w, k, $event)" [disabled]="w.locked" />
-            </label>
-          }
-        </div>
-        <div class="row-btns">
-          <button type="button" (click)="editor.updateWidget(w.id, { visible: !w.visible })">
-            {{ w.visible ? 'Hide' : 'Show' }}
-          </button>
-          <button type="button" (click)="editor.updateWidget(w.id, { locked: !w.locked })">
-            {{ w.locked ? 'Unlock' : 'Lock' }}
-          </button>
-          <button type="button" (click)="editor.duplicate(w.id)">Duplicate</button>
-          <button type="button" class="danger" (click)="editor.remove(w.id)">Delete</button>
-        </div>
-      </details>
-
-      @if (w.type === 'camera') {
-        <details class="sec obs" [open]="isOpen('obs-webcam-placement')" (toggle)="onToggle('obs-webcam-placement', $event)">
-          <summary>OBS webcam placement</summary>
-          <pre>{{ transformText(w) }}</pre>
-          <div class="row-btns">
-            <button type="button" (click)="copy(transformText(w))">{{ copied() ? 'Copied ✓' : 'Copy transform' }}</button>
-          </div>
-          <p class="hint">
-            In OBS select the webcam, press Ctrl+E (Edit Transform), set Position, Bounding Box type
-            "Scale to outer bounds" with this size, and tick "Crop to Bounding Box".
-          </p>
-          <div class="row-btns">
-            <button type="button" (click)="mask(w, 'frame')">Mask PNG (frame size)</button>
-            <button type="button" (click)="mask(w, 'canvas')">Mask PNG (1920×1080)</button>
-          </div>
-        </details>
-      }
-
-      @if (def.settingsSchema.length || def.actions?.length) {
-        @let ctx = actionCtx(w);
-        <details class="sec" [open]="isOpen('widget')" (toggle)="onToggle('widget', $event)">
-          <summary>{{ def.label }}</summary>
+      @if (def.readout || def.actions?.length) {
+        <details class="sec" [open]="isOpen('controls')" (toggle)="onToggle('controls', $event)">
+          <summary>Controls</summary>
           @if (def.readout) {
             @let r = def.readout(ctx);
             @if (r) {
@@ -119,7 +93,7 @@ function readOpenState(): Record<string, boolean> {
             }
           }
           @if (def.actions?.length) {
-            <div class="row-btns top">
+            <div class="btn-group">
               @for (a of def.actions; track a.id) {
                 @if (!a.when || a.when(ctx)) {
                   <button type="button" [class.primary]="isPrimary(a, ctx)" [title]="a.title ?? ''" (click)="a.run(ctx)">
@@ -129,22 +103,23 @@ function readOpenState(): Record<string, boolean> {
               }
             </div>
           }
-          @for (f of fieldsIn(def.settingsSchema, w, ''); track f.key) {
-            <cos-field [def]="f" [value]="w.props[f.key]" (changed)="setProp(w, f, $event)" />
-          }
         </details>
-        @for (g of groupsOf(def.settingsSchema); track g) {
+      }
+
+      @for (g of fieldGroups; track g) {
+        @let fields = fieldsIn(def.settingsSchema, w, g);
+        @if (fields.length) {
           <details class="sec" [open]="isOpen('g:' + g)" (toggle)="onToggle('g:' + g, $event)">
             <summary>{{ g }}</summary>
-            @for (f of fieldsIn(def.settingsSchema, w, g); track f.key) {
+            @for (f of fields; track f.key) {
               <cos-field [def]="f" [value]="w.props[f.key]" (changed)="setProp(w, f, $event)" />
             }
           </details>
         }
       }
 
-      <details class="sec" [open]="isOpen('look')" (toggle)="onToggle('look', $event)">
-        <summary>Look</summary>
+      <details class="sec" [open]="isOpen('style')" (toggle)="onToggle('style', $event)">
+        <summary>Style</summary>
         <cos-field [def]="titleToggle" [value]="w.style.showTitle" (changed)="setStyle(w, 'showTitle', $event)" />
         @if (w.style.showTitle) {
           <cos-field [def]="titleText" [value]="w.style.title ?? ''" (changed)="setStyle(w, 'title', $event)" />
@@ -178,6 +153,34 @@ function readOpenState(): Record<string, boolean> {
         <cos-field [def]="exitField" [value]="w.animation.exit" (changed)="setAnim(w, 'exit', $event)" />
         <cos-field [def]="delayField" [value]="w.animation.delay" (changed)="setAnim(w, 'delay', $event)" />
       </details>
+
+      <details class="sec" [open]="isOpen('position')" (toggle)="onToggle('position', $event)">
+        <summary>Position &amp; size</summary>
+        <div class="grid4">
+          @for (k of posKeys; track k) {
+            <label>
+              <span>{{ k.toUpperCase() }}</span>
+              <input type="number" [value]="w[k]" (change)="setPos(w, k, $event)" [disabled]="w.locked" />
+            </label>
+          }
+        </div>
+      </details>
+
+      @if (w.type === 'camera') {
+        <details class="sec obs" [open]="isOpen('obs')" (toggle)="onToggle('obs', $event)">
+          <summary>OBS webcam placement</summary>
+          <pre>{{ transformText(w) }}</pre>
+          <div class="btn-group">
+            <button type="button" (click)="copy(transformText(w))">{{ copied() ? '✓ Copied' : '⧉ Copy transform' }}</button>
+            <button type="button" (click)="mask(w, 'frame')">Mask PNG (frame)</button>
+            <button type="button" (click)="mask(w, 'canvas')">Mask PNG (1920×1080)</button>
+          </div>
+          <p class="hint">
+            In OBS select the webcam, press Ctrl+E (Edit Transform), set Position, Bounding Box type
+            "Scale to outer bounds" with this size, and tick "Crop to Bounding Box".
+          </p>
+        </details>
+      }
     } @else if (editor.scene(); as scene) {
       <header class="head"><span class="icon">▦</span><strong>Scene</strong></header>
       <section>
@@ -203,7 +206,7 @@ function readOpenState(): Record<string, boolean> {
         <cos-field [def]="langField" [value]="live.settings().language" (changed)="setSetting('language', $event)" />
         <cos-field [def]="imgField" [value]="live.settings().playerImages" (changed)="setSetting('playerImages', $event)" />
         @if (live.settings().playerImages === 'photo') {
-          <div class="row-btns">
+          <div class="btn-group">
             <button type="button" (click)="prefetchPhotos()" [disabled]="prefetching()" title="Look up both playing XIs on Wikimedia now, so panels show photos instantly on air">
               {{ prefetching() ? 'Fetching…' : '⤓ Fetch photos for both XIs' }}
             </button>
@@ -302,6 +305,38 @@ function readOpenState(): Record<string, boolean> {
       border-radius: 6px;
       flex: none;
     }
+    .titles {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+    }
+    .kind {
+      font-size: 11px;
+      color: var(--ui-muted);
+      padding-left: 9px;
+    }
+    /* one look for every row of related buttons: joined, equal height, wrapping when narrow */
+    .btn-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1px;
+      background: var(--ui-border);
+      border: 1px solid var(--ui-border);
+      border-radius: 8px;
+      overflow: hidden;
+      margin: 4px 0 2px;
+    }
+    .btn-group > button {
+      flex: 1 1 auto;
+      justify-content: center;
+      border: 0 !important;
+      border-radius: 0 !important;
+      min-height: 32px;
+    }
+    .layer-bar {
+      margin-bottom: 4px;
+    }
     .name {
       flex: 1;
       font-weight: 600;
@@ -381,20 +416,10 @@ function readOpenState(): Record<string, boolean> {
       width: 100%;
       font-variant-numeric: tabular-nums;
     }
-    .timer-ctl {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      flex-wrap: wrap;
-      margin-bottom: 12px;
-    }
     .readout {
       font: 700 28px/1 Inter, Mukta, sans-serif;
       font-variant-numeric: tabular-nums;
       margin-bottom: 8px;
-    }
-    .row-btns.top {
-      margin: 0 0 12px;
     }
     .row-btns {
       display: flex;
@@ -530,13 +555,11 @@ export class SettingsPanelComponent {
     return a.primary?.(c) ?? false;
   }
 
-  /** the fields of one group ('' = ungrouped) that apply to the widget's current props */
-  protected fieldsIn(schema: FieldDef[], w: WidgetInstance, group: string): FieldDef[] {
-    return schema.filter((f) => (f.group ?? '') === group && (!f.showIf || f.showIf(w.props)));
-  }
+  protected readonly fieldGroups = FIELD_GROUPS;
 
-  protected groupsOf(schema: FieldDef[]): string[] {
-    return [...new Set(schema.map((f) => f.group).filter((g): g is string => !!g))];
+  /** the fields of one section that apply to the widget's current props (ungrouped = Content) */
+  protected fieldsIn(schema: FieldDef[], w: WidgetInstance, group: FieldGroup): FieldDef[] {
+    return schema.filter((f) => (f.group ?? 'Content') === group && (!f.showIf || f.showIf(w.props)));
   }
 
   // ---- collapsible sections, remembered per browser ----
