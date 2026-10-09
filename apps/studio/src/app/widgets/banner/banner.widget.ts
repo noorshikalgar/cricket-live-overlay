@@ -5,6 +5,7 @@ import { LiveStore } from '../../core/live.store';
 import { MotionService } from '../../motion/motion.service';
 import { SplitText, gsap } from '../../motion/gsap';
 import { WidgetBase } from '../widget-base';
+import { BannerPopComponent } from './banner-pop.component';
 
 export interface BannerProps {
   autoFire: Record<string, boolean>;
@@ -12,8 +13,8 @@ export interface BannerProps {
   duration: number;
   direction: 'left' | 'right';
   showSubtitle: boolean;
-  /** blast = giant numeral, light burst, particles; classic = a clean colour wipe */
-  look: 'blast' | 'classic';
+  /** pop = centred comic word; blast = giant numeral, light burst, particles; classic = a clean colour wipe */
+  look: 'pop' | 'blast' | 'classic';
 }
 
 /** the giant glyph a blast shows for each moment */
@@ -40,6 +41,7 @@ const MAX_QUEUE = 3;
 
 @Component({
   selector: 'cos-banner',
+  imports: [BannerPopComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     @if (editing() && !playing()) {
@@ -48,6 +50,7 @@ const MAX_QUEUE = 3;
         <small>Plays on FOUR · SIX · WICKET · milestones · event pad</small>
       </div>
     }
+    <cos-banner-pop />
     <div class="blast" #blast>
       <div class="rays" #rays></div>
       <div class="flash" #flash></div>
@@ -322,8 +325,9 @@ export class BannerWidget extends WidgetBase<BannerProps> {
     duration: 2.5,
     direction: 'left',
     showSubtitle: true,
-    look: 'blast',
+    look: 'pop',
   };
+  private readonly pop = viewChild.required(BannerPopComponent);
   protected readonly streakList = [0, 1, 2, 3, 4, 5, 6];
   private readonly blastEl = viewChild.required<ElementRef<HTMLElement>>('blast');
   private readonly raysEl = viewChild.required<ElementRef<HTMLElement>>('rays');
@@ -377,7 +381,19 @@ export class BannerWidget extends WidgetBase<BannerProps> {
   }
 
   private play(e: MatchEvent): void {
-    if (this.p().look !== 'classic' && !this.motion.reduced()) {
+    if (this.p().look === 'pop' && !this.motion.reduced()) {
+      void this.pop()
+        .play({
+          type: e.type,
+          title: this.i18n.eventTitle(e.title),
+          subtitle: this.p().showSubtitle ? this.i18n.apiText(this.t(e.subtitle)) : '',
+          color: EVENT_COLOR[e.type] ?? 'var(--accent)',
+          hold: this.motion.d(Math.max(0.8, Number(this.p().duration) || 2.5)),
+        })
+        .then(() => this.next());
+      return;
+    }
+    if (this.p().look === 'blast' && !this.motion.reduced()) {
       this.playBlast(e);
       return;
     }
@@ -424,7 +440,12 @@ export class BannerWidget extends WidgetBase<BannerProps> {
     for (let i = 0; i < n; i++) {
       const dot = document.createElement('i');
       const s = 6 + Math.random() * (big ? 14 : 10);
+      // runtime elements don't get the scoped CSS: position them inline
       Object.assign(dot.style, {
+        position: 'absolute',
+        left: '0',
+        top: '0',
+        borderRadius: '2px',
         width: `${s}px`,
         height: `${s * (Math.random() < 0.5 ? 1 : 0.4)}px`,
         background: i % 3 === 0 ? '#ffffff' : color,

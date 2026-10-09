@@ -96,7 +96,7 @@ export const WIDGET_DEFAULTS: Record<WidgetType, WidgetDefaults> = {
       duration: 2.5,
       direction: 'left',
       showSubtitle: true,
-      look: 'blast',
+      look: 'pop',
     },
     style: { fontFamily: 'Barlow Condensed' },
     animation: { enter: 'none', exit: 'none' },
