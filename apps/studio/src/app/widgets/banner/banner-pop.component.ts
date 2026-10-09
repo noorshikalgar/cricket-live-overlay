@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, DestroyRef, ElementRef, inject, viewChild } from '@angular/core';
 import type { MatchEventType } from '@cos/shared';
 import { I18n } from '../../core/i18n';
-import { SplitText, gsap } from '../../motion/gsap';
+import { gsap } from '../../motion/gsap';
 import { MotionService } from '../../motion/motion.service';
 
 export interface PopShot {
@@ -131,13 +131,13 @@ const CONFETTI_COLORS = ['#facc15', '#22d3ee', '#f472b6', '#a3e635', '#ffffff', 
       top: 50%;
       transform: translateY(-58%);
       text-align: center;
-      white-space: nowrap;
+      white-space: pre;
+      line-height: 0.95;
       font-family: 'Barlow Condensed', var(--font);
       font-weight: 900;
       font-style: italic;
       text-transform: uppercase;
       font-size: calc(var(--wh) * 0.78 * var(--fs));
-      line-height: 1;
       letter-spacing: 0.02em;
       color: #fff;
       -webkit-text-stroke: 0.045em #111;
@@ -148,16 +148,13 @@ const CONFETTI_COLORS = ['#facc15', '#22d3ee', '#f472b6', '#a3e635', '#ffffff', 
         0.06em 0.06em 0 var(--ev),
         0.09em 0.09em 0 #111;
     }
-    .word .ch,
-    .word > div {
-      display: inline-block;
-      will-change: transform;
-    }
     .ribbon {
       position: absolute;
       left: 50%;
       top: 50%;
-      transform: translate(-50%, calc(var(--wh) * 0.42)) rotate(-2.5deg);
+      transform: translate(-50%, var(--ribbon-y, calc(var(--wh) * 0.42))) rotate(-2.5deg);
+      max-width: 92%;
+      text-align: center;
       padding: 0.25em 1em 0.3em;
       background: #111;
       color: #fff;
@@ -199,7 +196,6 @@ export class BannerPopComponent {
   private readonly fxEl = viewChild.required<ElementRef<HTMLElement>>('fx');
 
   private tl: gsap.core.Timeline | null = null;
-  private split: SplitText | null = null;
   private done: (() => void) | null = null;
 
   constructor() {
@@ -220,8 +216,6 @@ export class BannerPopComponent {
     this.tl = null;
     gsap.killTweensOf(this.fxEl().nativeElement.children);
     this.fxEl().nativeElement.replaceChildren();
-    this.split?.revert();
-    this.split = null;
     gsap.set(this.rootEl().nativeElement, { visibility: 'hidden' });
     const d = this.done;
     this.done = null;
@@ -244,19 +238,17 @@ export class BannerPopComponent {
 
     root.style.setProperty('--ev', shot.color);
     const loud = shot.type === 'FOUR' || shot.type === 'SIX' || shot.type === 'WICKET';
-    word.textContent = loud ? `${shot.title}!` : shot.title;
     sub.textContent = shot.subtitle;
+    const { box, parts } = this.fit(word, loud ? `${shot.title}!` : shot.title, ww, wh);
+    // the burst follows the box: never wider than most of it, never taller than it can show
+    root.style.setProperty('--size', `${Math.min(wh * 2.3, ww * 0.62)}px`);
+    root.style.setProperty('--ribbon-y', `${box.h * 0.5 + wh * 0.02}px`);
 
-    // letters in English; whole words in Marathi so joined Devanagari shapes stay intact
-    this.split = new SplitText(word, { type: this.i18n.lang() === 'en' ? 'chars' : 'words', charsClass: 'ch' });
-    const parts = (this.split.chars.length ? this.split.chars : this.split.words) as HTMLElement[];
     const mid = (parts.length - 1) / 2;
-    // long words (WICKET!, अर्धशतक) stretch the burst sideways so the word stays inside it
-    const first = parts[0]?.getBoundingClientRect();
-    const last = parts.at(-1)?.getBoundingClientRect();
-    const wordW = first && last ? last.right - first.left : 0;
-    const size = front.getBoundingClientRect().width || wh * 2.3;
-    const stretch = Math.max(1, (wordW * 1.25) / (size * 0.74));
+    // long or two-line words stretch the burst so the word stays inside it
+    const size = Math.min(wh * 2.3, ww * 0.62);
+    const stretch = Math.max(1, (box.w * 1.22) / (size * 0.74));
+    const stretchY = Math.max(1, (box.h * 1.3) / (size * 0.74));
 
     const tl = gsap.timeline({ onComplete: () => this.stop() });
     this.tl = tl;
@@ -267,8 +259,8 @@ export class BannerPopComponent {
       .set(ring, { opacity: 0, scale: 0.3 })
 
       // the burst punches in, overshoots, settles; then keeps turning slowly
-      .to(back, { scaleX: 1.05 * stretch, scaleY: 1.05, rotate: 0, duration: d(0.5), ease: 'back.out(2.6)' }, 0)
-      .to(front, { scaleX: stretch, scaleY: 1, rotate: 0, duration: d(0.5), ease: 'back.out(2.6)' }, d(0.04))
+      .to(back, { scaleX: 1.05 * stretch, scaleY: 1.05 * stretchY, rotate: 0, duration: d(0.5), ease: 'back.out(2.6)' }, 0)
+      .to(front, { scaleX: stretch, scaleY: stretchY, rotate: 0, duration: d(0.5), ease: 'back.out(2.6)' }, d(0.04))
       .to(halftone, { opacity: 1, scale: 1, duration: d(0.4), ease: 'power2.out' }, d(0.15))
       .to([back, front], { rotate: stretch > 1.05 ? '+=0' : '+=12', duration: shot.hold + d(1.2), ease: 'none' }, d(0.5));
 
@@ -350,6 +342,84 @@ export class BannerPopComponent {
       .to(ribbon, { opacity: 0, scaleX: 0, duration: d(0.25), ease: 'power2.in' }, out)
       .to(halftone, { opacity: 0, duration: d(0.25) }, out)
       .to([front, back], { scale: 0, rotate: '+=90', duration: d(0.4), ease: 'back.in(1.6)' }, out + d(0.1));
+  }
+
+  /**
+   * Sizes the word to the widget box: shrinks it until it fits, and lets a
+   * long phrase (DRS REVIEW, डावांमधील विश्रांती) wrap onto two lines first.
+   * Returns the word's size in canvas px.
+   */
+  private fit(word: HTMLElement, text: string, ww: number, wh: number): { box: { w: number; h: number }; parts: HTMLElement[] } {
+    word.style.fontSize = '';
+    // the Output scales the 1920×1080 canvas to the window; measure in canvas px
+    const scale = this.host.getBoundingClientRect().width / ww || 1;
+    const measure = () => {
+      const r = Array.from(word.children).reduce(
+        (acc, el) => {
+          const b = el.getBoundingClientRect();
+          return { w: Math.max(acc.w, b.width), h: acc.h + b.height };
+        },
+        { w: 0, h: 0 },
+      );
+      return { w: r.w / scale, h: r.h / scale };
+    };
+    const maxW = ww * 0.9;
+    let maxH = wh * 1.3;
+    let font = parseFloat(getComputedStyle(word).fontSize) || wh * 0.78;
+    let parts = this.build(word, [text]);
+    let m = measure();
+    const words = text.trim().split(/\s+/);
+    if (m.w > maxW && words.length > 1) {
+      // two balanced lines: break at the space closest to the middle
+      const total = text.length;
+      let best = 1;
+      let bestGap = Infinity;
+      for (let i = 1; i < words.length; i++) {
+        const gap = Math.abs(words.slice(0, i).join(' ').length - total / 2);
+        if (gap < bestGap) [best, bestGap] = [i, gap];
+      }
+      parts = this.build(word, [words.slice(0, best).join(' '), words.slice(best).join(' ')]);
+      maxH = wh * 1.75;
+      m = measure();
+    }
+    for (let i = 0; i < 12 && (m.w > maxW || m.h > maxH); i++) {
+      font *= 0.9;
+      word.style.fontSize = `${font}px`;
+      m = measure();
+    }
+    return { box: m, parts };
+  }
+
+  /**
+   * One block per line, each split into pieces that animate on their own:
+   * letters in English, whole words in Marathi (splitting letters would break
+   * the joined Devanagari shapes).
+   */
+  private build(word: HTMLElement, lines: string[]): HTMLElement[] {
+    word.replaceChildren();
+    const parts: HTMLElement[] = [];
+    const byLetter = this.i18n.lang() === 'en';
+    for (const line of lines) {
+      const ln = document.createElement('div');
+      ln.style.display = 'block';
+      ln.style.width = 'fit-content';
+      ln.style.margin = '0 auto';
+      const pieces = byLetter ? Array.from(line) : line.split(/(\s+)/);
+      for (const piece of pieces) {
+        if (/^\s+$/.test(piece)) {
+          ln.append(document.createTextNode(' '));
+          continue;
+        }
+        const span = document.createElement('span');
+        span.textContent = piece === ' ' ? '\u00a0' : piece;
+        // runtime elements don't get the component's scoped CSS
+        span.style.display = 'inline-block';
+        ln.append(span);
+        parts.push(span);
+      }
+      word.append(ln);
+    }
+    return parts;
   }
 
   /** SIX: a shower of paper confetti over the whole banner */
