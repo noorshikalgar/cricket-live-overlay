@@ -199,6 +199,13 @@ export const WIDGET_DEFAULTS: Record<WidgetType, WidgetDefaults> = {
     h: 64,
     props: { showStatus: true },
   },
+  playerSpotlight: {
+    label: 'Player spotlight',
+    icon: '◧',
+    w: 760,
+    h: 300,
+    props: { slot: 'batter1', showThisOver: true, showImage: true },
+  },
   infoRail: {
     label: 'Info rail',
     icon: '⇋',

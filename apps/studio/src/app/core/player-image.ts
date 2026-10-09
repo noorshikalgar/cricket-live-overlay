@@ -3,8 +3,14 @@ import type { MatchState, Squads } from '@cos/shared';
 export type PlayerImageSource = 'avatar' | 'photo';
 
 /** Local URL for a player's image (served and cached by our server, never hotlinked). */
-export function playerImageUrl(name: string, color: string | null, role: string, source: PlayerImageSource): string {
-  const q = new URLSearchParams({ name, color: (color ?? '#1D4ED8').replace('#', ''), role, source });
+export function playerImageUrl(
+  name: string,
+  color: string | null,
+  role: string,
+  source: PlayerImageSource,
+  style: 'tile' | 'cutout' = 'tile',
+): string {
+  const q = new URLSearchParams({ name, color: (color ?? '#1D4ED8').replace('#', ''), role, source, style });
   return `/api/players/image?${q.toString()}`;
 }
 

@@ -23,6 +23,7 @@ import { PlayerPanelWidget } from './broadcast/player-panel.widget';
 import { ScoreHeaderWidget } from './broadcast/score-header.widget';
 import { StatBarWidget } from './broadcast/stat-bar.widget';
 import { InfoRailWidget, RAIL_SLIDES } from './broadcast/info-rail.widget';
+import { PlayerSpotlightWidget } from './broadcast/player-spotlight.widget';
 import { VideoWidget } from './video/video.widget';
 
 export interface SelectOption {
@@ -330,6 +331,11 @@ export const WIDGET_REGISTRY: Record<WidgetType, WidgetDef> = {
   ]),
   statBar: def('statBar', StatBarWidget, 'CRR, RRR, partnership and the chase sentence on one line', [
     { kind: 'toggle', key: 'showStatus', label: 'Status sentence' },
+  ]),
+  playerSpotlight: def('playerSpotlight', PlayerSpotlightWidget, 'Big card: picture on the left, name, figures and stat tiles; Batter 1, Batter 2 or the bowler', [
+    { kind: 'select', key: 'slot', label: 'Shows', options: opts(['batter1', 'Batter 1'], ['batter2', 'Batter 2'], ['bowler', 'Current bowler']) },
+    { kind: 'toggle', key: 'showImage', group: 'Appearance', label: 'Player picture' },
+    { kind: 'toggle', key: 'showThisOver', group: 'Appearance', label: "This over's balls (bowler)", showIf: (p) => p['slot'] === 'bowler' },
   ]),
   infoRail: def('infoRail', InfoRailWidget, 'Bottom bar: score stays put while this over, run rates, batters, bowler and more rotate', [
     { kind: 'checks', key: 'slides', label: 'Slides', options: RAIL_SLIDES },

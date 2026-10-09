@@ -109,7 +109,7 @@ app.post<{ Body: { on?: boolean; text?: string; subtext?: string } }>('/api/blac
 // ---- player images: our own SVG avatars, or cached free Wikimedia photos (never the cricket API) ----
 const players = new PlayerImageService(path.join(DATA_DIR, 'players'));
 
-app.get<{ Querystring: { name?: string; color?: string; role?: string; source?: string } }>(
+app.get<{ Querystring: { name?: string; color?: string; role?: string; source?: string; style?: string } }>(
   '/api/players/image',
   async (req, reply) => {
     const name = String(req.query.name ?? '').slice(0, 80).trim();
@@ -129,7 +129,7 @@ app.get<{ Querystring: { name?: string; color?: string; role?: string; source?: 
     return reply
       .header('cache-control', 'public, max-age=3600')
       .type('image/svg+xml')
-      .send(readFileSync(players.avatarFile(name, color, role)));
+      .send(readFileSync(players.avatarFile(name, color, role, req.query.style === 'cutout' ? 'cutout' : 'tile')));
   },
 );
 

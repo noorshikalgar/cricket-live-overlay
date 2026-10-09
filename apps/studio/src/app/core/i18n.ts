@@ -65,6 +65,8 @@ const MR: Record<string, string> = {
   Over: 'षटक',
   Partnership: 'भागीदारी',
   Chase: 'पाठलाग',
+  'Batter {n}': 'फलंदाज {n}',
+  'On strike': 'स्ट्राइकवर',
   "P'SHIP": 'भागीदारी',
   Target: 'लक्ष्य',
   TARGET: 'लक्ष्य',

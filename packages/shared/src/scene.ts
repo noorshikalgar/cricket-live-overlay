@@ -23,6 +23,7 @@ export type WidgetType =
   | 'chaseBox'
   | 'statBar'
   | 'infoRail'
+  | 'playerSpotlight'
   | 'scorecard'
   | 'teamCard'
   | 'playerCard';
