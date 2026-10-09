@@ -39,8 +39,8 @@ function typingInField(e: KeyboardEvent): boolean {
     <cos-top-bar class="top" />
     <aside class="left" [class.open]="drawer() === 'left'">
       <div class="tabs" role="tablist">
-        <button type="button" role="tab" [class.on]="leftTab() === 'widgets'" (click)="leftTab.set('widgets')">Widgets</button>
-        <button type="button" role="tab" [class.on]="leftTab() === 'cards'" (click)="leftTab.set('cards')">Live cards</button>
+        <button type="button" role="tab" [class.on]="leftTab() === 'widgets'" (click)="leftTab.set('widgets')">＋ Widgets</button>
+        <button type="button" role="tab" [class.on]="leftTab() === 'cards'" (click)="leftTab.set('cards')">▤ Live cards</button>
       </div>
       @if (leftTab() === 'widgets') {
         <cos-library-panel class="lib" />
@@ -84,7 +84,7 @@ function typingInField(e: KeyboardEvent): boolean {
       inset: 0;
       display: grid;
       grid-template-columns: 236px minmax(0, 1fr) 312px;
-      grid-template-rows: 52px minmax(0, 1fr);
+      grid-template-rows: auto minmax(0, 1fr);
       grid-template-areas:
         'top top top'
         'left center right';
@@ -246,6 +246,12 @@ function typingInField(e: KeyboardEvent): boolean {
     .studio-root .drawer-bar,
     .studio-root .scrim {
       display: none;
+    }
+
+    @media (max-width: 1440px) {
+      .studio-root {
+        grid-template-columns: 220px minmax(0, 1fr) 290px;
+      }
     }
 
     @media (max-width: 1100px) {

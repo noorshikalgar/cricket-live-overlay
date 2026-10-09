@@ -93,7 +93,9 @@ import { EditorStore } from './editor.store';
       font-size: 12px;
       color: var(--ui-muted);
       white-space: nowrap;
-      overflow-x: auto;
+      /* wraps onto a second row instead of hiding controls behind a scrollbar */
+      flex-wrap: wrap;
+      row-gap: 8px;
     }
     label {
       display: inline-flex;

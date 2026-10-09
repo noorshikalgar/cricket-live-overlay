@@ -24,6 +24,16 @@ const ORDINAL = ['1st', '2nd', '3rd', '4th'];
  * card on the ON-AIR scene in one click, then minimise or close it. Cards are
  * ordinary widgets, so they can be moved and resized on the canvas too.
  */
+const CARDS_OPEN_KEY = 'cos.cards.open';
+
+function readOpen(): Record<string, boolean> {
+  try {
+    return JSON.parse(localStorage.getItem(CARDS_OPEN_KEY) ?? '{}') as Record<string, boolean>;
+  } catch {
+    return {};
+  }
+}
+
 @Component({
   selector: 'cos-cards-panel',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -31,33 +41,41 @@ const ORDINAL = ['1st', '2nd', '3rd', '4th'];
     @if (!live.match()) {
       <p class="hint">Select a match in the top bar to open live cards.</p>
     } @else {
-      <div class="data">
-        <span>
-          Scorecard
-          @if (scAge(); as a) {
-            <em>{{ a }}</em>
-          } @else {
-            <em>not loaded</em>
+      <p class="intro">Full-screen cards for breaks and replays: the scorecard, a team's XI, one player. They show on the <b>on-air</b> scene.</p>
+      @if (onAirCards().length) {
+      <details class="grp" [open]="isOpen('onair')" (toggle)="onToggle('onair', $event)">
+        <summary>On air now <span class="n">{{ onAirCards().length }}</span></summary>
+        <ul class="onair">
+          @for (w of onAirCards(); track w.id) {
+            <li [class.off]="!w.visible">
+              <span class="ic">{{ registry[w.type].icon }}</span>
+              <span class="nm">{{ label(w) }}</span>
+              <button
+                type="button"
+                [title]="w.props['minimized'] ? 'Restore' : 'Minimize'"
+                (click)="toggleMin(w)"
+                [disabled]="!w.visible || w.props['display'] === 'widget'"
+              >
+                {{ w.props['minimized'] ? '▢' : '–' }}
+              </button>
+              <button type="button" [title]="w.visible ? 'Close' : 'Show again'" (click)="toggleVisible(w)">{{ w.visible ? '✕' : '↺' }}</button>
+            </li>
           }
-        </span>
-        <button type="button" (click)="fetch('scorecard', true)" title="Fetch the latest scorecard (1 API call)">⟳</button>
-      </div>
-      <div class="data">
-        <span>
-          Playing XIs
-          <em>{{ live.squads() ? 'loaded' : 'not loaded' }}</em>
-        </span>
-        <button type="button" (click)="fetch('squads', true)" title="Fetch both playing XIs (1 API call)">⟳</button>
-      </div>
-
-      <h3>Open as</h3>
+        </ul>
+      </details>
+      }
+      <details class="grp" [open]="isOpen('show')" (toggle)="onToggle('show', $event)">
+        <summary>Show as</summary>
       <div class="seg" role="radiogroup" aria-label="Open cards as">
         <button type="button" role="radio" [attr.aria-checked]="openAs() === 'window'" [class.on]="openAs() === 'window'" (click)="openAs.set('window')" title="Floating card with a title bar (minimise, close, reload) on the on-air scene">Floating window</button>
         <button type="button" role="radio" [attr.aria-checked]="openAs() === 'widget'" [class.on]="openAs() === 'widget'" (click)="openAs.set('widget')" title="Plain fixed widget on the on-air scene">Widget</button>
         <button type="button" role="radio" [attr.aria-checked]="openAs() === 'scene'" [class.on]="openAs() === 'scene'" (click)="openAs.set('scene')" title="A dedicated scene built around the card, put on air">New scene</button>
       </div>
 
-      <h3>Scorecard</h3>
+      <p class="hint small">{{ openAsHint() }}</p>
+      </details>
+      <details class="grp" [open]="isOpen('scorecard')" (toggle)="onToggle('scorecard', $event)">
+        <summary>Scorecard</summary>
       <div class="grid">
         <button type="button" class="card-btn" (click)="open('scorecard', { innings: 'current' })">Current innings</button>
         @for (i of inningsList(); track $index) {
@@ -65,7 +83,9 @@ const ORDINAL = ['1st', '2nd', '3rd', '4th'];
         }
       </div>
 
-      <h3>Teams</h3>
+      </details>
+      <details class="grp" [open]="isOpen('teams')" (toggle)="onToggle('teams', $event)">
+        <summary>Teams</summary>
       <div class="grid">
         @for (t of live.match()!.teams; track t.shortCode; let i = $index) {
           <button type="button" class="card-btn" [style.--c]="t.primaryColor" (click)="open('teamCard', { side: String(i) })">
@@ -74,7 +94,9 @@ const ORDINAL = ['1st', '2nd', '3rd', '4th'];
         }
       </div>
 
-      <h3>Players</h3>
+      </details>
+      <details class="grp" [open]="isOpen('players')" (toggle)="onToggle('players', $event)">
+        <summary>Players</summary>
       <div class="grid">
         @for (b of live.match()!.batters; track b.name) {
           <button type="button" class="card-btn" (click)="openPlayer('', b.name)">🏏 {{ last(b.name) }} <small>{{ b.runs }}*</small></button>
@@ -113,29 +135,32 @@ const ORDINAL = ['1st', '2nd', '3rd', '4th'];
         }
       }
 
-      <h3>On air</h3>
-      @if (onAirCards().length) {
-        <ul class="onair">
-          @for (w of onAirCards(); track w.id) {
-            <li [class.off]="!w.visible">
-              <span class="ic">{{ registry[w.type].icon }}</span>
-              <span class="nm">{{ label(w) }}</span>
-              <button
-                type="button"
-                [title]="w.props['minimized'] ? 'Restore' : 'Minimize'"
-                (click)="toggleMin(w)"
-                [disabled]="!w.visible || w.props['display'] === 'widget'"
-              >
-                {{ w.props['minimized'] ? '▢' : '–' }}
-              </button>
-              <button type="button" [title]="w.visible ? 'Close' : 'Show again'" (click)="toggleVisible(w)">{{ w.visible ? '✕' : '↺' }}</button>
-            </li>
+      </details>
+      <details class="grp" [open]="isOpen('data')" (toggle)="onToggle('data', $event)">
+        <summary>Card data</summary>
+      <div class="data">
+        <span>
+          Scorecard
+          @if (scAge(); as a) {
+            <em>{{ a }}</em>
+          } @else {
+            <em>not loaded</em>
           }
-        </ul>
-      } @else {
-        <p class="hint">Cards you open appear here. They go on the on-air scene; drag and resize them on the canvas when editing that scene.</p>
-      }
+        </span>
+        <button type="button" (click)="fetch('scorecard', true)" title="Fetch the latest scorecard (1 API call)">⟳</button>
+      </div>
+      <div class="data">
+        <span>
+          Playing XIs
+          <em>{{ live.squads() ? 'loaded' : 'not loaded' }}</em>
+        </span>
+        <button type="button" (click)="fetch('squads', true)" title="Fetch both playing XIs (1 API call)">⟳</button>
+      </div>
+
+      <p class="hint small">Cards don't call the API on their own. ⟳ fetches fresh data (1 call each).</p>
+      </details>
     }
+
   `,
   styles: `
     :host {
@@ -143,6 +168,61 @@ const ORDINAL = ['1st', '2nd', '3rd', '4th'];
       padding: 12px 12px 24px;
       overflow-y: auto;
       font-size: 12px;
+    }
+    .intro {
+      margin: 0 2px 8px;
+      color: var(--ui-muted);
+      line-height: 1.45;
+    }
+    .intro b {
+      color: var(--ui-text);
+    }
+    .hint.small {
+      font-size: 11px;
+      margin: 6px 2px 0;
+    }
+    .grp {
+      border-top: 1px solid var(--ui-border);
+      padding: 8px 0 10px;
+    }
+    .grp > summary {
+      list-style: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 8px;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--ui-muted);
+      user-select: none;
+    }
+    .grp > summary::-webkit-details-marker {
+      display: none;
+    }
+    .grp > summary::before {
+      content: '▸';
+      font-size: 10px;
+      transition: transform 0.15s;
+    }
+    .grp[open] > summary::before {
+      transform: rotate(90deg);
+    }
+    .grp:not([open]) > summary {
+      margin-bottom: 0;
+    }
+    .grp > summary:hover {
+      color: var(--ui-text);
+    }
+    .grp > summary .n {
+      font-weight: 600;
+      letter-spacing: 0;
+      padding: 0 6px;
+      border-radius: 99px;
+      background: var(--ui-accent-soft);
+      color: var(--ui-accent);
     }
     h3 {
       margin: 14px 2px 8px;
@@ -346,6 +426,36 @@ export class CardsPanelComponent {
 
   protected readonly teamTab = signal(0);
   protected readonly openAs = signal<'window' | 'widget' | 'scene'>('window');
+
+  /** what the chosen "Show as" does, in one sentence */
+  protected readonly openAsHint = computed(() => {
+    switch (this.openAs()) {
+      case 'window':
+        return 'A floating card with a title bar (minimise, reload, close) over the on-air scene.';
+      case 'widget':
+        return 'A plain card fixed on the on-air scene, like any other widget.';
+      default:
+        return 'A new scene built around the card, put on air straight away.';
+    }
+  });
+
+  // ---- folding sections, remembered per browser ----
+  private readonly openState = signal<Record<string, boolean>>(readOpen());
+
+  protected isOpen(key: string): boolean {
+    return this.openState()[key] ?? key !== 'data';
+  }
+
+  protected onToggle(key: string, e: Event): void {
+    const open = (e.target as HTMLDetailsElement).open;
+    if (open === this.isOpen(key)) return;
+    this.openState.update((s) => ({ ...s, [key]: open }));
+    try {
+      localStorage.setItem(CARDS_OPEN_KEY, JSON.stringify(this.openState()));
+    } catch {
+      // storage blocked: sections reset next time
+    }
+  }
 
   /**
    * The chosen team's players: the cached playing XI when loaded, otherwise built from
