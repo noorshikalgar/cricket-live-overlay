@@ -412,7 +412,7 @@ export class BannerWidget extends WidgetBase<BannerProps> {
     glyph.textContent = g;
     glyph.classList.toggle('long', g.length > 1);
     title.textContent = this.i18n.eventTitle(e.title);
-    sub.textContent = this.p().showSubtitle ? e.subtitle : '';
+    sub.textContent = this.p().showSubtitle ? this.i18n.apiText(this.t(e.subtitle)) : '';
 
     const d = (s: number) => this.motion.d(s);
     const hold = d(Math.max(0.8, Number(this.p().duration) || 2.5));
@@ -538,7 +538,7 @@ export class BannerWidget extends WidgetBase<BannerProps> {
     banner.style.setProperty('--ev', EVENT_COLOR[e.type] ?? 'var(--accent)');
     banner.classList.toggle('from-right', this.p().direction === 'right');
     title.textContent = this.i18n.eventTitle(e.title);
-    sub.textContent = this.p().showSubtitle ? e.subtitle : '';
+    sub.textContent = this.p().showSubtitle ? this.i18n.apiText(this.t(e.subtitle)) : '';
 
     const d = (s: number) => this.motion.d(s);
     const hold = d(Math.max(0.5, Number(this.p().duration) || 2.5));

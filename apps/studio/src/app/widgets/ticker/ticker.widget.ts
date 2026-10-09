@@ -18,7 +18,7 @@ export interface TickerProps {
   template: `
     <div class="panel flush bar">
       @if (p().label) {
-        <div class="tag">{{ p().label }}</div>
+        <div class="tag">{{ i18n.defaultText(p().label) }}</div>
       }
       <div class="viewport">
         <div class="track" #track>
@@ -99,10 +99,10 @@ export class TickerWidget extends WidgetBase<TickerProps> {
     const scores = this.store
       .matches()
       .filter((m) => m.id !== current)
-      .map((m) => `${m.scoreLine}  ${m.statusText}`.trim());
+      .map((m) => `${this.i18n.lang() === 'mr' ? m.scoreLine.replace(/ v /, ' वि. ') : m.scoreLine}  ${this.i18n.apiText(m.statusText)}`.trim());
     if (source === 'custom') return custom.length ? custom : ['Add ticker text in settings'];
     if (source === 'both') return [...scores, ...custom];
-    return scores.length ? scores : custom.length ? custom : ['No other live matches'];
+    return scores.length ? scores : custom.length ? custom : [this.t('No other live matches')];
   });
 
   constructor() {

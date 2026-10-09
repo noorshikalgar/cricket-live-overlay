@@ -56,7 +56,7 @@ interface Line {
           }
         </div>
       } @else {
-        <span class="empty-dash">Match info —</span>
+        <span class="empty-dash">{{ t('Match info —') }}</span>
       }
     </div>
   `,
@@ -199,7 +199,7 @@ export class MatchInfoWidget extends WidgetBase<MatchInfoProps> {
     const all = [
       { key: 'series', label: this.t('Series'), value: m.series },
       { key: 'venue', label: this.t('Venue'), value: m.venue },
-      { key: 'toss', label: this.t('Toss'), value: m.toss },
+      { key: 'toss', label: this.t('Toss'), value: this.i18n.apiText(m.toss) },
       { key: 'status', label: this.t('Status'), value: this.i18n.status(m) },
     ];
     return all.filter((l) => on[l.key] !== false && l.value);

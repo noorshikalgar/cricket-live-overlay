@@ -23,8 +23,8 @@ export interface PlayerCardProps {
     <div class="panel card" [class.minimized]="min()" [style.--team]="color()">
       <div class="card-head">
         <span class="card-title">{{ name() || t('Player') }}</span>
-        @if (info()?.player?.captain) {<span class="tag-mini">C</span>}
-        @if (info()?.player?.keeper) {<span class="tag-mini">WK</span>}
+        @if (info()?.player?.captain) {<span class="tag-mini">{{ t('C') }}</span>}
+        @if (info()?.player?.keeper) {<span class="tag-mini">{{ t('WK') }}</span>}
         <span class="card-sub">{{ info()?.team?.name ?? '' }}</span>
         @if (min() && headline()) {
           <span class="card-score">{{ headline() }}</span>
@@ -38,8 +38,8 @@ export interface PlayerCardProps {
           <div class="cols">
             @if (info(); as i) {
               <div class="meta">
-                <span class="role">{{ i.player.role }}</span>
-                <span class="muted">{{ styles() }}</span>
+                <span class="role">{{ i18n.styleText(i.player.role) }}</span>
+                <span class="muted">{{ i18n.styleText(styles()) }}</span>
               </div>
             }
             @if (batting(); as b) {
@@ -48,7 +48,7 @@ export interface PlayerCardProps {
                 <span class="v"><b>{{ b.runs }}{{ b.status !== 'out' ? '*' : '' }}</b> <span class="muted">({{ b.balls }})</span></span>
                 <span class="muted d">{{ b.fours }}×4 · {{ b.sixes }}×6 · {{ t('SR') }} {{ b.strikeRate.toFixed(1) }}</span>
                 @if (b.status === 'out') {
-                  <span class="muted d dis" cosMarquee>{{ b.dismissal }}</span>
+                  <span class="muted d dis" cosMarquee>{{ i18n.dismissal(b.dismissal) }}</span>
                 } @else if (b.status === 'batting') {
                   <span class="d live">{{ t('batting') }}</span>
                 }
@@ -58,7 +58,7 @@ export interface PlayerCardProps {
               <div class="stat">
                 <span class="k">{{ t('Bowling') }}</span>
                 <span class="v"><b>{{ w.wickets }}-{{ w.runs }}</b> <span class="muted">({{ w.overs }})</span></span>
-                <span class="muted d">{{ t('Econ') }} {{ w.economy.toFixed(2) }} · {{ w.maidens }} maiden{{ w.maidens === 1 ? '' : 's' }}</span>
+                <span class="muted d">{{ t('Econ') }} {{ w.economy.toFixed(2) }} · {{ i18n.tf(w.maidens === 1 ? '{n} maiden' : '{n} maidens', { n: w.maidens }) }}</span>
               </div>
             }
             @if (!batting() && !bowling() && !info()) {

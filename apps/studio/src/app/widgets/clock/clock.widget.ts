@@ -63,7 +63,7 @@ export class ClockWidget extends WidgetBase<ClockProps> {
     if (mode === 'time') {
       const h = now.getHours();
       const hh = hour24 ? pad(h) : String(((h + 11) % 12) + 1);
-      return `${hh}:${pad(now.getMinutes())}${hour24 ? '' : h < 12 ? ' AM' : ' PM'}`;
+      return `${hh}:${pad(now.getMinutes())}${hour24 ? '' : ` ${this.t(h < 12 ? 'AM' : 'PM')}`}`;
     }
     const [th, tm] = target.split(':').map((x) => Number(x));
     const t = new Date(now);

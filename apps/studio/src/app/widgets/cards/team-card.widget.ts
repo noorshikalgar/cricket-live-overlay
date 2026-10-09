@@ -46,10 +46,10 @@ interface Row {
                 @for (r of rows(); track r.name) {
                   <tr [class.live]="r.live">
                     <td class="name">
-                      {{ r.name }}@if (r.captain) {<span class="tag-mini">C</span>}@if (r.keeper) {<span class="tag-mini">WK</span>}
+                      {{ r.name }}@if (r.captain) {<span class="tag-mini">{{ t('C') }}</span>}@if (r.keeper) {<span class="tag-mini">{{ t('WK') }}</span>}
                     </td>
                     @if (p().showRoles) {
-                      <td class="role muted">{{ short(r.role) }}</td>
+                      <td class="role muted">{{ t(short(r.role)) }}</td>
                     }
                     <td [class.muted]="r.muted" [class.big]="!r.muted">{{ r.line }}</td>
                   </tr>
@@ -143,7 +143,7 @@ export class TeamCardWidget extends WidgetBase<TeamCardProps> {
       }
       if (bowl) return { line: `${bowl.wickets}-${bowl.runs} (${bowl.overs})`, live: false, muted: false };
       const yet = batInns.some((i) => i.yetToBat.some((n) => sameName(n, name)));
-      return { line: yet || batInns.length ? 'yet to bat' : '', live: false, muted: true };
+      return { line: yet || batInns.length ? this.t('yet to bat') : '', live: false, muted: true };
     };
 
     if (squad?.playingXI.length) {

@@ -57,10 +57,10 @@ export function timerValue(p: TimerProps, now: number): { ms: number; done: bool
   template: `
     <div class="box" [class.panel]="p().panel">
       @if (p().title) {
-        <div class="title">{{ p().title }}</div>
+        <div class="title">{{ i18n.defaultText(p().title) }}</div>
       }
       @if (value().done && p().endText) {
-        <div class="end" #end>{{ p().endText }}</div>
+        <div class="end" #end>{{ i18n.defaultText(p().endText) }}</div>
       } @else {
         <div class="digits num" [class.paused]="p().mode === 'duration' && !value().running && !value().done">{{ text() }}</div>
       }

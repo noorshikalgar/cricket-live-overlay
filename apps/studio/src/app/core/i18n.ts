@@ -94,7 +94,70 @@ const MR: Record<string, string> = {
   '3rd innings': 'तिसरा डाव',
   '4th innings': 'चौथा डाव',
   'Waiting for the first ball': 'पहिल्या चेंडूची प्रतीक्षा',
+  'Last {n} overs': 'शेवटची {n} षटके',
+  '{n} maiden': '{n} निर्धाव षटक',
+  '{n} maidens': '{n} निर्धाव षटके',
+  'yet to bat': 'फलंदाजी बाकी',
+  'not out': 'नाबाद',
+  'No other live matches': 'इतर थेट सामने नाहीत',
+  // extras line: b 0, lb 3, w 4, nb 2
+  b: 'बाय',
+  lb: 'लेग बाय',
+  w: 'वाइड',
+  nb: 'नो बॉल',
+  RR: 'धावगती',
+  // captain / keeper tags and team-card roles
+  C: 'क.',
+  WK: 'य.र.',
+  BAT: 'फलंदाज',
+  BOWL: 'गोलंदाज',
+  AR: 'अष्टपैलू',
+  'BAT AR': 'फलं. अष्टपैलू',
+  'BOWL AR': 'गोलं. अष्टपैलू',
+  AM: 'म.पू.',
+  PM: 'म.उ.',
+  // the widgets' own default texts (a user's own text is never touched)
+  'LIVE COMMENTARY': 'थेट समालोचन',
+  'LIVE SCORES': 'थेट धावसंख्या',
+  'STARTING IN': 'सुरुवात होईल',
+  'STARTING NOW': 'आता सुरू होत आहे',
+  'BACK IN': 'पुन्हा भेटू',
+  Commentary: 'समालोचन',
+  'Your Name': 'तुमचे नाव',
+  'Decision pending': 'निर्णय प्रलंबित',
+  'Batters —': 'फलंदाज —',
+  'Bowler —': 'गोलंदाज —',
+  'Match info —': 'सामन्याची माहिती —',
 };
+
+/** texts widgets start with; only these are swapped, so a user's own wording is never changed */
+const DEFAULT_TEXTS = new Set(['LIVE COMMENTARY', 'LIVE SCORES', 'STARTING IN', 'STARTING NOW', 'BACK IN', 'Commentary', 'Your Name']);
+
+/** ball-chip notation (W, wd, 2nb, 1lb, 4b) in Marathi */
+const MR_CHIP: Record<string, string> = { W: 'बाद', wd: 'वा', nb: 'नो', lb: 'लेबा', b: 'बा' };
+
+/** fragments of player roles and styles from the API */
+const MR_STYLE: [RegExp, string][] = [
+  [/right[- ]hand(ed)? bat(ter|sman)?/i, 'उजव्या हाताचा फलंदाज'],
+  [/left[- ]hand(ed)? bat(ter|sman)?/i, 'डाव्या हाताचा फलंदाज'],
+  [/right[- ]arm/i, 'उजव्या हाताचा'],
+  [/left[- ]arm/i, 'डाव्या हाताचा'],
+  [/fast[- ]medium/i, 'वेगवान-मध्यमगती'],
+  [/medium[- ]fast/i, 'मध्यमगती-वेगवान'],
+  [/fast/i, 'वेगवान'],
+  [/medium/i, 'मध्यमगती'],
+  [/off[- ]?(break|spin)/i, 'ऑफ-स्पिन'],
+  [/leg[- ]?(break|spin)( googly)?/i, 'लेग-स्पिन'],
+  [/orthodox/i, 'फिरकी'],
+  [/wrist[- ]spin/i, 'मनगटी फिरकी'],
+  [/(wicket[- ]?keeper|wk)[- ]?bat(ter|sman)?/i, 'यष्टिरक्षक फलंदाज'],
+  [/wicket[- ]?keeper/i, 'यष्टिरक्षक'],
+  [/bowling all[- ]?rounder/i, 'गोलंदाजी अष्टपैलू'],
+  [/batting all[- ]?rounder/i, 'फलंदाजी अष्टपैलू'],
+  [/all[- ]?rounder/i, 'अष्टपैलू'],
+  [/bat(ter|sman)/i, 'फलंदाज'],
+  [/bowler/i, 'गोलंदाज'],
+];
 
 const DICTS: Record<OverlayLanguage, Record<string, string> | null> = { en: null, mr: MR };
 
@@ -118,6 +181,75 @@ export class I18n {
     return this.t(title);
   }
 
+  /** a label with {n} placeholders: tf('Last {n} overs', { n: 6 }) */
+  tf(en: string, vars: Record<string, string | number>): string {
+    return this.t(en).replace(/\{(\w+)\}/g, (_, k: string) => String(vars[k] ?? ''));
+  }
+
+  /** ball chip: "2nb" → "2नो", "W" → "बाद" (digits and • stay) */
+  chip(label: string): string {
+    if (this.lang() !== 'mr') return label;
+    const m = /^(\d*)(W|wd|nb|lb|b)$/.exec(label);
+    return m ? `${m[1]}${MR_CHIP[m[2]]}` : label;
+  }
+
+  /** how out: "c Kabir Shah b Neel Pandey" → "झे. Kabir Shah गो. Neel Pandey" */
+  dismissal(text: string): string {
+    if (this.lang() !== 'mr' || !text) return text;
+    if (/^not out$/i.test(text.trim())) return 'नाबाद';
+    if (/^batting$/i.test(text.trim())) return 'खेळत आहे';
+    return text
+      .replace(/^c & b /i, 'झे. व गो. ')
+      .replace(/^c(?:t)? (.+?) b /i, 'झे. $1 गो. ')
+      .replace(/^st (.+?) b /i, 'यष्टिचीत $1 गो. ')
+      .replace(/^lbw b /i, 'पायचीत गो. ')
+      .replace(/^hit wicket b /i, 'हिट विकेट गो. ')
+      .replace(/^b /i, 'त्रि. गो. ')
+      .replace(/^run out/i, 'धावचीत')
+      .replace(/^retired hurt/i, 'जखमी निवृत्त');
+  }
+
+  /** player role / batting & bowling style from the API, in the current language */
+  styleText(text: string): string {
+    if (this.lang() !== 'mr' || !text) return text;
+    let out = text;
+    for (const [re, mr] of MR_STYLE) out = out.replace(re, mr);
+    return out;
+  }
+
+  /**
+   * Common API sentences (toss, chase, result) rebuilt in Marathi; anything
+   * else comes back unchanged.
+   */
+  apiText(text: string): string {
+    if (this.lang() !== 'mr' || !text) return text;
+    const t = text.trim();
+    let m = /^(.+?) (?:won|have won|has won) the toss and (?:chose|elected|opted|decided) to (bat|bowl|field)/i.exec(t);
+    if (m) return `${m[1]} ने नाणेफेक जिंकून ${/bat/i.test(m[2]) ? 'फलंदाजी' : 'गोलंदाजी'} निवडली`;
+    m = /^(.+?) needs? (\d+) runs? (?:from|in|off) (\d+) balls?/i.exec(t);
+    if (m) return `${m[1]} ला ${m[3]} चेंडूंत ${m[2]} धावा हव्यात`;
+    m = /^(.+?) needs? (\d+) runs?/i.exec(t);
+    if (m) return `${m[1]} ला ${m[2]} धावा हव्यात`;
+    m = /^(.+?) won by (\d+) runs?/i.exec(t);
+    if (m) return `${m[1]} ${m[2]} धावांनी विजयी`;
+    m = /^(.+?) won by (\d+) wick(?:et)?s?/i.exec(t);
+    if (m) return `${m[1]} ${m[2]} गडी राखून विजयी`;
+    m = /^(.+?) won/i.exec(t);
+    if (m && /super over/i.test(t)) return `${m[1]} सुपर ओव्हरमध्ये विजयी`;
+    if (/^match tied/i.test(t)) return 'सामना बरोबरीत';
+    if (/no result|abandoned/i.test(t)) return 'सामना रद्द';
+    if (/innings break/i.test(t)) return 'डावांमधील विश्रांती';
+    if (/rain|wet outfield/i.test(t)) return 'पावसामुळे खेळ थांबला';
+    if (/stumps/i.test(t)) return 'दिवसाचा खेळ संपला';
+    return text;
+  }
+
+  /** a widget's default text in the current language; anything the user typed stays as is */
+  defaultText(text: string): string {
+    const key = text.trim();
+    return this.lang() === 'mr' && DEFAULT_TEXTS.has(key) ? (MR[key] ?? text) : text;
+  }
+
   /**
    * The one-line match situation. In Marathi a live chase is composed from the
    * numbers ("CHE ला 64 चेंडूंत 103 धावा हव्यात"); anything else keeps the API's text.
@@ -133,7 +265,7 @@ export class I18n {
         return `${team?.name ?? inn.battingTeam} ला ${m.ballsRemaining} चेंडूंत ${need} धावा हव्यात`;
       }
     }
-    return m.statusText;
+    return this.apiText(m.statusText);
   }
 }
 

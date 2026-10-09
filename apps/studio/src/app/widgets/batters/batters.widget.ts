@@ -33,7 +33,7 @@ export interface BattersProps {
           }
         </div>
       } @empty {
-        <div class="row"><span class="empty-dash">Batters —</span></div>
+        <div class="row"><span class="empty-dash">{{ t('Batters —') }}</span></div>
       }
     </div>
   `,

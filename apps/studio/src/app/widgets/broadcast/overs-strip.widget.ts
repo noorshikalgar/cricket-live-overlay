@@ -35,7 +35,7 @@ function cls(c: BallChip): string {
         <div class="over">
           <span class="ot bc-word">{{ o.title }}</span>
           @for (c of o.balls; track $index) {
-            <span [class]="'bc-chip ' + cls(c)">{{ c.label === '•' ? '0' : c.label }}</span>
+            <span [class]="'bc-chip ' + cls(c)">{{ c.label === '•' ? '0' : i18n.chip(c.label) }}</span>
           }
           @for (s of o.slotList; track $index) {
             <span class="bc-chip slot"></span>

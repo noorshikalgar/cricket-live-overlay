@@ -44,9 +44,9 @@ export function cameraRadiusPx(shape: CameraShape, w: number, h: number, themeRa
     </div>
     @if (p().showPlate && (p().label || p().sublabel)) {
       <div class="plate" [class.round]="p().shape === 'circle'">
-        <span class="name">{{ p().label }}</span>
+        <span class="name">{{ i18n.defaultText(p().label) }}</span>
         @if (p().sublabel) {
-          <span class="role">{{ p().sublabel }}</span>
+          <span class="role">{{ i18n.defaultText(p().sublabel) }}</span>
         }
       </div>
     }
