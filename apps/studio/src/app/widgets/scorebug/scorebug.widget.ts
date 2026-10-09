@@ -42,10 +42,18 @@ export interface ScorebugProps {
         @if (p().showChase && match()?.target !== null && match()?.target !== undefined && match()?.phase !== 'break') {
           <div class="seg chase stack">
             <span class="line">
-              <span class="label">{{ t('Need') }}</span>
-              <span class="num">{{ need() }}</span>
-              <span class="label">{{ t('off') }}</span>
-              <span class="num">{{ match()?.ballsRemaining }}</span>
+              @if (i18n.lang() === 'mr') {
+                <!-- Marathi word order: 12 चेंडूंत 20 धावा -->
+                <span class="num">{{ match()?.ballsRemaining }}</span>
+                <span class="label">चेंडूंत</span>
+                <span class="num">{{ need() }}</span>
+                <span class="label">धावा</span>
+              } @else {
+                <span class="label">Need</span>
+                <span class="num">{{ need() }}</span>
+                <span class="label">off</span>
+                <span class="num">{{ match()?.ballsRemaining }}</span>
+              }
             </span>
             <span class="line sub">
               @if (match()?.requiredRunRate !== null) {

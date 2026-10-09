@@ -33,7 +33,7 @@ export interface BowlerProps {
           }
         </div>
       } @else {
-        <div class="top"><span class="empty-dash">Bowler —</span></div>
+        <div class="top"><span class="empty-dash">{{ t('Bowler —') }}</span></div>
       }
     </div>
   `,

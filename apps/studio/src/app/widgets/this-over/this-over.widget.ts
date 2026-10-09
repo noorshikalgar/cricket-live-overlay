@@ -39,7 +39,7 @@ function chipClass(c: BallChip): string {
       }
       <div class="chips">
         @for (c of balls(); track $index) {
-          <span [class]="'chip ' + cls(c)">{{ c.label }}</span>
+          <span [class]="'chip ' + cls(c)">{{ i18n.chip(c.label) }}</span>
         }
         <!-- one empty slot per legal ball still to come; wides and no-balls don't use a slot -->
         @for (s of slots(); track $index) {

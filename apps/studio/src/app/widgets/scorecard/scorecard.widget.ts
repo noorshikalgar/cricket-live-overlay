@@ -60,14 +60,14 @@ const ORDINAL = ['1st', '2nd', '3rd', '4th'];
                       <tr [class.live]="b.status === 'batting'">
                         <td class="name">
                           <div cosMarquee>
-                            {{ b.name }}@if (b.captain) {<span class="tag-mini">C</span>}@if (b.keeper) {<span class="tag-mini">WK</span>}
+                            {{ b.name }}@if (b.captain) {<span class="tag-mini">{{ t('C') }}</span>}@if (b.keeper) {<span class="tag-mini">{{ t('WK') }}</span>}
                           </div>
                           @if (dis() === 'under') {
-                            <div class="how muted" cosMarquee>{{ b.status === 'batting' ? 'batting' : b.dismissal }}</div>
+                            <div class="how muted" cosMarquee>{{ b.status === 'batting' ? t('batting') : i18n.dismissal(b.dismissal) }}</div>
                           }
                         </td>
                         @if (dis() === 'column') {
-                          <td class="dis muted" cosMarquee>{{ b.status === 'batting' ? 'batting' : b.dismissal }}</td>
+                          <td class="dis muted" cosMarquee>{{ b.status === 'batting' ? t('batting') : i18n.dismissal(b.dismissal) }}</td>
                         }
                         <td class="big">{{ b.runs }}{{ b.status !== 'out' ? '*' : '' }}</td>
                         <td class="muted">{{ b.balls }}</td>
@@ -104,10 +104,10 @@ const ORDINAL = ['1st', '2nd', '3rd', '4th'];
                 <span class="k">{{ t('Extras') }}</span>
                 <span>
                   <b>{{ i.extras.total }}</b>
-                  <span class="muted"> (b {{ i.extras.byes }}, lb {{ i.extras.legByes }}, w {{ i.extras.wides }}, nb {{ i.extras.noBalls }})</span>
+                  <span class="muted"> ({{ t('b') }} {{ i.extras.byes }}, {{ t('lb') }} {{ i.extras.legByes }}, {{ t('w') }} {{ i.extras.wides }}, {{ t('nb') }} {{ i.extras.noBalls }})</span>
                 </span>
                 <span class="k total-k">{{ t('Total') }}</span>
-                <span><b>{{ i.runs }}/{{ i.wickets }}</b> <span class="muted">({{ i.overs }} ov, RR {{ i.runRate.toFixed(2) }})</span></span>
+                <span><b>{{ i.runs }}/{{ i.wickets }}</b> <span class="muted">({{ i.overs }} {{ t('ov') }}, {{ t('RR') }} {{ i.runRate.toFixed(2) }})</span></span>
               </div>
               @if (p().showYetToBat && i.yetToBat.length) {
                 <div class="line"><span class="k">{{ t('Yet to bat') }}</span><span class="ellipsis">{{ i.yetToBat.join(' · ') }}</span></div>

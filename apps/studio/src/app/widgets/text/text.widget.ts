@@ -28,7 +28,7 @@ export interface TextProps {
       @if (p().liveDot) {
         <span class="live-dot"></span>
       }
-      <span class="t">{{ p().text }}</span>
+      <span class="t">{{ i18n.defaultText(p().text) }}</span>
     </div>
   `,
   styles: `

@@ -14,7 +14,7 @@ export interface RecentOversProps {
         <div class="w-title">{{ style().title }}</div>
       }
       <div class="head">
-        <span class="label">Last {{ overs().length || 6 }} overs</span>
+        <span class="label">{{ i18n.tf('Last {n} overs', { n: overs().length || 6 }) }}</span>
         <span class="num total">{{ total() }}</span>
       </div>
       @if (p().mode === 'bars') {
