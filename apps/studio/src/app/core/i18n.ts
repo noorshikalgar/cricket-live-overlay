@@ -64,6 +64,7 @@ const MR: Record<string, string> = {
   'THIS OVER': 'हे षटक',
   Over: 'षटक',
   Partnership: 'भागीदारी',
+  Chase: 'पाठलाग',
   "P'SHIP": 'भागीदारी',
   Target: 'लक्ष्य',
   TARGET: 'लक्ष्य',

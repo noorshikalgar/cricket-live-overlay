@@ -22,6 +22,7 @@ export type WidgetType =
   | 'oversStrip'
   | 'chaseBox'
   | 'statBar'
+  | 'infoRail'
   | 'scorecard'
   | 'teamCard'
   | 'playerCard';
