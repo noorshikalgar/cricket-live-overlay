@@ -17,6 +17,12 @@ import { TextWidget } from './text/text.widget';
 import { ThisOverWidget } from './this-over/this-over.widget';
 import { TickerWidget } from './ticker/ticker.widget';
 import { TimerWidget } from './timer/timer.widget';
+import { ChaseBoxWidget } from './broadcast/chase-box.widget';
+import { OversStripWidget } from './broadcast/overs-strip.widget';
+import { PlayerPanelWidget } from './broadcast/player-panel.widget';
+import { ScoreHeaderWidget } from './broadcast/score-header.widget';
+import { StatBarWidget } from './broadcast/stat-bar.widget';
+import { VideoWidget } from './video/video.widget';
 
 export interface SelectOption {
   value: string;
@@ -32,6 +38,7 @@ export type FieldDef =
   | { kind: 'select'; key: string; label: string; options: SelectOption[] }
   | { kind: 'color'; key: string; label: string }
   | { kind: 'image'; key: string; label: string }
+  | { kind: 'video'; key: string; label: string }
   | { kind: 'checks'; key: string; label: string; options: SelectOption[] };
 
 export interface WidgetDef {
@@ -101,9 +108,19 @@ export const WIDGET_REGISTRY: Record<WidgetType, WidgetDef> = {
       label: 'Lines',
       options: opts(['series', 'Series'], ['venue', 'Venue'], ['toss', 'Toss'], ['status', 'Status']),
     },
+    {
+      kind: 'select',
+      key: 'layout',
+      label: 'Layout',
+      options: opts(['auto', 'Auto (fits the box shape)'], ['stack', 'Stacked list'], ['grid', 'Grid (two or three per row)'], ['row', 'Single row']),
+    },
+    { kind: 'select', key: 'labels', label: 'Labels', options: opts(['side', 'Beside the value'], ['above', 'Above the value'], ['hidden', 'Hidden']) },
+    { kind: 'select', key: 'align', label: 'Align', options: opts(['left', 'Left'], ['center', 'Centre']) },
+    { kind: 'toggle', key: 'showTeams', label: 'Team names line' },
   ]),
   banner: def('banner', BannerWidget, 'Full-width FOUR / SIX / WICKET moments', [
     { kind: 'checks', key: 'autoFire', label: 'Auto-fire on', options: AUTO_FIRE_EVENTS.map((e) => ({ value: e, label: EVENT_LABELS[e] ?? e })) },
+    { kind: 'select', key: 'look', label: 'Look', options: opts(['blast', 'Blast (giant number, burst, particles)'], ['classic', 'Classic (clean wipe)']) },
     { kind: 'slider', key: 'duration', label: 'Hold', min: 1, max: 6, step: 0.5, unit: 's' },
     { kind: 'select', key: 'direction', label: 'Wipe from', options: opts(['left', 'Left'], ['right', 'Right']) },
     { kind: 'toggle', key: 'showSubtitle', label: 'Subtitle line' },
@@ -155,6 +172,12 @@ export const WIDGET_REGISTRY: Record<WidgetType, WidgetDef> = {
     { kind: 'toggle', key: 'showBowling', label: 'Bowling' },
     { kind: 'toggle', key: 'showYetToBat', label: 'Yet to bat' },
     { kind: 'toggle', key: 'showFow', label: 'Fall of wickets' },
+    {
+      kind: 'select',
+      key: 'dismissal',
+      label: 'How out',
+      options: opts(['column', 'Own column'], ['under', 'Under the name (more room)'], ['hidden', 'Hidden']),
+    },
     { kind: 'select', key: 'display', label: 'Display', options: opts(['window', 'Floating window'], ['widget', 'Widget']) },
     { kind: 'toggle', key: 'minimized', label: 'Minimized (floating window only)' },
   ]),
@@ -175,6 +198,38 @@ export const WIDGET_REGISTRY: Record<WidgetType, WidgetDef> = {
     { kind: 'toggle', key: 'showPhoto', label: 'Show photo (check rights for public streams)' },
     { kind: 'select', key: 'display', label: 'Display', options: opts(['window', 'Floating window'], ['widget', 'Widget']) },
     { kind: 'toggle', key: 'minimized', label: 'Minimized (floating window only)' },
+  ]),
+  playerPanel: def('playerPanel', PlayerPanelWidget, 'Batter or bowler with image, big figures and stats', [
+    {
+      kind: 'select',
+      key: 'slot',
+      label: 'Shows',
+      options: opts(['striker', 'Striker'], ['nonStriker', 'Non-striker'], ['bowler', 'Current bowler'], ['name', 'A named player']),
+    },
+    { kind: 'text', key: 'playerName', label: 'Player name (for "a named player")' },
+    { kind: 'toggle', key: 'showImage', label: 'Player image' },
+    { kind: 'toggle', key: 'showFooter', label: 'Stats footer' },
+  ]),
+  scoreHeader: def('scoreHeader', ScoreHeaderWidget, 'Both teams in big colour blocks; the centre flashes FOUR / SIX / WICKET / OVER', [
+    { kind: 'text', key: 'centerText', label: 'Centre text between events (empty = VS)' },
+    { kind: 'toggle', key: 'showEvents', label: 'Flash events in the centre' },
+  ]),
+  oversStrip: def('oversStrip', OversStripWidget, 'Previous and current over, ball by ball, with totals', [
+    { kind: 'text', key: 'label', label: 'Label on the left' },
+    { kind: 'toggle', key: 'showPrevious', label: 'Show previous over' },
+  ]),
+  chaseBox: def('chaseBox', ChaseBoxWidget, 'Runs needed vs balls left (or run rate vs projected)', [
+    { kind: 'toggle', key: 'showProjection', label: 'Before a chase: run rate vs projected' },
+  ]),
+  statBar: def('statBar', StatBarWidget, 'CRR, RRR, partnership and the chase sentence on one line', [
+    { kind: 'toggle', key: 'showStatus', label: 'Status sentence' },
+  ]),
+  video: def('video', VideoWidget, 'A video clip: intro, sponsor loop, replay', [
+    { kind: 'video', key: 'src', label: 'Video' },
+    { kind: 'select', key: 'fit', label: 'Fit', options: opts(['cover', 'Fill (crop)'], ['contain', 'Fit (letterbox)']) },
+    { kind: 'toggle', key: 'loop', label: 'Loop' },
+    { kind: 'toggle', key: 'muted', label: 'Muted' },
+    { kind: 'toggle', key: 'panel', label: 'Panel background' },
   ]),
   timer: def('timer', TimerWidget, 'Starting in / back in countdown, or a stopwatch', [
     { kind: 'text', key: 'title', label: 'Title (e.g. STARTING IN, BACK IN)' },

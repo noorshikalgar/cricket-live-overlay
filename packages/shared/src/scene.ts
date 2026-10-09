@@ -16,6 +16,12 @@ export type WidgetType =
   | 'image'
   | 'clock'
   | 'timer'
+  | 'video'
+  | 'playerPanel'
+  | 'scoreHeader'
+  | 'oversStrip'
+  | 'chaseBox'
+  | 'statBar'
   | 'scorecard'
   | 'teamCard'
   | 'playerCard';
@@ -219,6 +225,8 @@ export interface AppSettings {
   blackout: boolean;
   blackoutText: string;
   blackoutSubtext: string;
+  /** player images on cards and panels: our own SVG avatars, or free Wikimedia photos (with credit) */
+  playerImages: 'avatar' | 'photo';
 }
 
 export const DEFAULT_SETTINGS: AppSettings = {
@@ -233,6 +241,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   blackout: false,
   blackoutText: "We'll be right back",
   blackoutSubtext: '',
+  playerImages: 'avatar',
 };
 
 export function newId(): string {

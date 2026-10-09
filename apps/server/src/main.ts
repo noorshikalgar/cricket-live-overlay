@@ -145,7 +145,10 @@ app.post<{ Body: { names?: unknown } }>('/api/players/prefetch', async (req) => 
   return { queued: names.length };
 });
 
-const IMAGE_EXT: Record<string, string> = {
+const MEDIA_EXT: Record<string, string> = {
+  'video/mp4': 'mp4',
+  'video/webm': 'webm',
+  'video/quicktime': 'mov',
   'image/png': 'png',
   'image/jpeg': 'jpg',
   'image/webp': 'webp',
@@ -153,10 +156,11 @@ const IMAGE_EXT: Record<string, string> = {
   'image/gif': 'gif',
 };
 app.addContentTypeParser(/^image\//, { parseAs: 'buffer', bodyLimit: 5 * 1024 * 1024 }, (_req, body, done) => done(null, body));
+app.addContentTypeParser(/^video\//, { parseAs: 'buffer', bodyLimit: 300 * 1024 * 1024 }, (_req, body, done) => done(null, body));
 app.post('/api/uploads', async (req, reply) => {
   const type = String(req.headers['content-type'] ?? '').split(';')[0].trim();
-  const ext = IMAGE_EXT[type];
-  if (!ext || !Buffer.isBuffer(req.body)) return reply.code(415).send({ error: 'Upload a PNG, JPEG, WebP, SVG or GIF' });
+  const ext = MEDIA_EXT[type];
+  if (!ext || !Buffer.isBuffer(req.body)) return reply.code(415).send({ error: 'Upload an image (PNG, JPEG, WebP, SVG, GIF) or a video (MP4, WebM, MOV)' });
   const name = `${newId()}.${ext}`;
   writeFileSync(path.join(UPLOADS_DIR, name), req.body);
   return { url: `/uploads/${name}` };

@@ -79,6 +79,10 @@ export interface MatchState {
   bowler: Bowler | null;
   partnership: Partnership;
   thisOver: BallChip[];
+  /** 1-based number of the over `thisOver` belongs to, when known */
+  overNumber?: number;
+  /** the over before `thisOver`, for over-by-over strips */
+  prevOver?: { number: number; balls: BallChip[]; runs: number } | null;
   /** runs in each of the last (up to) 6 completed overs, oldest first */
   recentOvers: number[];
   target: number | null;

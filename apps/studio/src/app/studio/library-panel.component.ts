@@ -5,10 +5,11 @@ import { WIDGET_DND_TYPE } from './canvas.component';
 import { EditorStore } from './editor.store';
 
 const GROUPS: { title: string; types: WidgetType[] }[] = [
+  { title: 'Broadcast', types: ['scoreHeader', 'statBar', 'oversStrip', 'playerPanel', 'chaseBox'] },
   { title: 'Live data', types: ['scorebug', 'batters', 'bowler', 'thisOver', 'partnership', 'recentOvers', 'matchInfo'] },
   { title: 'Moments', types: ['banner', 'ticker'] },
   { title: 'Cards', types: ['scorecard', 'teamCard', 'playerCard'] },
-  { title: 'Studio', types: ['camera', 'text', 'timer', 'image', 'clock'] },
+  { title: 'Studio', types: ['camera', 'text', 'timer', 'image', 'video', 'clock'] },
 ];
 
 /** Left panel: click to add at canvas centre, or drag onto the canvas. */

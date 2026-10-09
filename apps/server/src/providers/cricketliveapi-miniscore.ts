@@ -142,6 +142,39 @@ function toBowler(b: Json): Bowler | null {
   };
 }
 
+function chipFromBall(b: BallEvent): BallChip {
+  switch (b.kind) {
+    case 'wicket':
+      return { kind: 'wicket', label: 'W', runs: b.runs };
+    case 'six':
+      return { kind: 'six', label: '6', runs: 6 };
+    case 'four':
+      return { kind: 'four', label: '4', runs: 4 };
+    case 'wide':
+      return { kind: 'wide', label: b.runs > 1 ? `${b.runs}wd` : 'wd', runs: b.runs };
+    case 'noball':
+      return { kind: 'noball', label: 'nb', runs: b.runs };
+    case 'bye':
+      return { kind: 'bye', label: `${b.runs}b`, runs: b.runs };
+    case 'dot':
+      return { kind: 'dot', label: '•', runs: 0 };
+    default:
+      return { kind: 'run', label: String(b.runs), runs: b.runs };
+  }
+}
+
+/** current over number and the previous over's balls, from the commentary feed (newest first) */
+function overContext(feed: BallEvent[]): Pick<MatchState, 'overNumber' | 'prevOver'> {
+  const newest = feed[0];
+  if (!newest) return {};
+  const cur = Math.floor(Number(newest.over));
+  const prev = feed.filter((b) => Math.floor(Number(b.over)) === cur - 1).reverse();
+  return {
+    overNumber: cur + 1,
+    prevOver: prev.length ? { number: cur, balls: prev.map(chipFromBall), runs: prev.reduce((a, b) => a + b.runs, 0) } : null,
+  };
+}
+
 export interface MiniscoreExtras {
   /** colour for a team, keyed by full name */
   teamColor(name: string): string;
@@ -223,6 +256,7 @@ export function composeFromMiniscore(id: string, raw: unknown, extras: Miniscore
     // per-batter split isn't in the feed; widgets hide the bar when both are 0
     partnership: { runs: num(p['runs']), balls: num(p['balls']), contributions: [0, 0] },
     thisOver: thisOverChips(str(ms['recent_overs'])),
+    ...overContext(feed),
     recentOvers,
     target,
     requiredRunRate: Number.isFinite(rrr) && rrr > 0 ? rrr : null,

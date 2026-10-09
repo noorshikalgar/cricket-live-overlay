@@ -271,6 +271,8 @@ export function buildState(rec: Recording, count: number, now: number): MatchSta
   // This over: the balls of the over the last delivery belongs to.
   let thisOver: BallChip[] = [];
   let recentOvers: number[] = [];
+  let overNumber: number | undefined;
+  let prevOver: MatchState['prevOver'] = null;
   if (cur) {
     let legal = 0;
     const overOf: number[] = cur.deliveries.map((d) => {
@@ -280,6 +282,11 @@ export function buildState(rec: Recording, count: number, now: number): MatchSta
     });
     const lastOver = overOf.at(-1) ?? 0;
     thisOver = cur.deliveries.filter((_, i) => overOf[i] === lastOver).map(chipFor);
+    overNumber = lastOver + 1;
+    if (lastOver > 0) {
+      const prev = cur.deliveries.filter((_, i) => overOf[i] === lastOver - 1);
+      prevOver = { number: lastOver, balls: prev.map(chipFor), runs: prev.reduce((a, d) => a + d.runs + d.extras, 0) };
+    }
     const completed = Math.floor(cur.balls / 6);
     recentOvers = cur.overRuns.slice(0, completed).slice(-6);
   }
@@ -317,6 +324,8 @@ export function buildState(rec: Recording, count: number, now: number): MatchSta
     bowler,
     partnership,
     thisOver,
+    overNumber,
+    prevOver,
     recentOvers,
     target,
     requiredRunRate: rrr,
