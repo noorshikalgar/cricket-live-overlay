@@ -64,6 +64,19 @@ You'll see the score bug, batters, bowler and this over update, with FOUR / SIX 
 
 Each score update costs **1 call**. Card data (scorecard, playing XIs) is 1 call each, fetched once and cached. The top bar shows calls used today; when the daily limit is reached, updates stop until 00:00 UTC.
 
+**Logs:** every API call prints a line in the terminal running the server, with time, endpoint, status, duration, size and calls used; errors are red, calls refused by your limits show as *not sent*, and **CACHE** lines show calls that were saved:
+
+```
+[14:03:21] API  ✓ 200  /cricket/commentary/173107   312 ms  7.5 KB   calls 43/100 today · 2/5 min
+[14:03:51] API  ✗ 429  /cricket/commentary/173107   120 ms   Too Many Requests
+[14:04:02] API  ⊘ not sent  /cricket/scorecard/173107   Per-minute limit of 5 calls reached
+[14:04:10] CACHE  scorecard 173107 (age 4 min) · no call
+```
+
+The same lines are saved as JSON in `apps/server/data/logs/api-YYYY-MM-DD.jsonl` (7 days kept). Your API key is never printed.
+
+**Caching (no call needed):** the same request again within the API's own refresh time (10 s for the score, 30 s for the scorecard); the last score after a restart or when re-selecting a match within 2 minutes; the match list after a restart; the scorecard and playing XIs for the whole match (refresh with ⟳).
+
 **Saving calls:** switch the top bar to **Manual** and press **⟳ Update now** when you want fresh data, or press **⏸ Pause** during breaks.
 
 **Back to testing without spending calls:** set `CRICKET_PROVIDER=mock` and restart.

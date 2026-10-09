@@ -1,16 +1,44 @@
+import { log } from '../log';
 import { ProviderHttpError } from './types';
 
-/** GET JSON with a timeout; non-2xx becomes ProviderHttpError so the poller can back off on 429. */
+/**
+ * GET JSON with a timeout; non-2xx becomes ProviderHttpError so the poller can
+ * back off on 429. Every call is logged (terminal + daily JSONL), success or not.
+ */
 export async function getJson(url: string, headers: Record<string, string> = {}, timeoutMs = 8000): Promise<unknown> {
   const ctrl = new AbortController();
   const timer = setTimeout(() => ctrl.abort(), timeoutMs);
+  const t0 = Date.now();
   try {
     const res = await fetch(url, { headers: { accept: 'application/json', ...headers }, signal: ctrl.signal });
+    const text = await res.text().catch(() => '');
     if (!res.ok) {
-      const body = await res.text().catch(() => '');
-      throw new ProviderHttpError(res.status, `HTTP ${res.status} from ${new URL(url).host}: ${body.slice(0, 200)}`);
+      const err = new ProviderHttpError(res.status, `HTTP ${res.status} from ${new URL(url).host}: ${text.slice(0, 200)}`);
+      log.apiError(url, res.status, Date.now() - t0, `${res.statusText || 'error'} ${text.slice(0, 120)}`.trim());
+      throw err;
     }
-    return (await res.json()) as unknown;
+    let body: unknown;
+    try {
+      body = JSON.parse(text) as unknown;
+    } catch {
+      log.apiError(url, res.status, Date.now() - t0, 'response is not JSON');
+      throw new Error(`Response from ${new URL(url).host} is not JSON`);
+    }
+    log.apiOk(url, res.status, Date.now() - t0, text.length);
+    return body;
+  } catch (err) {
+    if (!(err instanceof ProviderHttpError) && !(err instanceof Error && err.message.startsWith('Response from'))) {
+      const cause = err instanceof Error ? (err.cause as { code?: string; message?: string } | undefined) : undefined;
+      const msg = ctrl.signal.aborted
+        ? `timed out after ${timeoutMs} ms`
+        : cause?.code
+          ? `network error (${cause.code})`
+          : err instanceof Error
+            ? err.message
+            : String(err);
+      log.apiError(url, null, Date.now() - t0, msg);
+    }
+    throw err;
   } finally {
     clearTimeout(timer);
   }

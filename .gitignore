@@ -10,3 +10,5 @@ apps/server/data/settings.json
 apps/server/data/uploads/
 apps/server/data/samples/
 apps/server/data/cards/
+apps/server/data/cache/
+apps/server/data/logs/

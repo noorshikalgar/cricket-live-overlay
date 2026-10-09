@@ -1,6 +1,7 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import type { CardKind, Scorecard, Squads } from '@cos/shared';
+import { log } from './log';
 import type { CricketProvider } from './providers';
 
 /** a forced reload still waits this long (their scorecard cache is 30 s) */
@@ -55,6 +56,8 @@ export class CardService {
         const c = JSON.parse(readFileSync(this.file(matchId), 'utf8')) as Partial<CardCacheFile>;
         this.scorecard = c.scorecard ?? null;
         this.squads = c.squads ?? null;
+        const parts = [this.scorecard && 'scorecard', this.squads && 'playing XIs'].filter(Boolean).join(' + ');
+        if (parts) log.info(`CARDS ${parts} for ${matchId} loaded from disk · no call`);
       } catch {
         // unreadable cache: start empty
       }
@@ -76,6 +79,7 @@ export class CardService {
     if (!id || !this.supports(kind) || this.inFlight.has(kind)) return;
     const cached = kind === 'scorecard' ? this.scorecard : this.squads;
     if (cached && (!force || Date.now() - cached.updatedAt < FORCE_COOLDOWN_MS)) {
+      log.cacheHit(`${kind === 'squads' ? 'playing XIs' : 'scorecard'} ${id}${force ? ' (reloaded < 15 s ago)' : ''}`, Date.now() - cached.updatedAt);
       this.emit(kind);
       return;
     }
@@ -93,6 +97,7 @@ export class CardService {
         this.emit(kind);
       }
     } catch (err) {
+      log.warn(`CARDS ${kind} for ${id} not loaded: ${err instanceof Error ? err.message : String(err)}`);
       this.hooks.onError(`${kind}: ${err instanceof Error ? err.message : String(err)}`);
     } finally {
       this.inFlight.delete(kind);
