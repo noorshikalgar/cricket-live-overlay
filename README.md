@@ -121,7 +121,7 @@ Click a widget in the library to add it, or drag it onto the canvas. Drag to mov
 
 | Group | Widgets |
 | --- | --- |
-| Broadcast | Info rail, Player panel, Score header, Overs strip, Chase box, Stat bar |
+| Broadcast | Info rail, Player spotlight, Player panel, Score header, Overs strip, Chase box, Stat bar |
 | Live data | Score bug, Batters, Bowler, This over, Partnership, Recent overs, Match info |
 | Moments | Event banner, Ticker |
 | Cards | Full scorecard, Team card, Player card |
@@ -133,12 +133,13 @@ Every widget's look (colours, font, radius, blur, title, enter / exit motion suc
 - **Match info** layout: *Auto* (follows the box shape), *Stacked*, *Grid* or *Single row*; labels beside, above or hidden.
 - **Full scorecard** → *How out*: own column, under the name (more room at big sizes) or hidden.
 - **Video**: upload MP4 / WebM / MOV or paste a URL; ▶ / ⏸, ⏮ Restart and mute buttons in its settings.
+- **Player spotlight**: a big card for **Batter 1**, **Batter 2** (the two at the crease, in the order they came in) or the **current bowler**: picture on the left over the team colour, name, figures and stat tiles on the right; the bowler card also shows this over's balls. A new batter swings the card round.
 - **Info rail**: the TV-style bottom bar. The score stays on the left while the right side flips through this over, run rates, batters, bowler, partnership, chase / toss, last overs and series & venue (pick which, and how many seconds each). On a FOUR / SIX it jumps to the batters, on a WICKET to the bowler.
 
 ### Overlay language and player images
 Scene settings → **Overlay (all scenes)** (also **Labels** in the canvas toolbar):
 - **Label language**: English or **मराठी**. Overlay labels (चौकार, षटकार, बाद, फलंदाज, धावगती…) and the chase line switch language; player, team, series and venue names stay as the API sends them.
-- **Player images**: *Avatars* (drawn in team colours, no rights issues) or *Wikimedia photos* — free-licence photos downloaded once to `apps/server/data/players/`, each shown with its author and licence. **⤓ Fetch photos for both XIs** looks them up before you go live. Players without a free photo get the avatar.
+- **Player images**: *Avatars* (our own illustrated cricketers in the team's jersey — helmet for batters and keepers, cap for bowlers — not anyone's likeness, so no rights issues) or *Wikimedia photos* — free-licence photos downloaded once to `apps/server/data/players/`, each shown with its author and licence. **⤓ Fetch photos for both XIs** looks them up before you go live. Players without a free photo get the avatar.
 
 ### Score updates
 Top bar: **Auto** (with an interval) or **Manual**, **⏸ Pause / ▶ Resume**, and **⟳ Update now**. A countdown shows the next automatic update.
