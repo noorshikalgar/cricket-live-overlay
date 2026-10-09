@@ -226,7 +226,7 @@ export const WIDGET_REGISTRY: Record<WidgetType, WidgetDef> = {
   ]),
   banner: def('banner', BannerWidget, 'Full-width FOUR / SIX / WICKET moments', [
     { kind: 'checks', key: 'autoFire', group: 'Behaviour', label: 'Auto-fire on', options: AUTO_FIRE_EVENTS.map((e) => ({ value: e, label: EVENT_LABELS[e] ?? e })) },
-    { kind: 'select', key: 'look', group: 'Appearance', label: 'Look', options: opts(['blast', 'Blast (giant number, burst, particles)'], ['classic', 'Classic (clean wipe)']) },
+    { kind: 'select', key: 'look', group: 'Appearance', label: 'Look', options: opts(['blast', 'Blast (giant number, burst, particles)'], ['pop', 'Pop art (centred word, comic burst)'], ['classic', 'Classic (clean wipe)']) },
     { kind: 'slider', key: 'duration', group: 'Appearance', label: 'Hold', min: 1, max: 6, step: 0.5, unit: 's' },
     { kind: 'select', key: 'direction', group: 'Appearance', label: 'Wipe from', options: opts(['left', 'Left'], ['right', 'Right']), showIf: (p) => p['look'] === 'classic' },
     { kind: 'toggle', key: 'showSubtitle', group: 'Appearance', label: 'Subtitle line' },
