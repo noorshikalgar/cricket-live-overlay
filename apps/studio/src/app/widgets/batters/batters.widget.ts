@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { OdometerDirective } from '../../motion/odometer.directive';
+import { MarqueeDirective } from '../../motion/marquee.directive';
 import { WidgetBase } from '../widget-base';
 
 export interface BattersProps {
@@ -9,7 +10,7 @@ export interface BattersProps {
 
 @Component({
   selector: 'cos-batters',
-  imports: [OdometerDirective],
+  imports: [MarqueeDirective, OdometerDirective],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="panel rows">

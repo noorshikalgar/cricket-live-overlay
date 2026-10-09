@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { LiveStore } from '../../core/live.store';
+import { MarqueeDirective } from '../../motion/marquee.directive';
 import { WidgetBase } from '../widget-base';
 import { findPlayer, playerFigures, sameName, teamColorFor } from './card-data';
 
@@ -16,6 +17,7 @@ export interface PlayerCardProps {
 /** One player: role and styles from the squads, this match's batting and bowling from the scorecard and live state. */
 @Component({
   selector: 'cos-player-card',
+  imports: [MarqueeDirective],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="panel card" [class.minimized]="min()" [style.--team]="color()">
@@ -46,7 +48,7 @@ export interface PlayerCardProps {
                 <span class="v"><b>{{ b.runs }}{{ b.status !== 'out' ? '*' : '' }}</b> <span class="muted">({{ b.balls }})</span></span>
                 <span class="muted d">{{ b.fours }}×4 · {{ b.sixes }}×6 · SR {{ b.strikeRate.toFixed(1) }}</span>
                 @if (b.status === 'out') {
-                  <span class="muted d dis">{{ b.dismissal }}</span>
+                  <span class="muted d dis" cosMarquee>{{ b.dismissal }}</span>
                 } @else if (b.status === 'batting') {
                   <span class="d live">batting</span>
                 }

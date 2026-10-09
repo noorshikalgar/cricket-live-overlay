@@ -65,6 +65,34 @@
   min-width: 0;
 }
 
+/* overflowing text ping-pongs instead of showing "…" (MarqueeDirective) */
+.mq-host {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+.mq-host.mq-inline {
+  display: inline-block;
+  max-width: 100%;
+  vertical-align: bottom;
+}
+.mq-host.mq {
+  /* beats component styles that set an ellipsis on the same element */
+  text-overflow: clip !important;
+  animation: mq-pingpong var(--mq-t, 6s) ease-in-out infinite alternate;
+}
+@keyframes mq-pingpong {
+  0%,
+  12% {
+    text-indent: 0;
+  }
+  88%,
+  100% {
+    text-indent: var(--mq-d, 0);
+  }
+}
+
 /* odometer roll: old value slides up and out, new one slides up and in */
 .odo {
   position: relative;
@@ -270,4 +298,114 @@
   color: var(--muted);
   text-align: center;
   padding: 1em;
+}
+
+/* ---- broadcast pack: bold team-colour panels, big condensed italic numbers ---- */
+.bc {
+  --hl: #facc15;
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  color: #fff;
+  /* the dark ramp keeps white text readable even on bright team colours (yellow, orange) */
+  background:
+    linear-gradient(118deg, rgba(0, 0, 0, 0.12) 0%, rgba(0, 0, 0, 0.42) 50%, rgba(0, 0, 0, 0.7) 100%),
+    var(--team, var(--accent));
+  border-radius: calc(var(--radius) * 0.6);
+  box-shadow:
+    0 10px 30px rgba(0, 0, 0, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.18);
+  font-family: var(--font);
+}
+/* a diagonal light streak across every panel */
+.bc::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(105deg, transparent 38%, rgba(255, 255, 255, 0.1) 46%, transparent 54%);
+  pointer-events: none;
+}
+.bc.dark {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(0, 0, 0, 0.25)),
+    var(--bg);
+}
+.bc-num {
+  font-family: 'Barlow Condensed', var(--font);
+  font-weight: 900;
+  font-style: italic;
+  line-height: 0.92;
+  letter-spacing: -0.005em;
+  font-variant-numeric: tabular-nums;
+  text-shadow:
+    0 0.06em 0 rgba(0, 0, 0, 0.45),
+    0 0 0.35em rgba(0, 0, 0, 0.45);
+}
+.bc-word {
+  font-family: 'Barlow Condensed', var(--font);
+  font-weight: 800;
+  font-style: italic;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  line-height: 1;
+  text-shadow:
+    0 0.06em 0 rgba(0, 0, 0, 0.4),
+    0 0 0.3em rgba(0, 0, 0, 0.4);
+}
+.bc-hl {
+  color: var(--hl);
+}
+.bc-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35em;
+  padding: 0.12em 0.7em 0.12em 0.5em;
+  background: rgba(0, 0, 0, 0.35);
+  border-left: 0.22em solid var(--hl);
+  font-family: 'Barlow Condensed', var(--font);
+  font-weight: 800;
+  font-style: italic;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+.bc-foot {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  background: rgba(0, 0, 0, 0.5);
+  border-top: 2px solid rgba(255, 255, 255, 0.12);
+}
+.bc-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.18em;
+  background: rgba(255, 255, 255, 0.14);
+  box-shadow: inset 0 -0.08em 0 rgba(0, 0, 0, 0.35);
+  font-family: 'Barlow Condensed', var(--font);
+  font-weight: 900;
+  font-style: italic;
+  color: #fff;
+}
+.bc-chip.four {
+  background: var(--c-four);
+}
+.bc-chip.six {
+  background: var(--c-six);
+}
+.bc-chip.wicket {
+  background: var(--c-wicket);
+}
+.bc-chip.extra {
+  background: rgba(255, 255, 255, 0.28);
+  font-size: 0.7em;
+}
+.bc-chip.slot {
+  background: transparent;
+  box-shadow: inset 0 0 0 0.08em rgba(255, 255, 255, 0.25);
 }

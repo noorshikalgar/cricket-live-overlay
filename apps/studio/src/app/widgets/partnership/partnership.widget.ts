@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed } from '@angular/core';
 import { OdometerDirective } from '../../motion/odometer.directive';
+import { MarqueeDirective } from '../../motion/marquee.directive';
 import { WidgetBase } from '../widget-base';
 
 export interface PartnershipProps {
@@ -8,7 +9,7 @@ export interface PartnershipProps {
 
 @Component({
   selector: 'cos-partnership',
-  imports: [OdometerDirective],
+  imports: [MarqueeDirective, OdometerDirective],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="panel box">
