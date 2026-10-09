@@ -486,9 +486,9 @@ export class BannerWidget extends WidgetBase<BannerProps> {
       .to(panel, { clipPath: 'inset(0% 0% 0% 0%)', duration: d(0.4), ease: 'power3.out' }, d(0.2))
       .add(() => {
         this.split = new SplitText(title, { type: 'chars' });
-        gsap.from(this.split.chars, { yPercent: 110, opacity: 0, duration: d(0.35), ease: 'power3.out', stagger: d(0.03) });
+        gsap.fromTo(this.split.chars, { yPercent: 110, opacity: 0 }, { yPercent: 0, opacity: 1, duration: d(0.35), ease: 'power3.out', stagger: d(0.03) });
       }, d(0.28))
-      .from(sub, { y: 12, opacity: 0, duration: d(0.35), ease: 'power3.out' }, d(0.5))
+      .fromTo(sub, { y: 12, opacity: 0 }, { y: 0, opacity: 1, duration: d(0.35), ease: 'power3.out' }, d(0.5))
       .to(glint, { xPercent: 450, duration: d(0.7), ease: 'power2.inOut' }, d(0.55));
 
     if (e.type === 'FOUR') {
@@ -563,12 +563,14 @@ export class BannerWidget extends WidgetBase<BannerProps> {
     tl.set(banner, { visibility: 'visible', opacity: 1 })
       .set([title, sub], { opacity: 1 })
       .fromTo(fill, { clipPath: hiddenIn }, { clipPath: shown, duration: d(0.45), ease: 'power3.out' })
-      .from(
+      .fromTo(
         this.split.chars,
-        { yPercent: 110, opacity: 0, duration: d(0.4), ease: 'power3.out', stagger: d(0.025) },
+        { yPercent: 110, opacity: 0 },
+        { yPercent: 0, opacity: 1, duration: d(0.4), ease: 'power3.out', stagger: d(0.025) },
         d(0.12),
       )
-      .from(sub, { y: 10, opacity: 0, duration: d(0.35), ease: 'power3.out' }, d(0.3))
+      // fromTo, not from: a from() would take the end value from the previous banner's fade-out (0)
+      .fromTo(sub, { y: 10, opacity: 0 }, { y: 0, opacity: 1, duration: d(0.35), ease: 'power3.out' }, d(0.3))
       .to([title, sub], { opacity: 0, duration: d(0.2), ease: 'power2.in' }, `+=${hold}`)
       .to(fill, { clipPath: hiddenOut, duration: d(0.3), ease: 'power2.in' }, '<0.05');
   }
