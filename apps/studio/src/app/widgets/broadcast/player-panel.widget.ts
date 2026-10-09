@@ -42,7 +42,7 @@ interface Shown {
         }
         <div class="main" [class.noimg]="!p().showImage">
           <div class="top">
-            <span class="bc-tag">{{ s.kind === 'bat' ? 'Batter' : 'Bowler' }}</span>
+            <span class="bc-tag">{{ t(s.kind === 'bat' ? 'Batter' : 'Bowler') }}</span>
             @if (s.onStrike) {
               <span class="strike" aria-label="on strike"></span>
             }
@@ -56,7 +56,7 @@ interface Shown {
         @if (p().showFooter) {
           <div class="bc-foot">
             @for (st of s.stats; track st.k) {
-              <span class="stat"><span class="k">{{ st.k }}</span> <b class="bc-num">{{ st.v }}</b></span>
+              <span class="stat"><span class="k">{{ t(st.k) }}</span> <b class="bc-num">{{ st.v }}</b></span>
             }
           </div>
         }
@@ -101,7 +101,7 @@ interface Shown {
       left: 0.4em;
       bottom: 0.2em;
       right: 0.4em;
-      font: 500 12px/1.2 Inter, sans-serif;
+      font: 500 12px/1.2 Inter, Mukta, sans-serif;
       color: rgba(255, 255, 255, 0.75);
       text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
       white-space: nowrap;
@@ -160,6 +160,7 @@ interface Shown {
       z-index: 1;
     }
     .stat .k {
+      margin-right: 0.25em;
       font-family: 'Barlow Condensed', var(--font);
       font-weight: 700;
       font-style: italic;
@@ -176,7 +177,7 @@ interface Shown {
       justify-content: center;
       text-align: center;
       padding: 1em;
-      font: 500 18px/1.3 Inter, sans-serif;
+      font: 500 18px/1.3 Inter, Mukta, sans-serif;
       opacity: 0.8;
     }
   `,

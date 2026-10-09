@@ -65,7 +65,7 @@ export interface VideoProps {
       border: 2px dashed rgba(255, 255, 255, 0.35);
       border-radius: var(--radius);
       color: rgba(255, 255, 255, 0.75);
-      font: 500 20px/1.3 Inter, sans-serif;
+      font: 500 20px/1.3 Inter, Mukta, sans-serif;
       padding: 12px;
     }
   `,

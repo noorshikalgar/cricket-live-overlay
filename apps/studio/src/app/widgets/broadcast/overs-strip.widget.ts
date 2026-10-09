@@ -43,7 +43,7 @@ function cls(c: BallChip): string {
           <span class="tot bc-num">= <span class="bc-hl">{{ o.total }}</span></span>
         </div>
       } @empty {
-        <span class="bc-word muted">Waiting for the first ball</span>
+        <span class="bc-word muted">{{ t('Waiting for the first ball') }}</span>
       }
     </div>
   `,
@@ -106,10 +106,10 @@ export class OversStripWidget extends WidgetBase<OversStripProps> {
     const legal = (b: BallChip[]) => b.filter((c) => c.kind !== 'wide' && c.kind !== 'noball').length;
     const out: OverRow[] = [];
     if (this.p().showPrevious && m.prevOver?.balls.length) {
-      out.push({ title: `OVER ${m.prevOver.number}`, balls: m.prevOver.balls, slotList: [], total: m.prevOver.runs });
+      out.push({ title: `${this.t('Over')} ${m.prevOver.number}`, balls: m.prevOver.balls, slotList: [], total: m.prevOver.runs });
     }
     out.push({
-      title: m.overNumber ? `OVER ${m.overNumber}` : 'THIS OVER',
+      title: m.overNumber ? `${this.t('Over')} ${m.overNumber}` : this.t('THIS OVER'),
       balls: m.thisOver,
       slotList: Array.from({ length: Math.max(0, 6 - legal(m.thisOver)) }, (_, i) => i),
       total: m.thisOver.reduce((a, c) => a + c.runs, 0),

@@ -1,5 +1,6 @@
-import { Directive, computed, input } from '@angular/core';
+import { Directive, computed, inject, input } from '@angular/core';
 import type { MatchState, PropValue, ResolvedStyle } from '@cos/shared';
+import { I18n } from '../core/i18n';
 
 /**
  * Every widget extends this: the same inputs in the Studio canvas and the Output.
@@ -19,4 +20,10 @@ export abstract class WidgetBase<P extends object> {
 
   /** props merged over defaults, so older scenes missing a new prop still render */
   protected readonly p = computed<P>(() => ({ ...this.defaults, ...(this.props() as Partial<P>) }));
+
+  protected readonly i18n = inject(I18n);
+  /** overlay label in the chosen language (English key) */
+  protected t(en: string): string {
+    return this.i18n.t(en);
+  }
 }

@@ -40,9 +40,9 @@ const ORDINAL = ['1st', '2nd', '3rd', '4th'];
   template: `
     <div class="panel card" [class.minimized]="min()" [style.--team]="teamColor()">
       <div class="card-head">
-        <span class="card-title">{{ inn()?.teamName || 'Scorecard' }}</span>
+        <span class="card-title">{{ inn()?.teamName || t('Scorecard') }}</span>
         @if (inn()) {
-          <span class="card-sub">{{ ordinal() }} innings</span>
+          <span class="card-sub">{{ t(ordinal() + ' innings') }}</span>
           <span class="card-score">{{ inn()!.runs }}/{{ inn()!.wickets }} <span class="muted">({{ inn()!.overs }})</span></span>
         }
       </div>
@@ -53,7 +53,7 @@ const ORDINAL = ['1st', '2nd', '3rd', '4th'];
               @if (p().showBatting) {
                 <table class="tbl bat" [class]="'tbl bat dis-' + dis()">
                   <thead>
-                    <tr><th>Batter</th>@if (dis() === 'column') {<th></th>}<th>R</th><th>B</th><th>4s</th><th>6s</th><th>SR</th></tr>
+                    <tr><th>{{ t('Batter') }}</th>@if (dis() === 'column') {<th></th>}<th>{{ t('R') }}</th><th>{{ t('B') }}</th><th>{{ t('4s') }}</th><th>{{ t('6s') }}</th><th>{{ t('SR') }}</th></tr>
                   </thead>
                   <tbody>
                     @for (b of i.batters; track b.name) {
@@ -82,7 +82,7 @@ const ORDINAL = ['1st', '2nd', '3rd', '4th'];
               @if (p().showBowling) {
                 <table class="tbl bowl">
                   <thead>
-                    <tr><th>Bowler</th><th>O</th><th>M</th><th>R</th><th>W</th><th>Econ</th></tr>
+                    <tr><th>{{ t('Bowler') }}</th><th>{{ t('O') }}</th><th>{{ t('M') }}</th><th>{{ t('R') }}</th><th>{{ t('W') }}</th><th>{{ t('Econ') }}</th></tr>
                   </thead>
                   <tbody>
                     @for (b of i.bowlers; track b.name) {
@@ -101,20 +101,20 @@ const ORDINAL = ['1st', '2nd', '3rd', '4th'];
             </div>
             <div class="foot">
               <div class="line">
-                <span class="k">Extras</span>
+                <span class="k">{{ t('Extras') }}</span>
                 <span>
                   <b>{{ i.extras.total }}</b>
                   <span class="muted"> (b {{ i.extras.byes }}, lb {{ i.extras.legByes }}, w {{ i.extras.wides }}, nb {{ i.extras.noBalls }})</span>
                 </span>
-                <span class="k total-k">Total</span>
+                <span class="k total-k">{{ t('Total') }}</span>
                 <span><b>{{ i.runs }}/{{ i.wickets }}</b> <span class="muted">({{ i.overs }} ov, RR {{ i.runRate.toFixed(2) }})</span></span>
               </div>
               @if (p().showYetToBat && i.yetToBat.length) {
-                <div class="line"><span class="k">Yet to bat</span><span class="ellipsis">{{ i.yetToBat.join(' · ') }}</span></div>
+                <div class="line"><span class="k">{{ t('Yet to bat') }}</span><span class="ellipsis">{{ i.yetToBat.join(' · ') }}</span></div>
               }
               @if (p().showFow && i.fallOfWickets.length) {
                 <div class="line">
-                  <span class="k">Fall of wkts</span>
+                  <span class="k">{{ t('Fall of wkts') }}</span>
                   <span class="ellipsis">{{ fow() }}</span>
                 </div>
               }

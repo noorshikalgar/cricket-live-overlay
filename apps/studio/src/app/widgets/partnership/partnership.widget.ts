@@ -17,7 +17,7 @@ export interface PartnershipProps {
         <div class="w-title">{{ style().title }}</div>
       }
       <div class="top">
-        <span class="label">Partnership</span>
+        <span class="label">{{ t('Partnership') }}</span>
         <span class="num big" [cosOdo]="match()?.partnership?.runs ?? 0"></span>
         <span class="num balls">(<span [cosOdo]="match()?.partnership?.balls ?? 0"></span>)</span>
       </div>

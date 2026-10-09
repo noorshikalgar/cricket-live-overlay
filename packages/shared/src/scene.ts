@@ -227,7 +227,11 @@ export interface AppSettings {
   blackoutSubtext: string;
   /** player images on cards and panels: our own SVG avatars, or free Wikimedia photos (with credit) */
   playerImages: 'avatar' | 'photo';
+  /** language of the overlay's own labels (FOUR, Batter, Venue…); names and API text stay as they come */
+  language: OverlayLanguage;
 }
+
+export type OverlayLanguage = 'en' | 'mr';
 
 export const DEFAULT_SETTINGS: AppSettings = {
   activeSceneId: null,
@@ -242,6 +246,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   blackoutText: "We'll be right back",
   blackoutSubtext: '',
   playerImages: 'avatar',
+  language: 'en',
 };
 
 export function newId(): string {

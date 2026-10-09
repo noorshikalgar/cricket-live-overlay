@@ -321,7 +321,7 @@ const ANIM_LABELS: Record<AnimPreset, string> = {
       margin-bottom: 12px;
     }
     .readout {
-      font: 700 20px/1 Inter, sans-serif;
+      font: 700 20px/1 Inter, Mukta, sans-serif;
       font-variant-numeric: tabular-nums;
       margin-right: auto;
     }

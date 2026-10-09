@@ -19,17 +19,17 @@ export interface BowlerProps {
       }
       @if (match()?.bowler; as b) {
         <div class="top">
-          <span class="label">Bowling</span>
+          <span class="label">{{ t('Bowling') }}</span>
           <span class="name ellipsis">{{ b.name }}</span>
         </div>
         <div class="figs">
           <span class="num big"><span [cosOdo]="b.wickets"></span>-<span [cosOdo]="b.runs"></span></span>
           <span class="num ov">(<span [cosOdo]="b.overs"></span>)</span>
           @if (p().showMaidens) {
-            <span class="label">M</span><span class="num">{{ b.maidens }}</span>
+            <span class="label">{{ t('M') }}</span><span class="num">{{ b.maidens }}</span>
           }
           @if (p().showEconomy) {
-            <span class="label econ">Econ</span><span class="num">{{ b.economy.toFixed(2) }}</span>
+            <span class="label econ">{{ t('Econ') }}</span><span class="num">{{ b.economy.toFixed(2) }}</span>
           }
         </div>
       } @else {

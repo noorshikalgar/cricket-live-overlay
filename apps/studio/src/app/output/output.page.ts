@@ -139,7 +139,7 @@ import { SceneRendererComponent } from '../widgets/scene-renderer.component';
       display: flex;
       align-items: center;
       justify-content: center;
-      font: 700 120px/1 'Barlow Condensed', Inter, sans-serif;
+      font: 700 120px/1 'Barlow Condensed', Inter, Mukta, sans-serif;
       letter-spacing: 0.04em;
       text-transform: uppercase;
       color: #fff;

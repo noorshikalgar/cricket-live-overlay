@@ -22,7 +22,7 @@ export interface PlayerCardProps {
   template: `
     <div class="panel card" [class.minimized]="min()" [style.--team]="color()">
       <div class="card-head">
-        <span class="card-title">{{ name() || 'Player' }}</span>
+        <span class="card-title">{{ name() || t('Player') }}</span>
         @if (info()?.player?.captain) {<span class="tag-mini">C</span>}
         @if (info()?.player?.keeper) {<span class="tag-mini">WK</span>}
         <span class="card-sub">{{ info()?.team?.name ?? '' }}</span>
@@ -44,27 +44,27 @@ export interface PlayerCardProps {
             }
             @if (batting(); as b) {
               <div class="stat">
-                <span class="k">Batting</span>
+                <span class="k">{{ t('Batting') }}</span>
                 <span class="v"><b>{{ b.runs }}{{ b.status !== 'out' ? '*' : '' }}</b> <span class="muted">({{ b.balls }})</span></span>
-                <span class="muted d">{{ b.fours }}×4 · {{ b.sixes }}×6 · SR {{ b.strikeRate.toFixed(1) }}</span>
+                <span class="muted d">{{ b.fours }}×4 · {{ b.sixes }}×6 · {{ t('SR') }} {{ b.strikeRate.toFixed(1) }}</span>
                 @if (b.status === 'out') {
                   <span class="muted d dis" cosMarquee>{{ b.dismissal }}</span>
                 } @else if (b.status === 'batting') {
-                  <span class="d live">batting</span>
+                  <span class="d live">{{ t('batting') }}</span>
                 }
               </div>
             }
             @if (bowling(); as w) {
               <div class="stat">
-                <span class="k">Bowling</span>
+                <span class="k">{{ t('Bowling') }}</span>
                 <span class="v"><b>{{ w.wickets }}-{{ w.runs }}</b> <span class="muted">({{ w.overs }})</span></span>
-                <span class="muted d">Econ {{ w.economy.toFixed(2) }} · {{ w.maidens }} maiden{{ w.maidens === 1 ? '' : 's' }}</span>
+                <span class="muted d">{{ t('Econ') }} {{ w.economy.toFixed(2) }} · {{ w.maidens }} maiden{{ w.maidens === 1 ? '' : 's' }}</span>
               </div>
             }
             @if (!batting() && !bowling() && !info()) {
               <div class="card-empty">{{ editing() ? 'Pick a player in the Cards panel.' : '' }}</div>
             } @else if (!batting() && !bowling()) {
-              <div class="muted">Yet to feature in this match</div>
+              <div class="muted">{{ t('Yet to feature in this match') }}</div>
             }
           </div>
         </div>

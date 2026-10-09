@@ -40,7 +40,7 @@ interface Line {
           <div class="teams">
             <span class="dot" [style.background]="m.teams[0].primaryColor"></span>
             <span class="ellipsis tn">{{ teamLabels()[0] }}</span>
-            <span class="vs label">vs</span>
+            <span class="vs label">{{ t('vs') }}</span>
             <span class="dot" [style.background]="m.teams[1].primaryColor"></span>
             <span class="ellipsis tn">{{ teamLabels()[1] }}</span>
           </div>
@@ -197,10 +197,10 @@ export class MatchInfoWidget extends WidgetBase<MatchInfoProps> {
     if (!m) return [];
     const on = this.p().lines;
     const all = [
-      { key: 'series', label: 'Series', value: m.series },
-      { key: 'venue', label: 'Venue', value: m.venue },
-      { key: 'toss', label: 'Toss', value: m.toss },
-      { key: 'status', label: 'Status', value: m.statusText },
+      { key: 'series', label: this.t('Series'), value: m.series },
+      { key: 'venue', label: this.t('Venue'), value: m.venue },
+      { key: 'toss', label: this.t('Toss'), value: m.toss },
+      { key: 'status', label: this.t('Status'), value: this.i18n.status(m) },
     ];
     return all.filter((l) => on[l.key] !== false && l.value);
   });

@@ -52,7 +52,7 @@ const EVENT_COLOR: Partial<Record<MatchEventType, string>> = {
           @if (s.score) {
             <div class="bc-num score" [cosOdo]="s.score"></div>
           } @else {
-            <div class="bc-word yet">Yet to bat</div>
+            <div class="bc-word yet">{{ t('Yet to bat') }}</div>
           }
           <div class="line bc-word">{{ s.line }} <span class="bc-hl">{{ s.hlLine }}</span></div>
         </div>
@@ -142,8 +142,8 @@ export class ScoreHeaderWidget extends WidgetBase<ScoreHeaderProps> {
 
   protected readonly word = computed(() => {
     const e = this.event();
-    if (e) return EVENT_WORD[e.type] ?? e.title;
-    return this.p().centerText || 'VS';
+    if (e) return this.t(EVENT_WORD[e.type] ?? e.title);
+    return this.p().centerText || this.t('VS');
   });
   protected readonly evColor = computed(() => {
     const e = this.event();
@@ -158,13 +158,13 @@ export class ScoreHeaderWidget extends WidgetBase<ScoreHeaderProps> {
       const inns = m.innings.filter((i) => i.battingTeam === team.shortCode);
       const cur = inns.at(-1);
       if (!cur) {
-        return { team, score: null, line: m.target ? 'TARGET' : '', hlLine: m.target ? String(m.target) : '' };
+        return { team, score: null, line: m.target ? this.t('TARGET') : '', hlLine: m.target ? String(m.target) : '' };
       }
       const score = inns.map((i) => `${i.runs}/${i.wickets}`).join(' & ');
       const isCurrent = m.innings.at(-1) === cur;
       const need = m.target !== null && isCurrent ? m.target - cur.runs : null;
-      if (need !== null && need > 0 && m.phase === 'live') return { team, score, line: 'NEED', hlLine: `${need} RUNS` };
-      return { team, score, line: 'OVERS', hlLine: max && !isCurrent ? `${cur.overs} / ${max}` : cur.overs };
+      if (need !== null && need > 0 && m.phase === 'live') return { team, score, line: this.t('NEED'), hlLine: `${need} ${this.t('RUNS')}` };
+      return { team, score, line: this.t('OVERS'), hlLine: max && !isCurrent ? `${cur.overs} / ${max}` : cur.overs };
     });
   });
 

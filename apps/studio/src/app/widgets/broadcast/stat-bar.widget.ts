@@ -39,6 +39,7 @@ export interface StatBarProps {
     }
     .k {
       font-size: 0.9em;
+      margin-right: 0.3em;
     }
     .status {
       margin-left: auto;
@@ -55,11 +56,11 @@ export class StatBarWidget extends WidgetBase<StatBarProps> {
     const m = this.match();
     const inn = m ? currentInnings(m) : null;
     if (!m || !inn) return [];
-    const out = [{ k: 'CRR', v: inn.runRate.toFixed(2) }];
-    if (m.requiredRunRate !== null) out.push({ k: 'RRR', v: m.requiredRunRate.toFixed(2) });
-    out.push({ k: "P'SHIP", v: `${m.partnership.runs} (${m.partnership.balls})` });
+    const out = [{ k: this.t('CRR'), v: inn.runRate.toFixed(2) }];
+    if (m.requiredRunRate !== null) out.push({ k: this.t('RRR'), v: m.requiredRunRate.toFixed(2) });
+    out.push({ k: this.t("P'SHIP"), v: `${m.partnership.runs} (${m.partnership.balls})` });
     return out;
   });
 
-  protected readonly status = computed(() => this.match()?.statusText ?? '');
+  protected readonly status = computed(() => this.i18n.status(this.match()));
 }

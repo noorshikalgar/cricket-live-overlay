@@ -29,7 +29,7 @@ export interface BattersProps {
             <span class="extra num">{{ b.fours }}<i>×4</i> {{ b.sixes }}<i>×6</i></span>
           }
           @if (p().showStrikeRate) {
-            <span class="extra num sr"><i>SR</i> {{ b.strikeRate.toFixed(0) }}</span>
+            <span class="extra num sr"><i>{{ t('SR') }}</i> {{ b.strikeRate.toFixed(0) }}</span>
           }
         </div>
       } @empty {

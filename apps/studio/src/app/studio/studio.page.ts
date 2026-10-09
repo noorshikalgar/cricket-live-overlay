@@ -190,7 +190,7 @@ function typingInField(e: KeyboardEvent): boolean {
       border: 1px solid var(--ui-border);
       border-radius: 6px;
       padding: 6px 10px;
-      font: 500 12px/1.2 Inter, sans-serif;
+      font: 500 12px/1.2 Inter, Mukta, sans-serif;
       cursor: pointer;
       display: inline-flex;
       align-items: center;

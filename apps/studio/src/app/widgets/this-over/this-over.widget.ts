@@ -35,7 +35,7 @@ function chipClass(c: BallChip): string {
         <div class="w-title">{{ style().title }}</div>
       }
       @if (p().showLabel) {
-        <span class="label">This over</span>
+        <span class="label">{{ t('This over') }}</span>
       }
       <div class="chips">
         @for (c of balls(); track $index) {

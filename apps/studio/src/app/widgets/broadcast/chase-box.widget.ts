@@ -28,7 +28,7 @@ interface Half {
             <span class="val bc-num" [cosOdo]="x.value"></span>
           </div>
           @if (i === 0) {
-            <span class="vs bc-word">VS</span>
+            <span class="vs bc-word">{{ t('VS') }}</span>
           }
         }
       </div>
@@ -86,15 +86,15 @@ export class ChaseBoxWidget extends WidgetBase<ChaseBoxProps> {
     const inn = currentInnings(m);
     if (m.target !== null && inn && m.ballsRemaining !== null) {
       return [
-        { label: 'Runs needed', value: String(Math.max(0, m.target - inn.runs)), tone: 'a' },
-        { label: 'Balls left', value: String(m.ballsRemaining), tone: 'b' },
+        { label: this.t('Runs needed'), value: String(Math.max(0, m.target - inn.runs)), tone: 'a' },
+        { label: this.t('Balls left'), value: String(m.ballsRemaining), tone: 'b' },
       ];
     }
     if (!this.p().showProjection || !inn) return null;
     const maxOvers = m.format === 'ODI' ? 50 : m.format === 'T20' ? 20 : null;
     return [
-      { label: 'Run rate', value: inn.runRate.toFixed(2), tone: 'a' },
-      { label: maxOvers ? 'Projected' : 'Overs', value: maxOvers ? String(Math.round(inn.runRate * maxOvers)) : inn.overs, tone: 'b' },
+      { label: this.t('Run rate'), value: inn.runRate.toFixed(2), tone: 'a' },
+      { label: this.t(maxOvers ? 'Projected' : 'Overs'), value: maxOvers ? String(Math.round(inn.runRate * maxOvers)) : inn.overs, tone: 'b' },
     ];
   });
 }

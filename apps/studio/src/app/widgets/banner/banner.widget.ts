@@ -150,7 +150,7 @@ const MAX_QUEUE = 3;
       white-space: nowrap;
     }
     .sub {
-      font-family: Inter, sans-serif;
+      font-family: Inter, Mukta, sans-serif;
       font-weight: 600;
       font-size: max(22px, calc(var(--wh) * 0.15 * var(--fs)));
       margin-top: 0.3em;
@@ -253,7 +253,7 @@ const MAX_QUEUE = 3;
       text-shadow: 0 0.05em 0 rgba(0, 0, 0, 0.35);
     }
     .bsub {
-      font: 700 max(22px, calc(var(--wh) * 0.13 * var(--fs))) / 1.2 Inter, sans-serif;
+      font: 700 max(22px, calc(var(--wh) * 0.13 * var(--fs))) / 1.2 Inter, Mukta, sans-serif;
       margin-top: 0.25em;
       white-space: nowrap;
       font-variant-numeric: tabular-nums;
@@ -411,7 +411,7 @@ export class BannerWidget extends WidgetBase<BannerProps> {
     const g = GLYPH[e.type] ?? '';
     glyph.textContent = g;
     glyph.classList.toggle('long', g.length > 1);
-    title.textContent = e.title;
+    title.textContent = this.i18n.eventTitle(e.title);
     sub.textContent = this.p().showSubtitle ? e.subtitle : '';
 
     const d = (s: number) => this.motion.d(s);
@@ -485,8 +485,8 @@ export class BannerWidget extends WidgetBase<BannerProps> {
       // panel wipes in, title letters rise, glint sweeps
       .to(panel, { clipPath: 'inset(0% 0% 0% 0%)', duration: d(0.4), ease: 'power3.out' }, d(0.2))
       .add(() => {
-        this.split = new SplitText(title, { type: 'chars' });
-        gsap.fromTo(this.split.chars, { yPercent: 110, opacity: 0 }, { yPercent: 0, opacity: 1, duration: d(0.35), ease: 'power3.out', stagger: d(0.03) });
+        this.split = new SplitText(title, { type: this.i18n.lang() === 'en' ? 'chars' : 'words' });
+        gsap.fromTo(this.splitParts(), { yPercent: 110, opacity: 0 }, { yPercent: 0, opacity: 1, duration: d(0.35), ease: 'power3.out', stagger: d(0.03) });
       }, d(0.28))
       .fromTo(sub, { y: 12, opacity: 0 }, { y: 0, opacity: 1, duration: d(0.35), ease: 'power3.out' }, d(0.5))
       .to(glint, { xPercent: 450, duration: d(0.7), ease: 'power2.inOut' }, d(0.55));
@@ -520,6 +520,12 @@ export class BannerWidget extends WidgetBase<BannerProps> {
       .to(rays, { opacity: 0, scale: 0.6, duration: d(0.3), ease: 'power2.in' }, '<');
   }
 
+  /** letters in English; whole words in Marathi, where splitting letters breaks the joined Devanagari shapes */
+  private splitParts(): Element[] {
+    if (!this.split) return [];
+    return this.split.chars.length ? this.split.chars : this.split.words;
+  }
+
   private playClassic(e: MatchEvent): void {
     const banner = this.bannerEl().nativeElement;
     const fill = this.fillEl().nativeElement;
@@ -531,7 +537,7 @@ export class BannerWidget extends WidgetBase<BannerProps> {
 
     banner.style.setProperty('--ev', EVENT_COLOR[e.type] ?? 'var(--accent)');
     banner.classList.toggle('from-right', this.p().direction === 'right');
-    title.textContent = e.title;
+    title.textContent = this.i18n.eventTitle(e.title);
     sub.textContent = this.p().showSubtitle ? e.subtitle : '';
 
     const d = (s: number) => this.motion.d(s);
@@ -559,12 +565,12 @@ export class BannerWidget extends WidgetBase<BannerProps> {
       return;
     }
 
-    this.split = new SplitText(title, { type: 'chars' });
+    this.split = new SplitText(title, { type: this.i18n.lang() === 'en' ? 'chars' : 'words' });
     tl.set(banner, { visibility: 'visible', opacity: 1 })
       .set([title, sub], { opacity: 1 })
       .fromTo(fill, { clipPath: hiddenIn }, { clipPath: shown, duration: d(0.45), ease: 'power3.out' })
       .fromTo(
-        this.split.chars,
+        this.splitParts(),
         { yPercent: 110, opacity: 0 },
         { yPercent: 0, opacity: 1, duration: d(0.4), ease: 'power3.out', stagger: d(0.025) },
         d(0.12),

@@ -16,8 +16,8 @@
   --chip-radius: 6px;
   --pad: 16px;
   --fs: 1;
-  --font: Inter, system-ui, sans-serif;
-  --font-display: 'Barlow Condensed', Inter, sans-serif;
+  --font: Inter, Mukta, system-ui, sans-serif;
+  --font-display: 'Barlow Condensed', Inter, Mukta, sans-serif;
   --border: 0 solid transparent;
   --shadow: 0 8px 24px rgba(0, 0, 0, 0.28);
   --wh: 100px;
