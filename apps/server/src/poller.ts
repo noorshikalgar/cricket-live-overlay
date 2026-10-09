@@ -1,5 +1,8 @@
 import type { MatchEvent, MatchFormat, MatchState, MatchSummary, PollStatus } from '@cos/shared';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import path from 'node:path';
 import { detectEvents } from './events';
+import { log } from './log';
 import type { CricketProvider } from './providers';
 import { ProviderHttpError } from './providers/types';
 import { BudgetExceededError, type CallBudget } from './usage';
@@ -47,7 +50,12 @@ export interface PollerOptions {
   minSeconds: number;
   /** POLL_SECONDS: fixed interval instead of the budget formula (budget caps still apply) */
   fixedSeconds: number;
+  /** where the last match state and match list are saved, so restarts don't refetch */
+  cacheDir?: string;
 }
+
+/** a saved match state younger than this is shown on select / restart instead of calling the API */
+const STATE_REUSE_MS = 2 * 60_000;
 
 export class Poller {
   private matchId: string | null = null;
@@ -93,6 +101,10 @@ export class Poller {
   /** Studio controls: auto/manual and the auto interval. Takes effect immediately. */
   setControl(mode: 'auto' | 'manual', seconds: number | null, paused = false): void {
     const changed = mode !== this.mode || seconds !== this.overrideSeconds || paused !== this.paused;
+    if (changed && this.matchId) {
+      const what = paused ? 'paused (no automatic API calls)' : mode === 'manual' ? 'manual (calls only on Update now)' : `auto every ${seconds === null ? 'default' : seconds === 0 ? 'budget-based' : `${seconds}s`}`;
+      log.info(`POLL  ${what}`);
+    }
     this.mode = mode;
     this.overrideSeconds = seconds;
     this.paused = paused;
@@ -151,6 +163,8 @@ export class Poller {
   }
 
   start(): void {
+    if (this.opts.cacheDir) mkdirSync(this.opts.cacheDir, { recursive: true });
+    this.loadMatches();
     if (this.autoList) {
       void this.refreshMatches();
       this.listTimer = setInterval(() => void this.refreshMatches(), LIST_REFRESH_MS);
@@ -174,29 +188,84 @@ export class Poller {
     this.lastGoodAt = 0;
     this.patchStatus({ matchId, phase: matchId ? 'live' : 'idle', lastError: null, stale: false, intervalSeconds: 0, nextPollAt: null });
     this.hooks.onState(null);
-    if (matchId) {
-      this.provider.onSelect?.(matchId);
-      // one fetch so the overlay has data, even when paused
-      void this.tick();
+    if (!matchId) return;
+    this.provider.onSelect?.(matchId);
+    log.info(`POLL  match ${matchId} selected`);
+    // a recently saved state (restart, re-selecting the same match) is shown without a call
+    const saved = this.loadState(matchId);
+    if (saved && Date.now() - saved.lastUpdated < STATE_REUSE_MS) {
+      log.cacheHit(`match state ${matchId}`, Date.now() - saved.lastUpdated);
+      this.last = saved;
+      this.lastGoodAt = saved.lastUpdated;
+      this.hooks.onState(saved);
+      const wait = Math.max(1, this.intervalFor(saved) - Math.round((Date.now() - saved.lastUpdated) / 1000));
+      this.patchStatus({ lastPollAt: saved.lastUpdated });
+      this.schedule(wait);
+      return;
     }
+    // one fetch so the overlay has data, even when paused
+    void this.tick();
   }
 
   /** Acquire budget for one call made directly by the poller (providers without their own guard). */
-  private acquire(): void {
+  private acquire(what: string): void {
     if (!this.provider.countsTowardQuota || this.selfGuarded) return;
-    if (!this.budget.tryAcquire()) throw new BudgetExceededError(this.budget.blockedReason() ?? 'API budget exhausted');
+    if (!this.budget.tryAcquire()) {
+      const reason = this.budget.blockedReason() ?? 'API budget exhausted';
+      log.apiBlocked(what, reason);
+      throw new BudgetExceededError(reason);
+    }
   }
 
   async refreshMatches(): Promise<MatchSummary[]> {
     try {
-      this.acquire();
+      this.acquire('match list');
       this.matches = await this.provider.listLiveMatches();
       this.hooks.onMatches(this.matches);
+      this.saveJson('matches.json', { at: Date.now(), matches: this.matches });
       this.patchStatus({});
     } catch (err) {
       this.patchStatus({ lastError: `match list: ${message(err)}` });
     }
     return this.matches;
+  }
+
+  /** the match list saved by the last refresh, shown at startup without a call */
+  private loadMatches(): void {
+    const saved = this.readJson<{ at: number; matches: MatchSummary[] }>('matches.json');
+    if (!saved?.matches?.length) return;
+    this.matches = saved.matches;
+    this.hooks.onMatches(this.matches);
+    log.cacheHit(`match list (${this.matches.length} matches)`, Date.now() - saved.at);
+  }
+
+  private stateFile(id: string): string {
+    return `state-${id.replace(/[^\w-]/g, '_')}.json`;
+  }
+
+  private loadState(id: string): MatchState | null {
+    const s = this.readJson<MatchState>(this.stateFile(id));
+    return s && s.matchId ? s : null;
+  }
+
+  private saveJson(file: string, value: unknown): void {
+    if (!this.opts.cacheDir || !this.provider.countsTowardQuota) return;
+    try {
+      writeFileSync(path.join(this.opts.cacheDir, file), JSON.stringify(value));
+    } catch (err) {
+      log.warn(`cache: could not write ${file}: ${message(err)}`);
+    }
+  }
+
+  private readJson<T>(file: string): T | null {
+    if (!this.opts.cacheDir || !this.provider.countsTowardQuota) return null;
+    const p = path.join(this.opts.cacheDir, file);
+    if (!existsSync(p)) return null;
+    try {
+      return JSON.parse(readFileSync(p, 'utf8')) as T;
+    } catch {
+      return null;
+    }
   }
 
   private async tick(): Promise<void> {
@@ -205,9 +274,11 @@ export class Poller {
     let delay: number;
     this.inFlight = true;
     try {
-      this.acquire();
+      this.acquire(`match ${id}`);
       const next = await this.provider.getMatchState(id);
       if (this.matchId !== id) return; // selection changed while awaiting
+      this.saveJson(this.stateFile(id), next);
+      if (this.last && next.phase !== this.last.phase) log.info(`POLL  match ${id} is now ${next.phase}`);
       const events = detectEvents(this.last, next, this.fired);
       this.last = next;
       this.lastGoodAt = Date.now();
@@ -225,6 +296,7 @@ export class Poller {
       if (this.matchId !== id) return;
       if (err instanceof BudgetExceededError && this.budget.remainingToday === 0) {
         // out of calls for today: stop instead of retrying into a wall
+        log.error(`POLL  stopped: ${err.message}`);
         this.patchStatus({ phase: 'error', lastPollAt: Date.now(), lastError: err.message, intervalSeconds: 0, nextPollAt: null });
         this.checkStale();
         return;
@@ -232,6 +304,7 @@ export class Poller {
       const rateLimited = (err instanceof ProviderHttpError && err.status === 429) || err instanceof BudgetExceededError;
       this.backoff = Math.min(this.backoff * 2, rateLimited ? 16 : 8);
       delay = Math.min(Math.max(BREAK_INTERVAL_SECONDS, this.baseInterval()), this.baseInterval() * this.backoff);
+      log.warn(`POLL  update failed (${message(err)}); retrying in ${delay}s`);
       this.patchStatus({ phase: 'error', lastPollAt: Date.now(), lastError: message(err), intervalSeconds: delay });
       this.checkStale();
     } finally {

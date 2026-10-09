@@ -11,6 +11,7 @@ import { ObsBridge } from './obs';
 import { Poller } from './poller';
 import { createProvider } from './providers';
 import { SceneStore, validateScene } from './scenes';
+import { log } from './log';
 import { CallBudget } from './usage';
 
 const cfg = loadConfig();
@@ -18,6 +19,11 @@ mkdirSync(UPLOADS_DIR, { recursive: true });
 
 const scenes = new SceneStore(SCENES_DIR);
 const budget = new CallBudget(path.join(DATA_DIR, 'usage.json'), cfg.dailyCallLimit, cfg.perMinuteLimit);
+log.init(path.join(DATA_DIR, 'logs'), () => {
+  const day = cfg.dailyCallLimit > 0 ? `${budget.calls}/${cfg.dailyCallLimit}` : `${budget.calls}`;
+  const min = cfg.perMinuteLimit > 0 ? ` · ${budget.lastMinute}/${cfg.perMinuteLimit} min` : '';
+  return `calls ${day} today${min}`;
+});
 const obs = new ObsBridge(cfg.obs, (status) => hub.broadcast({ type: 'obs:status', status }));
 const hub = new Hub(scenes, obs);
 const provider = createProvider(cfg);
@@ -40,7 +46,7 @@ function cardsOnAir(): { scorecard: boolean; squads: boolean } {
 const poller = new Poller(
   provider,
   budget,
-  { minSeconds: cfg.minPollSeconds, fixedSeconds: cfg.pollSeconds },
+  { minSeconds: cfg.minPollSeconds, fixedSeconds: cfg.pollSeconds, cacheDir: path.join(DATA_DIR, 'cache') },
   {
     onState: (state) => {
       hub.broadcast({ type: 'match:state', state });
@@ -154,6 +160,11 @@ if (selected) {
 if (scenes.getSettings().obsBridge) void obs.setEnabled(true);
 
 console.log(`\n  Cricket Overlay Studio server  ·  provider: ${provider.name}`);
+if (provider.countsTowardQuota) {
+  console.log(
+    `  API limits  ${cfg.dailyCallLimit || '∞'}/day · ${cfg.perMinuteLimit || '∞'}/min · used today ${budget.calls}  ·  logs: data/logs/`,
+  );
+}
 const uiPort = devMode ? 4200 : cfg.port;
 console.log(`  Studio  http://localhost:${uiPort}/studio${hasStudioBuild || devMode ? '' : '  (not built — run npm run build)'}`);
 console.log(`  Output  http://localhost:${uiPort}/output   (OBS Browser Source, 1920×1080)\n`);

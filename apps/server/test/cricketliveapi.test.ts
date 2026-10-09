@@ -111,6 +111,7 @@ describe('CricketLiveApi parsing', () => {
 
 describe('CricketLiveApiProvider.getMatchState', () => {
   it('combines feed, live list and scorecard within budget', async () => {
+    vi.useFakeTimers();
     let balls = [{ over: '18.1', runs: 1, type: 'RUN' }];
     vi.stubGlobal(
       'fetch',
@@ -132,7 +133,12 @@ describe('CricketLiveApiProvider.getMatchState', () => {
     expect(first.toss).toBe('MI won the toss');
     expect(first.phase).toBe('live');
 
+    // asking again inside the API's 10 s commentary cache costs nothing
+    await p.getMatchState('155409');
+    expect(budget.calls).toBe(4);
+
     // next ball is a six: only the feed is due, and it fires a SIX banner
+    vi.advanceTimersByTime(11_000);
     balls = [...balls, { over: '18.2', runs: 6, type: 'SIX' }];
     const second = await p.getMatchState('155409');
     expect(budget.calls).toBe(5);
@@ -141,8 +147,10 @@ describe('CricketLiveApiProvider.getMatchState', () => {
     expect(events.map((e) => e.type)).toEqual(['SIX']);
 
     // budget for this minute is spent: nothing is sent
+    vi.advanceTimersByTime(11_000);
     await expect(p.getMatchState('155409')).rejects.toThrow(/Per-minute/);
     expect(budget.calls).toBe(5);
+    vi.useRealTimers();
   });
 });
 

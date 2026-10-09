@@ -87,3 +87,39 @@ describe('Poller control', () => {
     expect(getMatchState).toHaveBeenCalledTimes(3);
   });
 });
+
+describe('Poller state cache', () => {
+  it('re-selecting a recently polled match shows the saved state without a call', async () => {
+    vi.useFakeTimers();
+    const cacheDir = mkdtempSync(path.join(tmpdir(), 'cos-cache-'));
+    const getMatchState = vi.fn(async (): Promise<MatchState> => ({ ...buildState(rec, 30, Date.now()), matchId: 'm1' }));
+    const provider: CricketProvider = { name: 'fake', countsTowardQuota: true, listLiveMatches: async () => [], getMatchState };
+    const budget = new CallBudget(path.join(cacheDir, 'u.json'), 100, 5);
+    const states: (MatchState | null)[] = [];
+    const make = () =>
+      new Poller(provider, budget, { minSeconds: 3, fixedSeconds: 60, cacheDir }, {
+        onState: (s) => states.push(s),
+        onEvent: () => undefined,
+        onStatus: () => undefined,
+        onMatches: () => undefined,
+      });
+    const first = make();
+    first.start();
+    first.select('m1');
+    await vi.advanceTimersByTimeAsync(0);
+    expect(getMatchState).toHaveBeenCalledTimes(1);
+    first.stop();
+
+    // "restart" 30 s later: the saved state is shown, no call until the interval is due
+    await vi.advanceTimersByTimeAsync(30_000);
+    const second = make();
+    second.start();
+    second.select('m1');
+    await vi.advanceTimersByTimeAsync(0);
+    expect(getMatchState).toHaveBeenCalledTimes(1);
+    expect(states.at(-1)?.matchId).toBe('m1');
+    await vi.advanceTimersByTimeAsync(31_000);
+    expect(getMatchState).toHaveBeenCalledTimes(2);
+    second.stop();
+  });
+});

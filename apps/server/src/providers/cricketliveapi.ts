@@ -16,6 +16,7 @@ import {
   type Team,
 } from '@cos/shared';
 import { arr, getJson, num, obj, oversToBalls, str, type Json } from './http';
+import { log } from '../log';
 import { BudgetExceededError, type CallBudget } from '../usage';
 import { mapScorecardReal, mapSquadsReal } from './cricketliveapi-cards';
 import { composeFromMiniscore, isMiniscoreResponse } from './cricketliveapi-miniscore';
@@ -53,6 +54,16 @@ const PATHS = {
 };
 
 const REFRESH_MS = { live: 15_000, scorecard: 30_000, facts: 10 * 60_000 };
+
+/** The API's own server-side cache per endpoint (from their docs): asking again sooner returns the same data. */
+function responseTtl(path: string): number {
+  if (path.startsWith('/cricket/commentary/')) return 10_000;
+  if (path.startsWith('/cricket/matches/live')) return 15_000;
+  if (path.startsWith('/cricket/scorecard/')) return 30_000;
+  if (path.startsWith('/cricket/match-facts/')) return 30_000;
+  if (path.startsWith('/cricket/squads/')) return 5 * 60_000;
+  return 10_000;
+}
 /** optional sources leave this many calls for the next ball-feed request */
 const OPTIONAL_KEEP_FREE = 1;
 
@@ -365,13 +376,29 @@ export class CricketLiveApiProvider implements CricketProvider {
     this.cache.delete(id);
   }
 
-  /** One HTTP call, only if the budget allows it. Refusal means nothing is sent. */
+  /** responses by path, reused while the API's own server cache would return the same thing */
+  private readonly responses = new Map<string, { at: number; value: unknown }>();
+
+  /**
+   * One HTTP call, only if the budget allows it (a refusal sends nothing). An
+   * identical request inside the API's cache window is answered from memory.
+   */
   private async get(path: string, optional = false): Promise<unknown> {
+    const hit = this.responses.get(path);
+    const ttl = responseTtl(path);
+    if (hit && Date.now() - hit.at < ttl) {
+      log.cacheHit(path, Date.now() - hit.at);
+      return hit.value;
+    }
     const b = this.budget;
     if (b && !b.tryAcquire(optional ? OPTIONAL_KEEP_FREE : 0)) {
-      throw new BudgetExceededError(b.blockedReason() ?? 'API budget reserved for the ball feed');
+      const reason = b.blockedReason() ?? 'API budget reserved for the ball feed';
+      log.apiBlocked(path, reason);
+      throw new BudgetExceededError(reason);
     }
-    return getJson(this.baseUrl + path, { authorization: `Bearer ${this.apiKey}` });
+    const value = await getJson(this.baseUrl + path, { authorization: `Bearer ${this.apiKey}` });
+    this.responses.set(path, { at: Date.now(), value });
+    return value;
   }
 
   private async fetchLiveList(optional: boolean): Promise<Json[]> {
