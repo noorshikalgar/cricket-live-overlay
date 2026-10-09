@@ -5,6 +5,13 @@
 @import '@fontsource/inter/700.css';
 @import '@fontsource/barlow-condensed/600.css';
 @import '@fontsource/barlow-condensed/700.css';
+@import '@fontsource/barlow-condensed/800.css';
+@import '@fontsource/barlow-condensed/800-italic.css';
+@import '@fontsource/barlow-condensed/900-italic.css';
+/* Devanagari for the Marathi overlay labels; picked up as the fallback in every font stack */
+@import '@fontsource/mukta/500.css';
+@import '@fontsource/mukta/700.css';
+@import '@fontsource/mukta/800.css';
 @import './app/theme/tokens.css';
 @import './app/theme/widgets.css';
 

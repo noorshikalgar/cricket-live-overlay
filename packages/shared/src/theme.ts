@@ -14,10 +14,10 @@ const night: ThemeDef = {
   accentFromTeam: false,
   tokens: {
     bg: '#0B0F17',
-    bgOpacity: 0.78,
+    bgOpacity: 0.86,
     blur: 12,
     text: '#F5F7FA',
-    textMuted: '#9AA4B2',
+    textMuted: '#AEB8C6',
     accent: '#22C55E',
     fontFamily: 'Inter',
     fontScale: 1,

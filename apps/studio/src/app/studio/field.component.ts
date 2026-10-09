@@ -80,6 +80,21 @@ import type { FieldDef } from '../widgets/widget-registry';
             <small class="err">{{ uploadError() }}</small>
           }
         }
+        @case ('video') {
+          <div class="image">
+            <label class="btn">
+              {{ uploading() ? 'Uploading…' : str() ? 'Replace' : 'Upload video' }}
+              <input type="file" accept="video/mp4,video/webm,video/quicktime" (change)="upload($event)" hidden />
+            </label>
+            @if (str()) {
+              <button type="button" class="btn" (click)="changed.emit('')">Remove</button>
+            }
+          </div>
+          <input type="text" [value]="str()" placeholder="…or paste a video URL (https://…/clip.mp4)" (change)="emitStr($event)" />
+          @if (uploadError()) {
+            <small class="err">{{ uploadError() }}</small>
+          }
+        }
       }
     </div>
   `,

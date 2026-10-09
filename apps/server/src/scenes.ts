@@ -2,6 +2,7 @@ import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync
 import path from 'node:path';
 import {
   CANVAS_H,
+  createBroadcastScene,
   CANVAS_W,
   BACKGROUND_KINDS,
   DEFAULT_BACKGROUND,
@@ -149,6 +150,8 @@ export class SceneStore {
     next.blackout = next.blackout === true;
     next.blackoutText = String(next.blackoutText ?? '').slice(0, 120);
     next.blackoutSubtext = String(next.blackoutSubtext ?? '').slice(0, 160);
+    next.playerImages = next.playerImages === 'photo' ? 'photo' : 'avatar';
+    next.language = next.language === 'mr' ? 'mr' : 'en';
     // null = .env default, 0 = budget-based, otherwise 5 s – 1 h
     const ps = next.pollSeconds;
     next.pollSeconds = ps === null || ps === undefined ? null : ps === 0 ? 0 : Math.min(3600, Math.max(5, Math.round(Number(ps)) || 60));
@@ -165,12 +168,14 @@ export class SceneStore {
     return s;
   }
 
-  create(name: string, copyFrom?: string): Scene {
+  create(name: string, copyFrom?: string, template?: 'broadcast'): Scene {
     const src = copyFrom ? this.scenes.get(copyFrom) : undefined;
     const scene: Scene = src
       ? // duplicates keep widget ids so Flip can glide shared widgets between the two scenes
         { ...structuredClone(src), id: newId(), name, updatedAt: Date.now() }
-      : { id: newId(), name, canvas: { w: CANVAS_W, h: CANVAS_H }, theme: 'night', widgets: [], updatedAt: Date.now() };
+      : template === 'broadcast'
+        ? { ...createBroadcastScene(name), updatedAt: Date.now() }
+        : { id: newId(), name, canvas: { w: CANVAS_W, h: CANVAS_H }, theme: 'night', widgets: [], updatedAt: Date.now() };
     this.scenes.set(scene.id, scene);
     this.writeNow(scene.id);
     return scene;

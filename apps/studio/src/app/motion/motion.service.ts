@@ -53,6 +53,18 @@ export class MotionService {
     switch (preset) {
       case 'fade':
         return gsap.fromTo(el, { autoAlpha: 0 }, { ...base, autoAlpha: 1 });
+      case 'pop':
+        return gsap.fromTo(
+          el,
+          { autoAlpha: 0, scale: 0.82, y: SLIDE * 0.6 },
+          { ...base, duration: this.d(0.55), ease: 'back.out(1.9)', autoAlpha: 1, scale: 1, y: 0, clearProps: 'transform' },
+        );
+      case 'flip':
+        return gsap.fromTo(
+          el,
+          { autoAlpha: 0, rotateX: -75, transformPerspective: 900, transformOrigin: '50% 0%' },
+          { ...base, duration: this.d(0.6), ease: 'back.out(1.4)', autoAlpha: 1, rotateX: 0, clearProps: 'transform' },
+        );
       case 'slideUp':
         return gsap.fromTo(el, { autoAlpha: 0, y: SLIDE }, { ...base, autoAlpha: 1, y: 0, clearProps: 'transform' });
       case 'slideDown':
@@ -97,6 +109,12 @@ export class MotionService {
       switch (preset) {
         case 'fade':
           gsap.to(el, { ...base, autoAlpha: 0 });
+          return;
+        case 'pop':
+          gsap.to(el, { ...base, autoAlpha: 0, scale: 0.88 });
+          return;
+        case 'flip':
+          gsap.to(el, { ...base, autoAlpha: 0, rotateX: 75, transformPerspective: 900, transformOrigin: '50% 0%' });
           return;
         case 'slideUp':
           gsap.to(el, { ...base, autoAlpha: 0, y: SLIDE });

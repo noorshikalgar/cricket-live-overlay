@@ -89,13 +89,15 @@ export class WidgetHostComponent {
       '--c-four': s.four,
       '--c-six': s.six,
       '--c-wicket': s.wicket,
-      '--font': `'${s.fontFamily}', Inter, system-ui, sans-serif`,
+      '--font': `'${s.fontFamily}', Inter, Mukta, system-ui, sans-serif`,
       '--fs': String(s.fontScale),
       '--radius': `${s.radius}px`,
       '--chip-radius': `${Math.round(s.radius * 0.6)}px`,
       '--pad': `${s.padding}px`,
       '--border': s.border.width > 0 ? `${s.border.width}px solid ${s.border.color}` : '0 solid transparent',
-      '--shadow': s.shadow === 'soft' ? '0 8px 24px rgba(0, 0, 0, 0.28)' : 'none',
+      '--shadow': s.shadow === 'soft' ? '0 10px 30px rgba(0, 0, 0, 0.38)' : 'none',
+      // a dark lift behind light text only; dark text on a light theme stays crisp
+      '--text-shadow': isLight(s.text) ? '0 1px 2px rgba(0, 0, 0, 0.35)' : 'none',
     };
   });
 
@@ -148,4 +150,16 @@ export class WidgetHostComponent {
       this.el.style.visibility = 'hidden';
     }
   }
+}
+
+/** true for light colours (#rgb / #rrggbb), by perceived brightness */
+function isLight(hex: string): boolean {
+  const h = hex.replace('#', '');
+  const full = h.length === 3 ? h.split('').map((c) => c + c).join('') : h.slice(0, 6);
+  const n = parseInt(full, 16);
+  if (Number.isNaN(n)) return true;
+  const r = (n >> 16) & 255;
+  const g = (n >> 8) & 255;
+  const b = n & 255;
+  return 0.299 * r + 0.587 * g + 0.114 * b > 150;
 }

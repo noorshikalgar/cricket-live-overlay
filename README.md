@@ -111,20 +111,33 @@ In OBS:
 
 ### Scenes and going on air
 - The scene dropdown picks which scene you are **editing**. **Put on air** sends it to the Output; **● ON AIR** shows it's live.
-- **⋯** creates, duplicates, renames, deletes, exports and imports scenes.
-- With no widget selected, the right panel shows the scene's **Theme**, **Transition in**, **On-air pointer** and **Background**.
+- **⋯** creates, duplicates, renames, deletes, exports and imports scenes. **New broadcast layout** makes a ready TV-style scene (score header, stat bar, overs strip, chase box, three player panels, event banner); every piece stays editable.
+- With no widget selected, the right panel shows the scene's **Theme**, **Overlay (all scenes)**, **Transition in**, **On-air pointer** and **Background**.
+- Right-panel sections fold open / closed with a click; the Studio remembers which.
+- On a tablet or phone the library and settings slide in from the **☰ Widgets** / **⚙ Settings** buttons, so a phone works as a remote for the event pad.
 
 ### Widgets
 Click a widget in the library to add it, or drag it onto the canvas. Drag to move, handles to resize, **Shift** keeps the aspect ratio, **Alt** skips snapping. Arrow keys nudge (Shift = 10 px), **Ctrl/⌘+D** duplicates, **Delete** removes, **Ctrl/⌘+Z** / **Ctrl/⌘+Shift+Z** undo / redo.
 
 | Group | Widgets |
 | --- | --- |
+| Broadcast | Player panel, Score header, Overs strip, Chase box, Stat bar |
 | Live data | Score bug, Batters, Bowler, This over, Partnership, Recent overs, Match info |
 | Moments | Event banner, Ticker |
 | Cards | Full scorecard, Team card, Player card |
-| Studio | Camera frame, Text / Title, Timer, Image / Logo, Clock |
+| Studio | Camera frame, Text / Title, Timer, Image / Logo, Video, Clock |
 
-Every widget's look (colours, font, radius, blur, title, enter / exit motion) is in the right panel. Unchanged values follow the scene theme (**Night**, **Clean**, **Team**); **↺** resets a value to the theme.
+Every widget's look (colours, font, radius, blur, title, enter / exit motion such as **Pop** or **Flip**) is in the right panel. Unchanged values follow the scene theme (**Night**, **Clean**, **Team**); **↺** resets a value to the theme.
+
+- Text that doesn't fit (long names, long status lines, big font sizes) scrolls slowly to its end and back instead of being cut off with "…".
+- **Match info** layout: *Auto* (follows the box shape), *Stacked*, *Grid* or *Single row*; labels beside, above or hidden.
+- **Full scorecard** → *How out*: own column, under the name (more room at big sizes) or hidden.
+- **Video**: upload MP4 / WebM / MOV or paste a URL; ▶ / ⏸, ⏮ Restart and mute buttons in its settings.
+
+### Overlay language and player images
+Scene settings → **Overlay (all scenes)** (also **Labels** in the canvas toolbar):
+- **Label language**: English or **मराठी**. Overlay labels (चौकार, षटकार, बाद, फलंदाज, धावगती…) and the chase line switch language; player, team, series and venue names stay as the API sends them.
+- **Player images**: *Avatars* (drawn in team colours, no rights issues) or *Wikimedia photos* — free-licence photos downloaded once to `apps/server/data/players/`, each shown with its author and licence. **⤓ Fetch photos for both XIs** looks them up before you go live. Players without a free photo get the avatar.
 
 ### Score updates
 Top bar: **Auto** (with an interval) or **Manual**, **⏸ Pause / ▶ Resume**, and **⟳ Update now**. A countdown shows the next automatic update.
@@ -139,7 +152,7 @@ Left panel → **Live cards**:
 Card data never refreshes on its own; press **⟳** on the card or in the panel when you want new data.
 
 ### Event banners
-The **Event banner** widget fires automatically on FOUR, SIX, WICKET, FIFTY and HUNDRED (choose which in its settings). Because live data lags the TV, the **Event pad** fires them instantly by hand: hotkeys **4**, **6**, **W**, **D** (DRS), **K** (drinks), **B** (break).
+The **Event banner** widget fires automatically on FOUR, SIX, WICKET, FIFTY and HUNDRED (choose which in its settings). Look: **Blast** (giant 4 / 6 / W slams in with a light burst and particles; FOUR gets speed streaks, WICKET flying bails, milestones go gold) or **Classic** (clean colour wipe). Because live data lags the TV, the **Event pad** fires them instantly by hand: hotkeys **4**, **6**, **W**, **D** (DRS), **K** (drinks), **B** (break).
 
 ### Timer
 **Timer** widget: a title (e.g. *STARTING IN*) above a countdown. Modes: countdown for a length (▶ Start, ⏸ Pause, ↺ Reset, +1m in the settings panel), countdown to a clock time, or stopwatch. Shows your end text at zero.

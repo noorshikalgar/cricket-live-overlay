@@ -200,12 +200,12 @@ export const WIDGET_DND_TYPE = 'application/x-cos-widget';
     }
     .bo-tag {
       color: #f87171;
-      font: 700 34px/1 Inter, sans-serif;
+      font: 700 34px/1 Inter, Mukta, sans-serif;
       letter-spacing: 0.12em;
     }
     .bo-msg {
       color: #f5f7fa;
-      font: 600 64px/1.2 Inter, sans-serif;
+      font: 600 64px/1.2 Inter, Mukta, sans-serif;
     }
     /* pointer mode: no editing, a crosshair, every move goes to the Output */
     .pointer-mode .edit-layer {
@@ -245,7 +245,7 @@ export const WIDGET_DND_TYPE = 'application/x-cos-widget';
       transform: scale(var(--inv));
       background: #60a5fa;
       color: #0b0f17;
-      font: 600 12px/1 Inter, sans-serif;
+      font: 600 12px/1 Inter, Mukta, sans-serif;
       padding: 4px 6px;
       border-radius: 4px;
       white-space: nowrap;
@@ -298,7 +298,7 @@ export const WIDGET_DND_TYPE = 'application/x-cos-widget';
       border-bottom: 0;
       border-radius: 6px 6px 0 0;
       color: #cfd6e2;
-      font: 600 12px/1 Inter, sans-serif;
+      font: 600 12px/1 Inter, Mukta, sans-serif;
       cursor: move;
       z-index: 2;
     }
@@ -322,7 +322,7 @@ export const WIDGET_DND_TYPE = 'application/x-cos-widget';
       border-radius: 4px;
       background: transparent;
       color: inherit;
-      font: 600 12px/1 Inter, sans-serif;
+      font: 600 12px/1 Inter, Mukta, sans-serif;
       cursor: pointer;
       display: inline-flex;
       align-items: center;
@@ -358,7 +358,7 @@ export const WIDGET_DND_TYPE = 'application/x-cos-widget';
     }
     .empty {
       color: #9aa4b2;
-      font: 500 14px Inter, sans-serif;
+      font: 500 14px Inter, Mukta, sans-serif;
     }
   `,
 })

@@ -35,6 +35,13 @@ import { EditorStore } from './editor.store';
       Snap 8px
     </label>
     <span class="sep"></span>
+    <label title="Language of the overlay's labels (FOUR, Batter, Venue…). Names stay as the API sends them.">
+      Labels
+      <select [value]="live.settings().language" (change)="setLanguage($event)">
+        <option value="en">English</option>
+        <option value="mr">मराठी</option>
+      </select>
+    </label>
     <label class="chk">
       <input type="checkbox" [checked]="live.settings().reduceMotion" (change)="toggleReduce()" />
       Reduce motion
@@ -203,6 +210,11 @@ export class CanvasToolbarComponent {
 
   protected toggleReduce(): void {
     this.live.send({ type: 'settings:update', settings: { reduceMotion: !this.live.settings().reduceMotion } });
+  }
+
+  protected setLanguage(e: Event): void {
+    const language = (e.target as HTMLSelectElement).value === 'mr' ? 'mr' : 'en';
+    this.live.send({ type: 'settings:update', settings: { language } });
   }
 
   protected setSpeed(e: Event): void {

@@ -16,15 +16,23 @@ export type WidgetType =
   | 'image'
   | 'clock'
   | 'timer'
+  | 'video'
+  | 'playerPanel'
+  | 'scoreHeader'
+  | 'oversStrip'
+  | 'chaseBox'
+  | 'statBar'
   | 'scorecard'
   | 'teamCard'
   | 'playerCard';
 
-export type AnimPreset = 'none' | 'fade' | 'slideUp' | 'slideDown' | 'slideLeft' | 'slideRight' | 'wipe';
+export type AnimPreset = 'none' | 'fade' | 'pop' | 'flip' | 'slideUp' | 'slideDown' | 'slideLeft' | 'slideRight' | 'wipe';
 
 export const ANIM_PRESETS: readonly AnimPreset[] = [
   'none',
   'fade',
+  'pop',
+  'flip',
   'slideUp',
   'slideDown',
   'slideLeft',
@@ -219,7 +227,13 @@ export interface AppSettings {
   blackout: boolean;
   blackoutText: string;
   blackoutSubtext: string;
+  /** player images on cards and panels: our own SVG avatars, or free Wikimedia photos (with credit) */
+  playerImages: 'avatar' | 'photo';
+  /** language of the overlay's own labels (FOUR, Batter, Venue…); names and API text stay as they come */
+  language: OverlayLanguage;
 }
+
+export type OverlayLanguage = 'en' | 'mr';
 
 export const DEFAULT_SETTINGS: AppSettings = {
   activeSceneId: null,
@@ -233,6 +247,8 @@ export const DEFAULT_SETTINGS: AppSettings = {
   blackout: false,
   blackoutText: "We'll be right back",
   blackoutSubtext: '',
+  playerImages: 'avatar',
+  language: 'en',
 };
 
 export function newId(): string {

@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { OdometerDirective } from '../../motion/odometer.directive';
+import { MarqueeDirective } from '../../motion/marquee.directive';
 import { WidgetBase } from '../widget-base';
 
 export interface BattersProps {
@@ -9,7 +10,7 @@ export interface BattersProps {
 
 @Component({
   selector: 'cos-batters',
-  imports: [OdometerDirective],
+  imports: [MarqueeDirective, OdometerDirective],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="panel rows">
@@ -28,7 +29,7 @@ export interface BattersProps {
             <span class="extra num">{{ b.fours }}<i>×4</i> {{ b.sixes }}<i>×6</i></span>
           }
           @if (p().showStrikeRate) {
-            <span class="extra num sr"><i>SR</i> {{ b.strikeRate.toFixed(0) }}</span>
+            <span class="extra num sr"><i>{{ t('SR') }}</i> {{ b.strikeRate.toFixed(0) }}</span>
           }
         </div>
       } @empty {
@@ -47,7 +48,7 @@ export interface BattersProps {
       flex-direction: column;
       justify-content: center;
       gap: 0.1em;
-      font-size: calc(var(--wh) * 0.26 * var(--fs));
+      font-size: calc(var(--wh) * 0.3 * var(--fs));
       padding-top: 0;
       padding-bottom: 0;
     }

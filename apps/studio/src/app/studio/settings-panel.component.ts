@@ -23,8 +23,7 @@ import {
   type WidgetStyle,
 } from '@cos/shared';
 import { LiveStore } from '../core/live.store';
-import { STYLE_SCHEMA, WIDGET_REGISTRY, type FieldDef } from '../widgets/widget-registry';
-import { formatClock, timerValue, type TimerProps } from '../widgets/timer/timer.widget';
+import { STYLE_SCHEMA, WIDGET_REGISTRY, type ActionContext, type FieldDef, type WidgetAction } from '../widgets/widget-registry';
 import { exportCameraMask, obsTransformText } from './camera-tools';
 import { EditorStore } from './editor.store';
 import { FieldComponent } from './field.component';
@@ -34,12 +33,26 @@ type StyleKey = keyof WidgetStyle;
 const ANIM_LABELS: Record<AnimPreset, string> = {
   none: 'None',
   fade: 'Fade',
+  pop: 'Pop (scale up with a bounce)',
+  flip: 'Flip down (3D)',
   slideUp: 'Slide up',
   slideDown: 'Slide down',
   slideLeft: 'Slide left',
   slideRight: 'Slide right',
   wipe: 'Wipe',
 };
+
+const OPEN_KEY = 'cos.inspector.open';
+/** sections that start folded so the panel stays short */
+const CLOSED_BY_DEFAULT = new Set(['look', 'motion', 'tips', 'obs-webcam-placement']);
+
+function readOpenState(): Record<string, boolean> {
+  try {
+    return JSON.parse(localStorage.getItem(OPEN_KEY) ?? '{}') as Record<string, boolean>;
+  } catch {
+    return {};
+  }
+}
 
 /** Right panel: settings for the selected widget (generated from its schema) or the scene. */
 @Component({
@@ -55,8 +68,8 @@ const ANIM_LABELS: Record<AnimPreset, string> = {
       </header>
       <p class="desc">{{ def.description }}</p>
 
-      <section>
-        <h3>Position</h3>
+      <details class="sec" [open]="isOpen('position')" (toggle)="onToggle('position', $event)">
+        <summary>Position</summary>
         <div class="grid4">
           @for (k of posKeys; track k) {
             <label>
@@ -75,11 +88,11 @@ const ANIM_LABELS: Record<AnimPreset, string> = {
           <button type="button" (click)="editor.duplicate(w.id)">Duplicate</button>
           <button type="button" class="danger" (click)="editor.remove(w.id)">Delete</button>
         </div>
-      </section>
+      </details>
 
       @if (w.type === 'camera') {
-        <section class="obs">
-          <h3>OBS webcam placement</h3>
+        <details class="sec obs" [open]="isOpen('obs-webcam-placement')" (toggle)="onToggle('obs-webcam-placement', $event)">
+          <summary>OBS webcam placement</summary>
           <pre>{{ transformText(w) }}</pre>
           <div class="row-btns">
             <button type="button" (click)="copy(transformText(w))">{{ copied() ? 'Copied ✓' : 'Copy transform' }}</button>
@@ -92,39 +105,46 @@ const ANIM_LABELS: Record<AnimPreset, string> = {
             <button type="button" (click)="mask(w, 'frame')">Mask PNG (frame size)</button>
             <button type="button" (click)="mask(w, 'canvas')">Mask PNG (1920×1080)</button>
           </div>
-        </section>
+        </details>
       }
 
-      @if (def.settingsSchema.length) {
-        <section>
-          <h3>{{ def.label }}</h3>
-          @if (w.type === 'timer' && w.props['mode'] !== 'until') {
-            <div class="timer-ctl">
-              <span class="readout">{{ timerText(w) }}</span>
-              @if (w.props['startedAt']) {
-                <button type="button" (click)="timerPause(w)">⏸ Pause</button>
-              } @else {
-                <button type="button" class="primary" (click)="timerStart(w)">▶ {{ w.props['elapsed'] ? 'Resume' : 'Start' }}</button>
-              }
-              <button type="button" (click)="timerReset(w)">↺ Reset</button>
-              @if (w.props['mode'] === 'duration') {
-                <button type="button" (click)="timerAdd(w, 1)" title="Add a minute">+1m</button>
-              }
-            </div>
+      @if (def.settingsSchema.length || def.actions?.length) {
+        @let ctx = actionCtx(w);
+        <details class="sec" [open]="isOpen('widget')" (toggle)="onToggle('widget', $event)">
+          <summary>{{ def.label }}</summary>
+          @if (def.readout) {
+            @let r = def.readout(ctx);
+            @if (r) {
+              <div class="readout">{{ r }}</div>
+            }
           }
-          @if (w.type === 'scorecard' || w.type === 'teamCard' || w.type === 'playerCard') {
+          @if (def.actions?.length) {
             <div class="row-btns top">
-              <button type="button" (click)="reloadCards(w.type)" title="Fetch fresh card data (1 API call)">⟳ Reload card data</button>
+              @for (a of def.actions; track a.id) {
+                @if (!a.when || a.when(ctx)) {
+                  <button type="button" [class.primary]="isPrimary(a, ctx)" [title]="a.title ?? ''" (click)="a.run(ctx)">
+                    {{ a.label(ctx) }}
+                  </button>
+                }
+              }
             </div>
           }
-          @for (f of def.settingsSchema; track f.key) {
+          @for (f of fieldsIn(def.settingsSchema, w, ''); track f.key) {
             <cos-field [def]="f" [value]="w.props[f.key]" (changed)="setProp(w, f, $event)" />
           }
-        </section>
+        </details>
+        @for (g of groupsOf(def.settingsSchema); track g) {
+          <details class="sec" [open]="isOpen('g:' + g)" (toggle)="onToggle('g:' + g, $event)">
+            <summary>{{ g }}</summary>
+            @for (f of fieldsIn(def.settingsSchema, w, g); track f.key) {
+              <cos-field [def]="f" [value]="w.props[f.key]" (changed)="setProp(w, f, $event)" />
+            }
+          </details>
+        }
       }
 
-      <section>
-        <h3>Look</h3>
+      <details class="sec" [open]="isOpen('look')" (toggle)="onToggle('look', $event)">
+        <summary>Look</summary>
         <cos-field [def]="titleToggle" [value]="w.style.showTitle" (changed)="setStyle(w, 'showTitle', $event)" />
         @if (w.style.showTitle) {
           <cos-field [def]="titleText" [value]="w.style.title ?? ''" (changed)="setStyle(w, 'title', $event)" />
@@ -150,14 +170,14 @@ const ANIM_LABELS: Record<AnimPreset, string> = {
         @if (resolved().border.width > 0) {
           <cos-field [def]="borderColor" [value]="resolved().border.color" (changed)="setBorder(w, 'color', $event)" />
         }
-      </section>
+      </details>
 
-      <section>
-        <h3>Motion</h3>
+      <details class="sec" [open]="isOpen('motion')" (toggle)="onToggle('motion', $event)">
+        <summary>Motion</summary>
         <cos-field [def]="enterField" [value]="w.animation.enter" (changed)="setAnim(w, 'enter', $event)" />
         <cos-field [def]="exitField" [value]="w.animation.exit" (changed)="setAnim(w, 'exit', $event)" />
         <cos-field [def]="delayField" [value]="w.animation.delay" (changed)="setAnim(w, 'delay', $event)" />
-      </section>
+      </details>
     } @else if (editor.scene(); as scene) {
       <header class="head"><span class="icon">▦</span><strong>Scene</strong></header>
       <section>
@@ -178,8 +198,24 @@ const ANIM_LABELS: Record<AnimPreset, string> = {
           value; ↺ puts it back.
         </p>
       </section>
-      <section>
-        <h3>Transition in</h3>
+      <details class="sec" [open]="isOpen('overlay')" (toggle)="onToggle('overlay', $event)">
+        <summary>Overlay (all scenes)</summary>
+        <cos-field [def]="langField" [value]="live.settings().language" (changed)="setSetting('language', $event)" />
+        <cos-field [def]="imgField" [value]="live.settings().playerImages" (changed)="setSetting('playerImages', $event)" />
+        @if (live.settings().playerImages === 'photo') {
+          <div class="row-btns">
+            <button type="button" (click)="prefetchPhotos()" [disabled]="prefetching()" title="Look up both playing XIs on Wikimedia now, so panels show photos instantly on air">
+              {{ prefetching() ? 'Fetching…' : '⤓ Fetch photos for both XIs' }}
+            </button>
+          </div>
+          <p class="hint">
+            Free photos from Wikimedia Commons, downloaded once and kept on this computer. Each shows its author and
+            licence, as the licences require. Players without a free photo get the avatar.
+          </p>
+        }
+      </details>
+      <details class="sec" [open]="isOpen('transition-in')" (toggle)="onToggle('transition-in', $event)">
+        <summary>Transition in</summary>
         @let tr = sceneTr();
         <cos-field [def]="trKindField" [value]="tr.kind" (changed)="setTr({ kind: asTrKind($event) })" />
         @if (tr.kind !== 'cut') {
@@ -197,10 +233,10 @@ const ANIM_LABELS: Record<AnimPreset, string> = {
           <cos-field [def]="trNameField" [value]="tr.showName" (changed)="setTr({ showName: $event === true })" />
         }
         <p class="hint">Plays on the Output when this scene is put on air.</p>
-      </section>
+      </details>
 
-      <section>
-        <h3>On-air pointer</h3>
+      <details class="sec" [open]="isOpen('on-air-pointer')" (toggle)="onToggle('on-air-pointer', $event)">
+        <summary>On-air pointer</summary>
         @let ptr = scenePtr();
         <cos-field [def]="ptrOnField" [value]="ptr.enabled" (changed)="setPtr({ enabled: $event === true })" />
         @if (ptr.enabled) {
@@ -210,10 +246,10 @@ const ANIM_LABELS: Record<AnimPreset, string> = {
           <cos-field [def]="ptrBlurField" [value]="ptr.motionBlur" (changed)="setPtr({ motionBlur: $event === true })" />
           <p class="hint">Press ◎ Pointer in the canvas toolbar, then move over the canvas: the pointer follows live on the Output. Click for a ripple, Esc to stop.</p>
         }
-      </section>
+      </details>
 
-      <section>
-        <h3>Background (on air)</h3>
+      <details class="sec" [open]="isOpen('background-on-air')" (toggle)="onToggle('background-on-air', $event)">
+        <summary>Background (on air)</summary>
         @let bg = sceneBg();
         <cos-field [def]="bgKindField" [value]="bg.kind" (changed)="setBg({ kind: asKind($event) })" />
         @if (bg.kind === 'transparent') {
@@ -231,9 +267,9 @@ const ANIM_LABELS: Record<AnimPreset, string> = {
           <cos-field [def]="bgDimField" [value]="bg.dim" (changed)="setBg({ dim: asNum($event) }, 'bg-dim')" />
           <p class="hint">Covers everything below the Browser Source in OBS, so use it for full-screen scenes like breaks.</p>
         }
-      </section>
-      <section>
-        <h3>Tips</h3>
+      </details>
+      <details class="sec" [open]="isOpen('tips')" (toggle)="onToggle('tips', $event)">
+        <summary>Tips</summary>
         <ul class="tips">
           <li>Click a widget in the library to add it, or drag it onto the canvas.</li>
           <li>Drag to move, handles to resize. Shift keeps the aspect ratio, Alt skips snapping.</li>
@@ -241,7 +277,7 @@ const ANIM_LABELS: Record<AnimPreset, string> = {
           <li>Ctrl/⌘+D duplicates, Delete removes, Ctrl/⌘+Z undoes.</li>
           <li>Event pad hotkeys: 4, 6, W, D (DRS), K (drinks), B (break).</li>
         </ul>
-      </section>
+      </details>
     }
   `,
   styles: `
@@ -284,10 +320,42 @@ const ANIM_LABELS: Record<AnimPreset, string> = {
       line-height: 1.45;
       margin: 4px 0 8px;
     }
-    section {
+    section,
+    .sec {
       border-top: 1px solid var(--ui-border);
       padding-top: 12px;
       margin-top: 12px;
+    }
+    .sec > summary {
+      list-style: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin: 0 0 10px;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--ui-muted);
+      font-weight: 600;
+      user-select: none;
+    }
+    .sec > summary::-webkit-details-marker {
+      display: none;
+    }
+    .sec > summary::before {
+      content: '▸';
+      font-size: 10px;
+      transition: transform 0.15s;
+    }
+    .sec[open] > summary::before {
+      transform: rotate(90deg);
+    }
+    .sec:not([open]) > summary {
+      margin-bottom: 0;
+    }
+    .sec > summary:hover {
+      color: var(--ui-text, inherit);
     }
     h3 {
       margin: 0 0 10px;
@@ -321,9 +389,9 @@ const ANIM_LABELS: Record<AnimPreset, string> = {
       margin-bottom: 12px;
     }
     .readout {
-      font: 700 20px/1 Inter, sans-serif;
+      font: 700 28px/1 Inter, Mukta, sans-serif;
       font-variant-numeric: tabular-nums;
-      margin-right: auto;
+      margin-bottom: 8px;
     }
     .row-btns.top {
       margin: 0 0 12px;
@@ -361,7 +429,7 @@ const ANIM_LABELS: Record<AnimPreset, string> = {
 })
 export class SettingsPanelComponent {
   protected readonly editor = inject(EditorStore);
-  private readonly live = inject(LiveStore);
+  protected readonly live = inject(LiveStore);
 
   protected readonly registry = WIDGET_REGISTRY;
   protected readonly styleSchema = STYLE_SCHEMA;
@@ -437,7 +505,7 @@ export class SettingsPanelComponent {
     return resolveStyle(w.style, s.theme, this.live.teamColor());
   });
 
-  /** ticks the timer readout */
+  /** ticks live readouts (timer) */
   private readonly now = signal(Date.now());
   private readonly clock = setInterval(() => this.now.set(Date.now()), 250);
 
@@ -445,34 +513,93 @@ export class SettingsPanelComponent {
     inject(DestroyRef).onDestroy(() => clearInterval(this.clock));
   }
 
-  protected timerText(w: WidgetInstance): string {
-    return formatClock(timerValue(w.props as unknown as TimerProps, this.now()).ms);
+  // ---- generic widget sections ----
+
+  /** what a registry action sees: the selected widget's props and ways to change them */
+  protected actionCtx(w: WidgetInstance): ActionContext {
+    return {
+      props: w.props,
+      now: this.now(),
+      update: (patch, key) => this.editor.updateWidget(w.id, { props: { ...w.props, ...patch } }, key ? `${key}:${w.id}` : undefined),
+      send: (msg) => this.live.send(msg),
+      hasSquads: !!this.live.squads(),
+    };
   }
 
-  protected timerStart(w: WidgetInstance): void {
-    // a finished countdown starts over
-    const v = timerValue(w.props as unknown as TimerProps, Date.now());
-    const elapsed = v.done ? 0 : Number(w.props['elapsed']) || 0;
-    this.editor.updateWidget(w.id, { props: { ...w.props, startedAt: Date.now(), elapsed } });
+  protected isPrimary(a: WidgetAction, c: ActionContext): boolean {
+    return a.primary?.(c) ?? false;
   }
 
-  protected timerPause(w: WidgetInstance): void {
-    const started = Number(w.props['startedAt']) || Date.now();
-    const elapsed = (Number(w.props['elapsed']) || 0) + (Date.now() - started);
-    this.editor.updateWidget(w.id, { props: { ...w.props, startedAt: null, elapsed } });
+  /** the fields of one group ('' = ungrouped) that apply to the widget's current props */
+  protected fieldsIn(schema: FieldDef[], w: WidgetInstance, group: string): FieldDef[] {
+    return schema.filter((f) => (f.group ?? '') === group && (!f.showIf || f.showIf(w.props)));
   }
 
-  protected timerReset(w: WidgetInstance): void {
-    this.editor.updateWidget(w.id, { props: { ...w.props, startedAt: null, elapsed: 0 } });
+  protected groupsOf(schema: FieldDef[]): string[] {
+    return [...new Set(schema.map((f) => f.group).filter((g): g is string => !!g))];
   }
 
-  protected timerAdd(w: WidgetInstance, minutes: number): void {
-    this.editor.updateWidget(w.id, { props: { ...w.props, minutes: (Number(w.props['minutes']) || 0) + minutes } }, `timer-add:${w.id}`);
+  // ---- collapsible sections, remembered per browser ----
+
+  private readonly openState = signal<Record<string, boolean>>(readOpenState());
+
+  protected isOpen(key: string): boolean {
+    return this.openState()[key] ?? !CLOSED_BY_DEFAULT.has(key);
   }
 
-  protected reloadCards(type: string): void {
-    this.live.send({ type: 'cards:fetch', kind: 'scorecard', force: true });
-    if (type !== 'scorecard' && !this.live.squads()) this.live.send({ type: 'cards:fetch', kind: 'squads', force: true });
+  protected onToggle(key: string, e: Event): void {
+    const open = (e.target as HTMLDetailsElement).open;
+    if (open === this.isOpen(key)) return;
+    this.openState.update((s) => ({ ...s, [key]: open }));
+    try {
+      localStorage.setItem(OPEN_KEY, JSON.stringify(this.openState()));
+    } catch {
+      // storage blocked: sections just reset next time
+    }
+  }
+
+  // ---- overlay-wide settings ----
+
+  protected readonly langField: FieldDef = {
+    kind: 'select',
+    key: 'language',
+    label: 'Label language',
+    options: [
+      { value: 'en', label: 'English' },
+      { value: 'mr', label: 'मराठी (Marathi)' },
+    ],
+  };
+  protected readonly imgField: FieldDef = {
+    kind: 'select',
+    key: 'playerImages',
+    label: 'Player images',
+    options: [
+      { value: 'avatar', label: 'Avatars (drawn, no rights needed)' },
+      { value: 'photo', label: 'Wikimedia photos (with credit)' },
+    ],
+  };
+  protected readonly prefetching = signal(false);
+
+  protected setSetting(key: 'language' | 'playerImages', v: PropValue): void {
+    if (key === 'language') this.live.send({ type: 'settings:update', settings: { language: v === 'mr' ? 'mr' : 'en' } });
+    else this.live.send({ type: 'settings:update', settings: { playerImages: v === 'photo' ? 'photo' : 'avatar' } });
+  }
+
+  protected async prefetchPhotos(): Promise<void> {
+    const squads = this.live.squads();
+    if (!squads) this.live.send({ type: 'cards:fetch', kind: 'squads', force: false });
+    const names = (squads?.teams ?? []).flatMap((t) => t.playingXI.map((p) => p.name));
+    if (!names.length) return;
+    this.prefetching.set(true);
+    try {
+      await fetch('/api/players/prefetch', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ names }),
+      });
+    } finally {
+      this.prefetching.set(false);
+    }
   }
 
   protected asStyleKey(k: string): StyleKey {

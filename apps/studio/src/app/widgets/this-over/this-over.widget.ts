@@ -35,7 +35,7 @@ function chipClass(c: BallChip): string {
         <div class="w-title">{{ style().title }}</div>
       }
       @if (p().showLabel) {
-        <span class="label">This over</span>
+        <span class="label">{{ t('This over') }}</span>
       }
       <div class="chips">
         @for (c of balls(); track $index) {
@@ -58,7 +58,7 @@ function chipClass(c: BallChip): string {
       display: flex;
       align-items: center;
       gap: 0.6em;
-      font-size: calc(var(--wh) * 0.34 * var(--fs));
+      font-size: calc(var(--wh) * 0.4 * var(--fs));
       padding-top: 0;
       padding-bottom: 0;
     }
@@ -73,10 +73,11 @@ function chipClass(c: BallChip): string {
       overflow: hidden;
     }
     .chip {
-      min-width: 1.7em;
-      height: 1.7em;
+      min-width: 1.6em;
+      height: 1.6em;
       padding: 0 0.35em;
-      font-size: max(22px, 0.8em);
+      font-size: max(22px, 0.92em);
+      font-weight: 800;
     }
     .chip.slot {
       background: transparent;

@@ -37,7 +37,7 @@ function typingInField(e: KeyboardEvent): boolean {
   host: { class: 'studio-root', '(document:keydown)': 'onKey($event)' },
   template: `
     <cos-top-bar class="top" />
-    <aside class="left">
+    <aside class="left" [class.open]="drawer() === 'left'">
       <div class="tabs" role="tablist">
         <button type="button" role="tab" [class.on]="leftTab() === 'widgets'" (click)="leftTab.set('widgets')">Widgets</button>
         <button type="button" role="tab" [class.on]="leftTab() === 'cards'" (click)="leftTab.set('cards')">Live cards</button>
@@ -49,16 +49,23 @@ function typingInField(e: KeyboardEvent): boolean {
       }
     </aside>
     <main class="center">
+      <!-- narrow screens: the side panels become drawers -->
+      <div class="drawer-bar">
+        <button type="button" [class.on]="drawer() === 'left'" (click)="toggleDrawer('left')">☰ Widgets</button>
+        <button type="button" [class.on]="showLayers()" (click)="showLayers.set(!showLayers())">▤ Layers</button>
+        <button type="button" [class.on]="drawer() === 'right'" (click)="toggleDrawer('right')">⚙ Settings</button>
+      </div>
       <cos-canvas-toolbar />
       <cos-canvas class="canvas" />
-      <div class="bottom">
+      <div class="bottom" [class.layers-on]="showLayers()">
         <cos-layers-panel class="layers" />
         <cos-event-pad class="pad" />
       </div>
     </main>
-    <aside class="right">
+    <aside class="right" [class.open]="drawer() === 'right'">
       <cos-settings-panel class="settings" />
     </aside>
+    <div class="scrim" [class.on]="drawer() !== null" (click)="drawer.set(null)"></div>
     <cos-prompt-dialog />
   `,
   styles: `
@@ -190,7 +197,7 @@ function typingInField(e: KeyboardEvent): boolean {
       border: 1px solid var(--ui-border);
       border-radius: 6px;
       padding: 6px 10px;
-      font: 500 12px/1.2 Inter, sans-serif;
+      font: 500 12px/1.2 Inter, Mukta, sans-serif;
       cursor: pointer;
       display: inline-flex;
       align-items: center;
@@ -236,6 +243,11 @@ function typingInField(e: KeyboardEvent): boolean {
       border: 2px solid var(--ui-panel);
     }
 
+    .studio-root .drawer-bar,
+    .studio-root .scrim {
+      display: none;
+    }
+
     @media (max-width: 1100px) {
       .studio-root {
         grid-template-columns: 200px minmax(0, 1fr) 270px;
@@ -249,6 +261,86 @@ function typingInField(e: KeyboardEvent): boolean {
         border-right: 0;
       }
     }
+
+    /* tablets and phones: one column; library and settings slide in over the canvas */
+    @media (max-width: 900px) {
+      .studio-root {
+        grid-template-columns: minmax(0, 1fr);
+        grid-template-rows: auto minmax(0, 1fr);
+        grid-template-areas:
+          'top'
+          'center';
+      }
+      .studio-root .left,
+      .studio-root .right {
+        position: fixed;
+        top: 0;
+        bottom: 0;
+        z-index: 40;
+        width: min(340px, 88vw);
+        transition: transform 0.22s var(--ease-out, ease-out);
+        box-shadow: 0 0 40px rgba(0, 0, 0, 0.5);
+      }
+      .studio-root .left {
+        left: 0;
+        transform: translateX(-105%);
+      }
+      .studio-root .right {
+        right: 0;
+        transform: translateX(105%);
+      }
+      .studio-root .left.open,
+      .studio-root .right.open {
+        transform: none;
+      }
+      .studio-root .scrim {
+        display: block;
+        position: fixed;
+        inset: 0;
+        z-index: 39;
+        background: rgba(0, 0, 0, 0.45);
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.2s;
+      }
+      .studio-root .scrim.on {
+        opacity: 1;
+        pointer-events: auto;
+      }
+      .studio-root .drawer-bar {
+        display: flex;
+        gap: 6px;
+        padding: 6px 10px;
+        border-bottom: 1px solid var(--ui-border);
+        background: var(--ui-panel);
+      }
+      .studio-root .drawer-bar button {
+        flex: 1;
+        justify-content: center;
+      }
+      .studio-root .drawer-bar button.on {
+        background: var(--ui-accent-soft);
+        border-color: var(--ui-accent);
+      }
+      .studio-root .bottom {
+        height: auto;
+        max-height: 46vh;
+      }
+      .studio-root .bottom .layers {
+        display: none;
+        max-height: 26vh;
+        border-bottom: 1px solid var(--ui-border);
+      }
+      .studio-root .bottom.layers-on .layers {
+        display: block;
+      }
+    }
+
+    @media (max-width: 600px) {
+      .studio-root .canvas {
+        min-height: 200px;
+      }
+    }
   `,
 })
 export default class StudioPage {
@@ -257,6 +349,14 @@ export default class StudioPage {
   private readonly prompt = inject(PromptService);
 
   protected readonly leftTab = signal<'widgets' | 'cards'>('widgets');
+  /** which side panel is slid in on narrow screens */
+  protected readonly drawer = signal<'left' | 'right' | null>(null);
+  /** phones: the layer list is hidden behind a toggle so the event pad gets the room */
+  protected readonly showLayers = signal(false);
+
+  protected toggleDrawer(side: 'left' | 'right'): void {
+    this.drawer.set(this.drawer() === side ? null : side);
+  }
 
   constructor() {
     this.live.connect('studio');
@@ -320,6 +420,10 @@ export default class StudioPage {
       }
     }
     if (key === 'escape') {
+      if (this.drawer()) {
+        this.drawer.set(null);
+        return;
+      }
       if (this.editor.pointerMode()) {
         this.editor.pointerMode.set(false);
         this.live.send({ type: 'pointer', x: 0, y: 0, visible: false });

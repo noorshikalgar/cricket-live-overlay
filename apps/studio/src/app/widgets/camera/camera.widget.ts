@@ -75,7 +75,7 @@ export function cameraRadiusPx(shape: CameraShape, w: number, h: number, themeRa
       justify-content: center;
       gap: 8px;
       color: rgba(255, 255, 255, 0.55);
-      font: 500 20px/1.2 Inter, sans-serif;
+      font: 500 20px/1.2 Inter, Mukta, sans-serif;
       border-radius: inherit;
       background: repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.04) 0 12px, transparent 12px 24px);
       text-align: center;

@@ -32,8 +32,8 @@ interface Row {
   template: `
     <div class="panel card" [class.minimized]="min()" [style.--team]="team()?.primaryColor ?? null">
       <div class="card-head">
-        <span class="card-title">{{ team()?.name ?? 'Team' }}</span>
-        <span class="card-sub">Playing XI</span>
+        <span class="card-title">{{ team()?.name ?? t('Team') }}</span>
+        <span class="card-sub">{{ t('Playing XI') }}</span>
         @if (p().showScores && scoreLine()) {
           <span class="card-score">{{ scoreLine() }}</span>
         }

@@ -9,7 +9,7 @@ import { PromptService } from './prompt-dialog.component';
   selector: 'cos-top-bar',
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <div class="brand"><img class="logo" src="/logo.svg" alt="" width="26" height="26" /> Overlay Studio</div>
+    <div class="brand"><img class="logo" src="/logo.svg" alt="" width="26" height="26" /> <span class="brand-name">Overlay Studio</span></div>
 
     <div class="group bo" [class.active]="live.settings().blackout">
       <button
@@ -36,6 +36,9 @@ import { PromptService } from './prompt-dialog.component';
         @if (menuOpen()) {
           <div class="menu" (click)="menuOpen.set(false)">
             <button type="button" (click)="newScene()">New scene</button>
+            <button type="button" (click)="newBroadcast()" title="Score header, stat bar, overs strip, chase box, player panels and the event banner, ready to go">
+              New broadcast layout
+            </button>
             <button type="button" (click)="duplicateScene()">Duplicate</button>
             <button type="button" (click)="renameScene()">Rename</button>
             <hr />
@@ -340,6 +343,32 @@ import { PromptService } from './prompt-dialog.component';
     .offline {
       color: #fbbf24;
     }
+    /* tablets and phones: controls wrap onto extra rows instead of scrolling off-screen */
+    @media (max-width: 900px) {
+      :host {
+        height: auto;
+        flex-wrap: wrap;
+        row-gap: 8px;
+        padding: 8px 12px;
+        overflow-x: visible;
+      }
+      .spacer {
+        display: none;
+      }
+      .scene select,
+      .match select {
+        max-width: 60vw;
+      }
+    }
+    @media (max-width: 600px) {
+      .brand-name {
+        display: none;
+      }
+      .group {
+        flex-wrap: wrap;
+        row-gap: 6px;
+      }
+    }
   `,
 })
 export class TopBarComponent {
@@ -465,6 +494,13 @@ export class TopBarComponent {
     if (name) this.createAndEdit({ type: 'scene:create', name });
   }
 
+  /** a ready-made TV-style scene; it is a normal scene afterwards, every widget editable */
+  protected async newBroadcast(): Promise<void> {
+    const name = await this.prompt.ask('Name for the broadcast layout', 'Broadcast', 'Create');
+    if (!name) return;
+    this.createAndEdit({ type: 'scene:create', name, template: 'broadcast' });
+  }
+
   protected async duplicateScene(): Promise<void> {
     const cur = this.editor.scene();
     if (!cur) return;
@@ -473,7 +509,7 @@ export class TopBarComponent {
   }
 
   /** Create on the server, then switch the editor to the new scene once it arrives. */
-  private createAndEdit(msg: { type: 'scene:create'; name: string; copyFrom?: string }): void {
+  private createAndEdit(msg: { type: 'scene:create'; name: string; copyFrom?: string; template?: 'broadcast' }): void {
     const before = new Set(Object.keys(this.live.scenes()));
     this.live.send(msg);
     const started = Date.now();

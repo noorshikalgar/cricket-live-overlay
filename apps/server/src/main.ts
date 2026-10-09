@@ -1,4 +1,4 @@
-import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import Fastify from 'fastify';
 import fastifyStatic from '@fastify/static';
@@ -12,6 +12,7 @@ import { Poller } from './poller';
 import { createProvider } from './providers';
 import { SceneStore, validateScene } from './scenes';
 import { log } from './log';
+import { PlayerImageService, roleOf } from './players';
 import { CallBudget } from './usage';
 
 const cfg = loadConfig();
@@ -105,7 +106,49 @@ app.post<{ Body: { on?: boolean; text?: string; subtext?: string } }>('/api/blac
   return { blackout: settings.blackout, text: settings.blackoutText };
 });
 
-const IMAGE_EXT: Record<string, string> = {
+// ---- player images: our own SVG avatars, or cached free Wikimedia photos (never the cricket API) ----
+const players = new PlayerImageService(path.join(DATA_DIR, 'players'));
+
+app.get<{ Querystring: { name?: string; color?: string; role?: string; source?: string } }>(
+  '/api/players/image',
+  async (req, reply) => {
+    const name = String(req.query.name ?? '').slice(0, 80).trim();
+    if (!name) return reply.code(400).send({ error: 'name required' });
+    const color = /^#?[0-9a-f]{6}$/i.test(req.query.color ?? '') ? `#${String(req.query.color).replace('#', '')}` : '#1D4ED8';
+    const role = roleOf(String(req.query.role ?? ''));
+    if (req.query.source === 'photo') {
+      // wait briefly for a first-time lookup; otherwise show the avatar now and the photo next time
+      const meta = await Promise.race([players.photo(name), new Promise<null>((r) => setTimeout(() => r(null), 6000))]);
+      if (meta?.found && meta.file) {
+        return reply
+          .header('cache-control', 'public, max-age=86400')
+          .type(meta.contentType ?? 'image/jpeg')
+          .send(readFileSync(path.join(DATA_DIR, 'players', meta.file)));
+      }
+    }
+    return reply
+      .header('cache-control', 'public, max-age=3600')
+      .type('image/svg+xml')
+      .send(readFileSync(players.avatarFile(name, color, role)));
+  },
+);
+
+app.get<{ Querystring: { name?: string } }>('/api/players/credit', async (req) => {
+  const meta = players.cachedPhoto(String(req.query.name ?? ''));
+  return meta?.found ? { credit: meta.credit, sourcePage: meta.sourcePage } : {};
+});
+
+app.post<{ Body: { names?: unknown } }>('/api/players/prefetch', async (req) => {
+  const names = (Array.isArray(req.body?.names) ? req.body.names : []).map(String).filter(Boolean).slice(0, 60);
+  log.info(`PHOTO looking up ${names.length} players on Wikimedia (cached ones are skipped)`);
+  for (const n of names) void players.photo(n);
+  return { queued: names.length };
+});
+
+const MEDIA_EXT: Record<string, string> = {
+  'video/mp4': 'mp4',
+  'video/webm': 'webm',
+  'video/quicktime': 'mov',
   'image/png': 'png',
   'image/jpeg': 'jpg',
   'image/webp': 'webp',
@@ -113,10 +156,11 @@ const IMAGE_EXT: Record<string, string> = {
   'image/gif': 'gif',
 };
 app.addContentTypeParser(/^image\//, { parseAs: 'buffer', bodyLimit: 5 * 1024 * 1024 }, (_req, body, done) => done(null, body));
+app.addContentTypeParser(/^video\//, { parseAs: 'buffer', bodyLimit: 300 * 1024 * 1024 }, (_req, body, done) => done(null, body));
 app.post('/api/uploads', async (req, reply) => {
   const type = String(req.headers['content-type'] ?? '').split(';')[0].trim();
-  const ext = IMAGE_EXT[type];
-  if (!ext || !Buffer.isBuffer(req.body)) return reply.code(415).send({ error: 'Upload a PNG, JPEG, WebP, SVG or GIF' });
+  const ext = MEDIA_EXT[type];
+  if (!ext || !Buffer.isBuffer(req.body)) return reply.code(415).send({ error: 'Upload an image (PNG, JPEG, WebP, SVG, GIF) or a video (MP4, WebM, MOV)' });
   const name = `${newId()}.${ext}`;
   writeFileSync(path.join(UPLOADS_DIR, name), req.body);
   return { url: `/uploads/${name}` };

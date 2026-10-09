@@ -36,32 +36,32 @@ export interface ScorebugProps {
       </div>
       <div class="seg overs">
         <span class="num ov" [cosOdo]="inn()?.overs ?? '0.0'"></span>
-        <span class="label">ov</span>
+        <span class="label">{{ t('ov') }}</span>
       </div>
       @if (p().layout === 'wide') {
         @if (p().showChase && match()?.target !== null && match()?.target !== undefined && match()?.phase !== 'break') {
           <div class="seg chase stack">
             <span class="line">
-              <span class="label">Need</span>
+              <span class="label">{{ t('Need') }}</span>
               <span class="num">{{ need() }}</span>
-              <span class="label">off</span>
+              <span class="label">{{ t('off') }}</span>
               <span class="num">{{ match()?.ballsRemaining }}</span>
             </span>
             <span class="line sub">
               @if (match()?.requiredRunRate !== null) {
-                <span class="label">RRR</span>
+                <span class="label">{{ t('RRR') }}</span>
                 <span class="num">{{ match()?.requiredRunRate?.toFixed(2) }}</span>
               }
-              <span class="label">CRR</span>
+              <span class="label">{{ t('CRR') }}</span>
               <span class="num">{{ (inn()?.runRate ?? 0).toFixed(2) }}</span>
             </span>
           </div>
         } @else if (p().showRunRate) {
           <div class="seg rate">
-            <span class="label">CRR</span>
+            <span class="label">{{ t('CRR') }}</span>
             <span class="num" [cosOdo]="(inn()?.runRate ?? 0).toFixed(2)"></span>
             @if (match()?.target) {
-              <span class="label rr">Target</span>
+              <span class="label rr">{{ t('Target') }}</span>
               <span class="num">{{ match()?.target }}</span>
             }
           </div>

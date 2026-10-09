@@ -84,7 +84,7 @@ export const WIDGET_DEFAULTS: Record<WidgetType, WidgetDefaults> = {
     icon: 'ℹ',
     w: 640,
     h: 190,
-    props: { lines: { series: true, venue: true, toss: true, status: true } },
+    props: { lines: { series: true, venue: true, toss: true, status: true }, layout: 'auto', labels: 'side', align: 'left', showTeams: true },
   },
   banner: {
     label: 'Event banner',
@@ -96,6 +96,7 @@ export const WIDGET_DEFAULTS: Record<WidgetType, WidgetDefaults> = {
       duration: 2.5,
       direction: 'left',
       showSubtitle: true,
+      look: 'blast',
     },
     style: { fontFamily: 'Barlow Condensed' },
     animation: { enter: 'none', exit: 'none' },
@@ -138,12 +139,13 @@ export const WIDGET_DEFAULTS: Record<WidgetType, WidgetDefaults> = {
       innings: 'current',
       showBatting: true,
       showBowling: true,
+      dismissal: 'under',
       showYetToBat: true,
       showFow: true,
       minimized: false,
       display: 'window',
     },
-    animation: { enter: 'slideUp', exit: 'fade' },
+    animation: { enter: 'pop', exit: 'pop' },
   },
   teamCard: {
     label: 'Team card',
@@ -159,7 +161,50 @@ export const WIDGET_DEFAULTS: Record<WidgetType, WidgetDefaults> = {
     w: 620,
     h: 330,
     props: { playerId: '', playerName: '', showPhoto: false, minimized: false, display: 'window' },
-    animation: { enter: 'slideUp', exit: 'fade' },
+    animation: { enter: 'pop', exit: 'pop' },
+  },
+  playerPanel: {
+    label: 'Player panel',
+    icon: '◪',
+    w: 540,
+    h: 230,
+    props: { slot: 'striker', playerName: '', showImage: true, showFooter: true },
+    style: { radius: 10 },
+  },
+  scoreHeader: {
+    label: 'Score header',
+    icon: '▬',
+    w: 1600,
+    h: 230,
+    props: { centerText: '', showEvents: true },
+  },
+  oversStrip: {
+    label: 'Overs strip',
+    icon: '⋯',
+    w: 1600,
+    h: 80,
+    props: { showPrevious: true, label: '' },
+  },
+  chaseBox: {
+    label: 'Chase box',
+    icon: '⇆',
+    w: 420,
+    h: 220,
+    props: { showProjection: true },
+  },
+  statBar: {
+    label: 'Stat bar',
+    icon: '≡',
+    w: 1600,
+    h: 64,
+    props: { showStatus: true },
+  },
+  video: {
+    label: 'Video',
+    icon: '▶',
+    w: 640,
+    h: 360,
+    props: { src: '', fit: 'cover', loop: true, muted: true, playing: true, startedAt: null, panel: false },
   },
   timer: {
     label: 'Timer',
@@ -203,7 +248,7 @@ export function createWidget(type: WidgetType, over: Partial<WidgetInstance> = {
     name: d.label,
     style: { showTitle: false, ...d.style },
     props: structuredClone(d.props),
-    animation: { enter: 'slideUp', exit: 'fade', delay: 0, ...d.animation },
+    animation: { enter: 'pop', exit: 'pop', delay: 0, ...d.animation },
     ...over,
   };
 }
@@ -217,6 +262,20 @@ function scene(name: string, widgets: WidgetInstance[]): Scene {
     widgets: widgets.map((w, i) => ({ ...w, z: i + 1 })),
     updatedAt: Date.now(),
   };
+}
+
+/** A bold broadcast layout (score header, stat bar, overs strip, player panels, chase box). */
+export function createBroadcastScene(name = 'Broadcast'): Scene {
+  return scene(name, [
+    createWidget('scoreHeader', { x: 160, y: 12 }),
+    createWidget('statBar', { x: 160, y: 250 }),
+    createWidget('oversStrip', { x: 160, y: 322, props: { ...WIDGET_DEFAULTS.oversStrip.props, label: 'LIVE' } }),
+    createWidget('chaseBox', { x: 1340, y: 610 }),
+    createWidget('playerPanel', { x: 160, y: 836, props: { ...WIDGET_DEFAULTS.playerPanel.props, slot: 'striker' } }),
+    createWidget('playerPanel', { x: 712, y: 836, props: { ...WIDGET_DEFAULTS.playerPanel.props, slot: 'nonStriker' } }),
+    createWidget('playerPanel', { x: 1264, y: 836, w: 496, props: { ...WIDGET_DEFAULTS.playerPanel.props, slot: 'bowler' } }),
+    createWidget('banner', { x: 420, y: 480 }),
+  ]);
 }
 
 /** The three starter scenes created on first run. */

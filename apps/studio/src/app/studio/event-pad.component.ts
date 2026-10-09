@@ -64,7 +64,7 @@ export const PAD_BUTTONS: PadButton[] = [
       border: 1px solid color-mix(in srgb, var(--c) 55%, transparent);
       background: color-mix(in srgb, var(--c) 18%, #12161e);
       color: #fff;
-      font: 700 13px/1 Inter, sans-serif;
+      font: 700 13px/1 Inter, Mukta, sans-serif;
       letter-spacing: 0.06em;
       cursor: pointer;
       transition:
