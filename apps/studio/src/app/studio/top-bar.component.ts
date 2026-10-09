@@ -9,7 +9,7 @@ import { PromptService } from './prompt-dialog.component';
   selector: 'cos-top-bar',
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <div class="brand"><img class="logo" src="/logo.svg" alt="" width="26" height="26" /> Overlay Studio</div>
+    <div class="brand"><img class="logo" src="/logo.svg" alt="" width="26" height="26" /> <span class="brand-name">Overlay Studio</span></div>
 
     <div class="group bo" [class.active]="live.settings().blackout">
       <button
@@ -339,6 +339,32 @@ import { PromptService } from './prompt-dialog.component';
     }
     .offline {
       color: #fbbf24;
+    }
+    /* tablets and phones: controls wrap onto extra rows instead of scrolling off-screen */
+    @media (max-width: 900px) {
+      :host {
+        height: auto;
+        flex-wrap: wrap;
+        row-gap: 8px;
+        padding: 8px 12px;
+        overflow-x: visible;
+      }
+      .spacer {
+        display: none;
+      }
+      .scene select,
+      .match select {
+        max-width: 60vw;
+      }
+    }
+    @media (max-width: 600px) {
+      .brand-name {
+        display: none;
+      }
+      .group {
+        flex-wrap: wrap;
+        row-gap: 6px;
+      }
     }
   `,
 })
