@@ -69,6 +69,12 @@ function typingInField(e: KeyboardEvent): boolean {
     <cos-prompt-dialog />
   `,
   styles: `
+    /*
+     * This component's styles are global (ViewEncapsulation.None) so they style
+     * the panels inside it. Layout selectors go through direct children (>) so
+     * they never reach into widgets on the canvas, which have their own .center,
+     * .top, .bottom… classes.
+     */
     .studio-root {
       --ui-bg: #0a0d13;
       --ui-panel: #10141c;
@@ -93,10 +99,10 @@ function typingInField(e: KeyboardEvent): boolean {
       font: 400 13px/1.4 Inter, system-ui, sans-serif;
       color-scheme: dark;
     }
-    .studio-root .top {
+    .studio-root > .top {
       grid-area: top;
     }
-    .studio-root .left {
+    .studio-root > .left {
       grid-area: left;
       border-right: 1px solid var(--ui-border);
       background: var(--ui-panel);
@@ -104,14 +110,14 @@ function typingInField(e: KeyboardEvent): boolean {
       flex-direction: column;
       min-height: 0;
     }
-    .studio-root .tabs {
+    .studio-root > .left > .tabs {
       display: flex;
       gap: 4px;
       padding: 8px 10px 0;
       border-bottom: 1px solid var(--ui-border);
       flex: none;
     }
-    .studio-root .tabs button {
+    .studio-root > .left > .tabs button {
       flex: 1;
       justify-content: center;
       border-radius: 6px 6px 0 0;
@@ -119,26 +125,26 @@ function typingInField(e: KeyboardEvent): boolean {
       background: transparent;
       color: var(--ui-muted);
     }
-    .studio-root .tabs button.on {
+    .studio-root > .left > .tabs button.on {
       background: var(--ui-chip);
       color: var(--ui-text);
       font-weight: 600;
     }
-    .studio-root .lib {
+    .studio-root > .left > .lib {
       flex: 1;
       min-height: 0;
     }
-    .studio-root .center {
+    .studio-root > .center {
       grid-area: center;
       display: flex;
       flex-direction: column;
       min-height: 0;
       min-width: 0;
     }
-    .studio-root .canvas {
+    .studio-root > .center > .canvas {
       flex: 1;
     }
-    .studio-root .bottom {
+    .studio-root > .center > .bottom {
       height: 210px;
       flex: none;
       display: grid;
@@ -146,18 +152,18 @@ function typingInField(e: KeyboardEvent): boolean {
       border-top: 1px solid var(--ui-border);
       background: var(--ui-panel);
     }
-    .studio-root .layers {
+    .studio-root > .center > .bottom > .layers {
       min-height: 0;
       border-right: 1px solid var(--ui-border);
     }
-    .studio-root .right {
+    .studio-root > .right {
       grid-area: right;
       border-left: 1px solid var(--ui-border);
       background: var(--ui-panel);
       display: flex;
       min-height: 0;
     }
-    .studio-root .settings {
+    .studio-root > .right > .settings {
       flex: 1;
       min-height: 0;
     }
@@ -243,8 +249,8 @@ function typingInField(e: KeyboardEvent): boolean {
       border: 2px solid var(--ui-panel);
     }
 
-    .studio-root .drawer-bar,
-    .studio-root .scrim {
+    .studio-root > .center > .drawer-bar,
+    .studio-root > .scrim {
       display: none;
     }
 
@@ -258,12 +264,12 @@ function typingInField(e: KeyboardEvent): boolean {
       .studio-root {
         grid-template-columns: 200px minmax(0, 1fr) 270px;
       }
-      .studio-root .bottom {
+      .studio-root > .center > .bottom {
         grid-template-columns: minmax(0, 1fr);
         height: 260px;
         grid-template-rows: 1fr auto;
       }
-      .studio-root .layers {
+      .studio-root > .center > .bottom > .layers {
         border-right: 0;
       }
     }
@@ -277,8 +283,8 @@ function typingInField(e: KeyboardEvent): boolean {
           'top'
           'center';
       }
-      .studio-root .left,
-      .studio-root .right {
+      .studio-root > .left,
+      .studio-root > .right {
         position: fixed;
         top: 0;
         bottom: 0;
@@ -287,19 +293,19 @@ function typingInField(e: KeyboardEvent): boolean {
         transition: transform 0.22s var(--ease-out, ease-out);
         box-shadow: 0 0 40px rgba(0, 0, 0, 0.5);
       }
-      .studio-root .left {
+      .studio-root > .left {
         left: 0;
         transform: translateX(-105%);
       }
-      .studio-root .right {
+      .studio-root > .right {
         right: 0;
         transform: translateX(105%);
       }
-      .studio-root .left.open,
-      .studio-root .right.open {
+      .studio-root > .left.open,
+      .studio-root > .right.open {
         transform: none;
       }
-      .studio-root .scrim {
+      .studio-root > .scrim {
         display: block;
         position: fixed;
         inset: 0;
@@ -309,41 +315,41 @@ function typingInField(e: KeyboardEvent): boolean {
         pointer-events: none;
         transition: opacity 0.2s;
       }
-      .studio-root .scrim.on {
+      .studio-root > .scrim.on {
         opacity: 1;
         pointer-events: auto;
       }
-      .studio-root .drawer-bar {
+      .studio-root > .center > .drawer-bar {
         display: flex;
         gap: 6px;
         padding: 6px 10px;
         border-bottom: 1px solid var(--ui-border);
         background: var(--ui-panel);
       }
-      .studio-root .drawer-bar button {
+      .studio-root > .center > .drawer-bar button {
         flex: 1;
         justify-content: center;
       }
-      .studio-root .drawer-bar button.on {
+      .studio-root > .center > .drawer-bar button.on {
         background: var(--ui-accent-soft);
         border-color: var(--ui-accent);
       }
-      .studio-root .bottom {
+      .studio-root > .center > .bottom {
         height: auto;
         max-height: 46vh;
       }
-      .studio-root .bottom .layers {
+      .studio-root > .center > .bottom > .layers {
         display: none;
         max-height: 26vh;
         border-bottom: 1px solid var(--ui-border);
       }
-      .studio-root .bottom.layers-on .layers {
+      .studio-root > .center > .bottom.layers-on > .layers {
         display: block;
       }
     }
 
     @media (max-width: 600px) {
-      .studio-root .canvas {
+      .studio-root > .center > .canvas {
         min-height: 200px;
       }
     }
