@@ -143,13 +143,14 @@ app.get<{ Querystring: { name?: string; color?: string; role?: string; source?: 
       const meta = await Promise.race([players.photo(name), new Promise<null>((r) => setTimeout(() => r(null), 6000))]);
       if (meta?.found && meta.file) {
         return reply
-          .header('cache-control', 'public, max-age=86400')
+          // short: a re-checked lookup can change the picture
+          .header('cache-control', 'public, max-age=600')
           .type(meta.contentType ?? 'image/jpeg')
           .send(readFileSync(path.join(DATA_DIR, 'players', meta.file)));
       }
     }
     return reply
-      .header('cache-control', 'public, max-age=3600')
+      .header('cache-control', 'public, max-age=600')
       .type('image/svg+xml')
       .send(readFileSync(players.avatarFile(name, color, role, req.query.style === 'cutout' ? 'cutout' : 'tile')));
   },

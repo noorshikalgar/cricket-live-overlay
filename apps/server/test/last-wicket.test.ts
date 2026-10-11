@@ -62,3 +62,13 @@ describe('keepKnown', () => {
     expect(keepKnown(next, prev).lastWicket).toEqual(prev.lastWicket);
   });
 });
+
+describe('sameName (photo lookup)', () => {
+  it('accepts the same player and close spellings, rejects other people', async () => {
+    const { sameName } = await import('../src/players');
+    expect(sameName('Varun Chakravarthy', 'Varun Chakaravarthy')).toBe(true);
+    expect(sameName('Rinku Singh (cricketer)', 'Rinku Singh')).toBe(true);
+    expect(sameName('Tilak Varma', 'Rahul Varma')).toBe(false);
+    expect(sameName('List of Odisha cricketers', 'Manoj Raju')).toBe(false);
+  });
+});

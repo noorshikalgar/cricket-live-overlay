@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, ElementRef, computed, effect, inject, signal, untracked, viewChild } from '@angular/core';
 import type { BallChip } from '@cos/shared';
 import { LiveStore } from '../../core/live.store';
+import { lastWicketLine, nextBatters } from '../../core/next-batters';
 import { playerImageUrl, playerRole, sideColor } from '../../core/player-image';
 import { gsap } from '../../motion/gsap';
 import { MarqueeDirective } from '../../motion/marquee.directive';
@@ -24,6 +25,9 @@ interface Card {
   big: string;
   small: string;
   stats: { k: string; v: string }[];
+  /** the slot is empty after a wicket: next batter (if known) is walking in */
+  waiting?: boolean;
+  note?: string;
 }
 
 function chipClass(c: BallChip): string {
@@ -47,7 +51,7 @@ function chipClass(c: BallChip): string {
         @if (p().showImage) {
           <div class="pic">
             <span class="watermark">{{ teamCode() }}</span>
-            <img [src]="img()" alt="" [class.photo]="isPhoto()" />
+            <img [src]="img()" alt="" [class.photo]="isPhoto()" [style.visibility]="loadedSrc() === img() ? 'visible' : 'hidden'" (load)="loadedSrc.set(img())" />
           </div>
         }
         <div class="info">
@@ -58,11 +62,18 @@ function chipClass(c: BallChip): string {
             }
           </div>
           <div class="name" cosMarquee>{{ c.name }}</div>
+          @if (c.waiting) {
+            <div class="walking"><i></i>{{ t('Walking in') }}</div>
+            @if (c.note) {
+              <div class="out-note"><b>{{ t('OUT') }}</b> <span cosMarquee>{{ c.note }}</span></div>
+            }
+          } @else {
           <div class="figs">
             <span class="big" [cosOdo]="c.big"></span>
             <span class="small">{{ c.small }}</span>
           </div>
-          <div class="tiles">
+          }
+          <div class="tiles" [hidden]="c.waiting">
             @for (s of c.stats; track s.k) {
               <div class="tile">
                 <span class="v">{{ s.v }}</span>
@@ -282,6 +293,42 @@ function chipClass(c: BallChip): string {
     .tight .over {
       font-size: calc(var(--u) * 9);
     }
+    .walking {
+      display: flex;
+      align-items: center;
+      gap: 0.4em;
+      font-size: calc(var(--u) * 15);
+      font-weight: 800;
+      font-style: italic;
+      text-transform: uppercase;
+      opacity: 0.9;
+    }
+    .walking i {
+      width: 0.5em;
+      height: 0.5em;
+      border-radius: 50%;
+      background: #facc15;
+      animation: sp-pulse 1.1s ease-in-out infinite;
+    }
+    @keyframes sp-pulse {
+      50% {
+        opacity: 0.25;
+        transform: scale(0.7);
+      }
+    }
+    .out-note {
+      display: flex;
+      gap: 0.4em;
+      min-width: 0;
+      font-size: calc(var(--u) * 11);
+      font-weight: 800;
+      font-style: italic;
+      text-transform: uppercase;
+      opacity: 0.85;
+    }
+    .out-note b {
+      color: #ef4444;
+    }
     .empty {
       height: 100%;
       display: grid;
@@ -321,7 +368,21 @@ export class PlayerSpotlightWidget extends WidgetBase<PlayerSpotlightProps> {
       };
     }
     const b = m.batters[slot === 'batter2' ? 1 : 0];
-    if (!b) return null;
+    if (!b) {
+      if (m.phase === 'complete' || !m.innings.length) return null;
+      // a wicket has just fallen and the new batter isn't in yet
+      return {
+        name: nextBatters(m, this.store.scorecard(), this.store.squads())[0] ?? this.t('New batter'),
+        tag: this.i18n.tf('Batter {n}', { n: slot === 'batter2' ? 2 : 1 }),
+        kind: 'bat',
+        onStrike: false,
+        big: '',
+        small: '',
+        stats: [],
+        waiting: true,
+        note: lastWicketLine(m),
+      };
+    }
     return {
       name: b.name,
       tag: this.i18n.tf('Batter {n}', { n: slot === 'batter2' ? 2 : 1 }),
@@ -365,6 +426,8 @@ export class PlayerSpotlightWidget extends WidgetBase<PlayerSpotlightProps> {
 
   /** a new player in this slot: the card swings in fresh */
   private readonly shownName = signal<string | null>(null);
+  /** the picture currently loaded; a new player's picture stays hidden until it arrives */
+  protected readonly loadedSrc = signal('');
 
   constructor() {
     super();

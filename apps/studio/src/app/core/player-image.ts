@@ -10,7 +10,8 @@ export function playerImageUrl(
   source: PlayerImageSource,
   style: 'tile' | 'cutout' = 'tile',
 ): string {
-  const q = new URLSearchParams({ name, color: (color ?? '#1D4ED8').replace('#', ''), role, source, style });
+  // v: bumped when lookups change, so browsers drop pictures cached under the old rules
+  const q = new URLSearchParams({ name, color: (color ?? '#1D4ED8').replace('#', ''), role, source, style, v: '3' });
   return `/api/players/image?${q.toString()}`;
 }
 

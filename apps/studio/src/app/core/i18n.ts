@@ -69,6 +69,8 @@ const MR: Record<string, string> = {
   'On strike': 'स्ट्राइकवर',
   'Last wicket': 'शेवटचा बळी',
   'Match predictions': 'सामन्याचा अंदाज',
+  'New batter': 'नवीन फलंदाज',
+  'Walking in': 'मैदानात येत आहे',
   Session: 'सत्र',
   'Total runs': 'एकूण धावा',
   Winner: 'विजेता',

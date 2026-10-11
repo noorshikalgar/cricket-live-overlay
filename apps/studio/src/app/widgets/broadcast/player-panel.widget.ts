@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, effect, inject, signal, untracked } from '@angular/core';
 import { LiveStore } from '../../core/live.store';
+import { lastWicketLine, nextBatters } from '../../core/next-batters';
 import { playerImageUrl, playerRole, sideColor } from '../../core/player-image';
 import { OdometerDirective } from '../../motion/odometer.directive';
 import { playerFigures, sameName } from '../cards/card-data';
@@ -22,6 +23,10 @@ interface Shown {
   big: string;
   small: string;
   stats: { k: string; v: string }[];
+  /** the slot is empty after a wicket: next batter (if known) is walking in */
+  waiting?: boolean;
+  /** waiting: the batter just out, "Surya Menon 18 (16)" */
+  note?: string;
 }
 
 /** Batter or bowler panel with player image, big figures and a stats footer. */
@@ -34,7 +39,7 @@ interface Shown {
       @if (shown(); as s) {
         @if (p().showImage) {
           <div class="img">
-            <img [src]="imgUrl()" alt="" (load)="loadCredit()" (error)="imgFailed.set(true)" [class.hide]="imgFailed()" />
+            <img [src]="imgUrl()" alt="" (load)="imgLoaded.set(true); loadCredit()" (error)="imgFailed.set(true)" [class.hide]="imgFailed() || !imgLoaded()" />
             @if (credit()) {
               <span class="credit">{{ credit() }}</span>
             }
@@ -48,12 +53,18 @@ interface Shown {
             }
           </div>
           <div class="name bc-word" cosMarquee>{{ s.name }}</div>
-          <div class="figs">
-            <span class="bc-num big" [cosOdo]="s.big"></span>
-            <span class="bc-num small bc-hl">{{ s.small }}</span>
-          </div>
+          @if (s.waiting) {
+            <div class="walking bc-word"><i></i>{{ t('Walking in') }}</div>
+          } @else {
+            <div class="figs">
+              <span class="bc-num big" [cosOdo]="s.big"></span>
+              <span class="bc-num small bc-hl">{{ s.small }}</span>
+            </div>
+          }
         </div>
-        @if (p().showFooter) {
+        @if (s.waiting && s.note) {
+          <div class="bc-foot out-note"><span class="k">{{ t('OUT') }}</span>&nbsp;<span cosMarquee>{{ s.note }}</span></div>
+        } @else if (p().showFooter && !s.waiting) {
           <div class="bc-foot">
             @for (st of s.stats; track st.k) {
               <span class="stat"><span class="k">{{ t(st.k) }}</span> <b class="bc-num">{{ st.v }}</b></span>
@@ -170,6 +181,40 @@ interface Shown {
     .stat b {
       font-size: 1.25em;
     }
+    .walking {
+      display: flex;
+      align-items: center;
+      gap: 0.4em;
+      margin-top: calc(var(--u) * 6);
+      font-size: calc(var(--u) * 16);
+      opacity: 0.9;
+    }
+    .walking i {
+      width: 0.5em;
+      height: 0.5em;
+      border-radius: 50%;
+      background: var(--hl);
+      animation: pp-pulse 1.1s ease-in-out infinite;
+    }
+    @keyframes pp-pulse {
+      50% {
+        opacity: 0.25;
+        transform: scale(0.7);
+      }
+    }
+    .out-note {
+      justify-content: flex-start;
+      gap: 0;
+      font-size: calc(var(--u) * 12);
+      font-family: 'Barlow Condensed', var(--font);
+      font-weight: 800;
+      font-style: italic;
+      text-transform: uppercase;
+    }
+    .out-note .k {
+      color: var(--c-wicket, #ef4444);
+      flex: none;
+    }
     .empty {
       grid-column: 1 / -1;
       display: flex;
@@ -186,6 +231,8 @@ export class PlayerPanelWidget extends WidgetBase<PlayerPanelProps> {
   protected readonly defaults: PlayerPanelProps = { slot: 'striker', playerName: '', showImage: true, showFooter: true };
   private readonly store = inject(LiveStore);
   protected readonly imgFailed = signal(false);
+  /** hide the previous player's picture until the new one has arrived */
+  protected readonly imgLoaded = signal(false);
   protected readonly credit = signal<string | null>(null);
 
   protected readonly shown = computed<Shown | null>(() => {
@@ -222,6 +269,20 @@ export class PlayerPanelWidget extends WidgetBase<PlayerPanelProps> {
           { k: 'Econ', v: bw.economy.toFixed(2) },
           { k: 'Mdns', v: String(bw.maidens) },
         ],
+      };
+    }
+    if ((slot === 'striker' || slot === 'nonStriker') && !bat && m.phase !== 'complete' && m.innings.length) {
+      // a wicket has just fallen and the new batter isn't in yet
+      const next = nextBatters(m, this.store.scorecard(), this.store.squads())[0];
+      return {
+        name: next ?? this.t('New batter'),
+        kind: 'bat',
+        onStrike: false,
+        big: '',
+        small: '',
+        stats: [],
+        waiting: true,
+        note: lastWicketLine(m),
       };
     }
     if (slot === 'name' && playerName) {
@@ -274,6 +335,7 @@ export class PlayerPanelWidget extends WidgetBase<PlayerPanelProps> {
       this.imgUrl();
       untracked(() => {
         this.imgFailed.set(false);
+        this.imgLoaded.set(false);
         this.credit.set(null);
       });
     });
