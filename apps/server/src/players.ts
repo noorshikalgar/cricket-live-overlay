@@ -17,6 +17,8 @@ import { log } from './log';
 const UA = 'CricketOverlayStudio/0.1 (https://github.com/noorshikalgar/cricket-live-overlay)';
 /** a failed photo lookup is retried after this long */
 const RETRY_NOT_FOUND_MS = 7 * 86_400_000;
+/** bump when the lookup gets smarter, so earlier misses are tried again */
+const LOOKUP_VERSION = 2;
 const PHOTO_WIDTH = 400;
 
 export type PlayerRole = 'bat' | 'bowl' | 'wk' | 'ar' | '';
@@ -24,6 +26,8 @@ export type PlayerRole = 'bat' | 'bowl' | 'wk' | 'ar' | '';
 export interface PhotoMeta {
   found: boolean;
   checkedAt: number;
+  /** lookup version that produced a miss */
+  v?: number;
   file?: string;
   contentType?: string;
   /** credit line for the card, e.g. "Photo: Jane Doe · CC BY-SA 4.0 · Wikimedia Commons" */
@@ -237,7 +241,8 @@ export class PlayerImageService {
   /** Cached photo meta, or a fresh Wikimedia lookup (deduped, queued). */
   async photo(name: string): Promise<PhotoMeta> {
     const cached = this.cachedPhoto(name);
-    if (cached && (cached.found || Date.now() - cached.checkedAt < RETRY_NOT_FOUND_MS)) return cached;
+    const freshMiss = cached && cached.v === LOOKUP_VERSION && Date.now() - cached.checkedAt < RETRY_NOT_FOUND_MS;
+    if (cached && (cached.found || freshMiss)) return cached;
     const key = slugify(name);
     let p = this.inFlight.get(key);
     if (!p) {
@@ -248,30 +253,55 @@ export class PlayerImageService {
     return p;
   }
 
+  /** Wikidata: the first search hit described as a cricketer, and its image (P18). */
+  private async imageFromWikidata(name: string): Promise<string | null> {
+    const search = obj(
+      await getJson(
+        `https://www.wikidata.org/w/api.php?action=wbsearchentities&format=json&language=en&type=item&limit=7&search=${encodeURIComponent(name)}`,
+      ),
+    );
+    const hits = (Array.isArray(search['search']) ? search['search'] : []).map(obj);
+    const hit = hits.find((h) => /cricket/i.test(String(h['description'] ?? '')));
+    return hit ? this.p18(String(hit['id'])) : null;
+  }
+
+  /**
+   * Wikipedia search for "<name> cricketer": finds the right person when the
+   * name is common (Abhishek Sharma) or spelled differently (Chakaravarthy /
+   * Chakravarthy). Uses the article's free lead image, else its Wikidata image.
+   */
+  private async imageFromWikipedia(name: string): Promise<string | null> {
+    const res = obj(
+      await getJson(
+        `https://en.wikipedia.org/w/api.php?action=query&format=json&generator=search&gsrlimit=1&gsrsearch=${encodeURIComponent(`${name} cricketer`)}&prop=pageimages|pageprops|description&piprop=name&pilicense=free`,
+      ),
+    );
+    const page = Object.values(obj(obj(res['query'])['pages'])).map(obj)[0];
+    if (!page || !/cricket/i.test(String(page['description'] ?? ''))) return null;
+    const lead = String(page['pageimage'] ?? '');
+    if (lead) return lead;
+    const qid = String(obj(page['pageprops'])['wikibase_item'] ?? '');
+    return qid ? this.p18(qid) : null;
+  }
+
+  /** a Wikidata item's image file name (P18) */
+  private async p18(qid: string): Promise<string | null> {
+    const claims = obj(await getJson(`https://www.wikidata.org/w/api.php?action=wbgetclaims&format=json&property=P18&entity=${qid}`));
+    const p18 = (obj(claims['claims'])['P18'] as unknown[] | undefined)?.map(obj)[0];
+    return String(obj(obj(obj(p18)['mainsnak'])['datavalue'])['value'] ?? '') || null;
+  }
+
   private async lookup(name: string): Promise<PhotoMeta> {
     const notFound = (why: string): PhotoMeta => {
       log.info(`PHOTO ${name}: no free photo (${why}) · using avatar`);
-      const meta: PhotoMeta = { found: false, checkedAt: Date.now() };
+      const meta: PhotoMeta = { found: false, checkedAt: Date.now(), v: LOOKUP_VERSION };
       writeFileSync(this.metaFile(name), JSON.stringify(meta));
       return meta;
     };
     try {
-      // 1. Wikidata item for this person, preferring one described as a cricketer
-      const search = obj(
-        await getJson(
-          `https://www.wikidata.org/w/api.php?action=wbsearchentities&format=json&language=en&type=item&limit=7&search=${encodeURIComponent(name)}`,
-        ),
-      );
-      const hits = (Array.isArray(search['search']) ? search['search'] : []).map(obj);
-      const hit = hits.find((h) => /cricket/i.test(String(h['description'] ?? '')));
-      if (!hit) return notFound('no cricketer with this name on Wikidata');
-      // 2. its image (P18)
-      const claims = obj(
-        await getJson(`https://www.wikidata.org/w/api.php?action=wbgetclaims&format=json&property=P18&entity=${String(hit['id'])}`),
-      );
-      const p18 = (obj(claims['claims'])['P18'] as unknown[] | undefined)?.map(obj)[0];
-      const fileName = String(obj(obj(obj(p18)['mainsnak'])['datavalue'])['value'] ?? '');
-      if (!fileName) return notFound('no image on Wikidata');
+      // 1–2. a free image of this cricketer, from Wikidata or Wikipedia
+      const fileName = (await this.imageFromWikidata(name)) ?? (await this.imageFromWikipedia(name));
+      if (!fileName) return notFound('no free photo on Wikidata or Wikipedia');
       // 3. a thumbnail and its license from Commons
       const info = obj(
         await getJson(
