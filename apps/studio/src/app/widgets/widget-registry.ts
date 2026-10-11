@@ -322,6 +322,16 @@ export const WIDGET_REGISTRY: Record<WidgetType, WidgetDef> = {
   scoreHeader: def('scoreHeader', ScoreHeaderWidget, 'Both teams in big colour blocks; the centre flashes FOUR / SIX / WICKET / OVER', [
     { kind: 'text', key: 'centerText', label: 'Centre text between events (empty = VS)' },
     { kind: 'toggle', key: 'showEvents', group: 'Behaviour', label: 'Flash events in the centre' },
+    { kind: 'toggle', key: 'showWin', label: 'Show win %' },
+    { kind: 'slider', key: 'winA', label: 'First team win %', min: 0, max: 100, step: 1, unit: '%', showIf: (p) => p['showWin'] === true },
+    {
+      kind: 'select',
+      key: 'winSplit',
+      label: 'Second team win %',
+      options: opts(['auto', 'Auto (100 − first team)'], ['manual', 'Set it myself']),
+      showIf: (p) => p['showWin'] === true,
+    },
+    { kind: 'slider', key: 'winB', label: 'Second team win %', min: 0, max: 100, step: 1, unit: '%', showIf: (p) => p['showWin'] === true && p['winSplit'] === 'manual' },
   ]),
   oversStrip: def('oversStrip', OversStripWidget, 'Previous and current over, ball by ball, with totals', [
     { kind: 'text', key: 'label', label: 'Label on the left' },

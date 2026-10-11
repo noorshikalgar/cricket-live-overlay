@@ -13,6 +13,13 @@ export interface ScoreHeaderProps {
   centerText: string;
   /** flash FOUR / SIX / WICKET / OVER / milestones in the centre */
   showEvents: boolean;
+  /** win chances typed by the streamer, shown per team and as a split bar */
+  showWin: boolean;
+  /** first team's win %, 0–100 */
+  winA: number;
+  /** second team: 100 − first, or its own number */
+  winSplit: 'auto' | 'manual';
+  winB: number;
 }
 
 interface Side {
@@ -45,7 +52,7 @@ const EVENT_COLOR: Partial<Record<MatchEventType, string>> = {
   imports: [MarqueeDirective, OdometerDirective],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <div class="sh">
+    <div class="sh" [class.with-win]="!!win()">
       @for (s of sides(); track s.team.shortCode; let i = $index) {
         <div class="bc team" [class.right]="i === 1" [style.--team]="s.team.primaryColor">
           <div class="tname bc-word" cosMarquee>{{ s.team.name }}</div>
@@ -55,12 +62,26 @@ const EVENT_COLOR: Partial<Record<MatchEventType, string>> = {
             <div class="bc-word yet">{{ t('Yet to bat') }}</div>
           }
           <div class="line bc-word">{{ s.line }} <span class="bc-hl">{{ s.hlLine }}</span></div>
+          @if (win(); as w) {
+            <div class="win bc-word">
+              <span class="wl">{{ t('Win') }}</span>
+              <span class="bc-num wv" [cosOdo]="w[i] + '%'"></span>
+            </div>
+          }
         </div>
         @if (i === 0) {
           <div class="center">
             <span class="word bc-word" #wordEl [style.--ev]="evColor()">{{ word() }}</span>
           </div>
         }
+      }
+      @if (win(); as w) {
+        <!-- win-probability bar in the two team colours; slides when the numbers change -->
+        <div class="winbar" aria-hidden="true">
+          @for (s of sides(); track s.team.shortCode; let i = $index) {
+            <i [style.flex-grow]="w[i] || 0.001" [style.background]="s.team.primaryColor"></i>
+          }
+        </div>
       }
     </div>
   `,
@@ -72,6 +93,7 @@ const EVENT_COLOR: Partial<Record<MatchEventType, string>> = {
       --u: calc(var(--wh) / 100 * var(--fs));
     }
     .sh {
+      position: relative;
       height: 100%;
       display: grid;
       grid-template-columns: 1fr auto 1fr;
@@ -130,10 +152,72 @@ const EVENT_COLOR: Partial<Record<MatchEventType, string>> = {
       -webkit-text-stroke: calc(var(--u) * 0.6) #fff;
       paint-order: stroke fill;
     }
+    /* room for the win pill */
+    .with-win .score {
+      font-size: calc(var(--u) * 42);
+    }
+    .with-win .yet {
+      font-size: calc(var(--u) * 22);
+      padding: calc(var(--u) * 4) 0;
+    }
+    .with-win .tname {
+      font-size: calc(var(--u) * 14);
+    }
+    .win {
+      display: inline-flex;
+      align-items: baseline;
+      gap: 0.35em;
+      margin-top: calc(var(--u) * 2);
+      padding: 0.05em 0.6em;
+      border-radius: 99px;
+      font-size: calc(var(--u) * 13);
+      background: rgba(0, 0, 0, 0.35);
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.18);
+    }
+    .wl {
+      font-size: 0.75em;
+      opacity: 0.85;
+    }
+    .wv {
+      color: #facc15;
+    }
+    .winbar {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: calc(var(--u) * -6);
+      height: calc(var(--u) * 4);
+      display: flex;
+      gap: 2px;
+      border-radius: 99px;
+      overflow: hidden;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+    }
+    .winbar i {
+      flex-basis: 0;
+      transition: flex-grow 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+      background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.35), transparent 60%) !important;
+    }
   `,
 })
 export class ScoreHeaderWidget extends WidgetBase<ScoreHeaderProps> {
-  protected readonly defaults: ScoreHeaderProps = { centerText: '', showEvents: true };
+  protected readonly defaults: ScoreHeaderProps = {
+    centerText: '',
+    showEvents: true,
+    showWin: false,
+    winA: 50,
+    winSplit: 'auto',
+    winB: 50,
+  };
+
+  /** [first team %, second team %], rounded; null when hidden */
+  protected readonly win = computed<[number, number] | null>(() => {
+    const p = this.p();
+    if (!p.showWin) return null;
+    const clamp = (n: unknown) => Math.max(0, Math.min(100, Math.round(Number(n) || 0)));
+    const a = clamp(p.winA);
+    return [a, p.winSplit === 'manual' ? clamp(p.winB) : 100 - a];
+  });
   private readonly motion = inject(MotionService);
   private readonly wordEl = viewChild<ElementRef<HTMLElement>>('wordEl');
 
