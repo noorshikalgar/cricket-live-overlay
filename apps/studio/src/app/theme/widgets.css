@@ -125,6 +125,10 @@
   overflow: hidden;
   vertical-align: bottom;
   line-height: 1.1;
+  /* room for italic numbers to lean past their box (the "7" in 0-7) without
+     changing the layout; overflow is clipped at the padding edge */
+  padding-right: 0.14em;
+  margin-right: -0.14em;
 }
 .odo > span {
   display: inline-block;
@@ -163,6 +167,8 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  white-space: nowrap;
+  box-sizing: border-box;
   border-radius: var(--chip-radius);
   background: var(--chip);
   font-variant-numeric: tabular-nums;
@@ -409,6 +415,10 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  /* grows for longer labels (2nb, Marathi वाइड…) instead of cramping them */
+  padding: 0 0.22em;
+  white-space: nowrap;
+  box-sizing: border-box;
   border-radius: 0.18em;
   background: rgba(255, 255, 255, 0.14);
   box-shadow: inset 0 -0.08em 0 rgba(0, 0, 0, 0.35);

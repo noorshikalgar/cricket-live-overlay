@@ -227,7 +227,8 @@ function teamName(rec: Recording, code: string): string {
  * Rebuild the full match state after the first `count` deliveries.
  * Pure, so the mock can jump anywhere in the replay and tests can assert on it.
  */
-export function buildState(rec: Recording, count: number, now: number): MatchState {
+/** `withCard` = false when called from buildScorecard (which builds the card itself) */
+export function buildState(rec: Recording, count: number, now: number, withCard = true): MatchState {
   const all = rec.deliveries;
   const n = Math.max(0, Math.min(count, all.length));
   const first = rec.meta.battingFirst;
@@ -314,10 +315,28 @@ export function buildState(rec: Recording, count: number, now: number): MatchSta
     rrr = ballsRemaining > 0 && need > 0 ? round2((need / ballsRemaining) * 6) : null;
   }
 
+  // last wicket and who's still to bat, from the scorecard at this point of the replay
+  const card = n > 0 && withCard ? buildScorecard(rec, n, now).innings.at(-1) : undefined;
+  const fall = card?.fallOfWickets.at(-1);
+  const outBatter = fall ? card?.batters.find((b) => b.name === fall.player) : undefined;
+  const lastWicket: MatchState['lastWicket'] = fall
+    ? {
+        batter: fall.player,
+        how: outBatter?.dismissal ?? '',
+        runs: outBatter?.runs ?? null,
+        balls: outBatter?.balls ?? null,
+        score: `${fall.runs}/${fall.wicket}`,
+        over: fall.over,
+      }
+    : null;
+  const yetToBat = card?.yetToBat ?? [];
+
   return {
     matchId: rec.meta.id,
     format: rec.meta.format,
     phase,
+    lastWicket,
+    yetToBat,
     teams: rec.meta.teams,
     innings: accs.map(toInnings),
     batters,
@@ -409,7 +428,7 @@ export function buildScorecard(rec: Recording, count: number, now: number): Scor
   const first = rec.meta.battingFirst;
   const second = otherTeam(rec, first).shortCode;
   const innings: CardInnings[] = [];
-  const state = buildState(rec, count, now);
+  const state = buildState(rec, count, now, false);
 
   for (let i = 0; i <= (all.at(-1)?.inn ?? -1); i++) {
     const code = i === 0 ? first : second;

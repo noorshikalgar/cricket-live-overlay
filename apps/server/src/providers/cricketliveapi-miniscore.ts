@@ -164,6 +164,37 @@ function chipFromBall(b: BallEvent): BallChip {
 }
 
 /** current over number and the previous over's balls, from the commentary feed (newest first) */
+/**
+ * "Abhishek Sharma c Head b Starc 2(2) - 15/1 in 0.4 ov." → its parts. Anything
+ * that doesn't fit the pattern is kept whole as the 'how' text.
+ */
+/**
+ * Over number → runs, for the current innings, from the over separators in
+ * this response (oldest first). The API keeps only the last ~20 balls, so a
+ * single response holds two or three overs at most.
+ */
+export function overRunsSeen(raw: unknown): Map<number, number> {
+  const data = obj(obj(raw)['data']);
+  const inn = num(obj(data['miniscore'])['innings_id']);
+  const out = new Map<number, number>();
+  const seps = arr(data['commentary'])
+    .map(obj)
+    .filter((e) => num(e['innings_id']) === inn && e['over_separator'])
+    .map((e) => obj(e['over_separator']))
+    .map((sep) => [num(sep['over_number']), num(sep['over_runs'])] as const)
+    .sort((x, y) => x[0] - y[0]);
+  for (const [over, runs] of seps) out.set(over, runs);
+  return out;
+}
+
+export function parseLastWicket(text: string): MatchState['lastWicket'] {
+  const t = text.trim().replace(/\.$/, '');
+  if (!t) return null;
+  const m = /^(.+?)\s+((?:c & b|c|b|lbw|st|run out|hit wicket|retired|obstructing)\b.*?)\s+(\d+)\s*\((\d+)\)\s*-\s*(\d+\/\d+)(?:\s+in\s+([\d.]+)\s*ov)?/i.exec(t);
+  if (!m) return { batter: '', how: t, runs: null, balls: null, score: '', over: '' };
+  return { batter: m[1], how: m[2], runs: Number(m[3]), balls: Number(m[4]), score: m[5], over: m[6] ?? '' };
+}
+
 function overContext(feed: BallEvent[]): Pick<MatchState, 'overNumber' | 'prevOver'> {
   const newest = feed[0];
   if (!newest) return {};
@@ -234,13 +265,9 @@ export function composeFromMiniscore(id: string, raw: unknown, extras: Miniscore
   const decision = str(hd['toss_decision']).toLowerCase();
   const toss = tossWinner ? `${tossWinner} won the toss and chose to ${decision.startsWith('bowl') ? 'bowl' : 'bat'}` : '';
 
-  // completed overs' runs, from the over separators the feed carries (newest first in the API)
-  const recentOvers = arr(data['commentary'])
-    .map(obj)
-    .filter((e) => num(e['innings_id']) === num(ms['innings_id']) && e['over_separator'])
-    .map((e) => num(obj(e['over_separator'])['over_runs']))
-    .reverse()
-    .slice(-6);
+  // completed overs' runs: only the overs still in this response's short feed
+  // (~20 balls). The provider merges them across polls; see overRunsSeen().
+  const recentOvers = [...overRunsSeen(raw).values()].slice(-6);
 
   const p = obj(ms['partnership']);
   const rrr = num(ms['rrr'], NaN);
@@ -257,6 +284,7 @@ export function composeFromMiniscore(id: string, raw: unknown, extras: Miniscore
     partnership: { runs: num(p['runs']), balls: num(p['balls']), contributions: [0, 0] },
     thisOver: thisOverChips(str(ms['recent_overs'])),
     ...overContext(feed),
+    lastWicket: parseLastWicket(str(ms['last_wicket'])),
     recentOvers,
     target,
     requiredRunRate: Number.isFinite(rrr) && rrr > 0 ? rrr : null,

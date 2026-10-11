@@ -259,7 +259,7 @@ function chipClass(c: BallChip): string {
       margin-right: 0.3em;
     }
     .over .bc-chip {
-      width: 1.5em;
+      min-width: 1.5em;
       height: 1.5em;
       font-size: 0.85em;
     }

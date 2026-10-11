@@ -38,10 +38,29 @@ const cards = new CardService(provider, path.join(DATA_DIR, 'cards'), {
 function cardsOnAir(): { scorecard: boolean; squads: boolean } {
   const id = scenes.getSettings().activeSceneId;
   const widgets = (id ? scenes.get(id)?.widgets : undefined)?.filter((w) => w.visible) ?? [];
+  // the info rail's "next batters" / "overs left" slides read the scorecard and XIs
+  const rail = widgets.some((w) => w.type === 'infoRail' && railUsesCards(w.props));
   return {
-    scorecard: widgets.some((w) => (CARD_WIDGET_TYPES as readonly string[]).includes(w.type)),
-    squads: widgets.some((w) => w.type === 'teamCard' || w.type === 'playerCard'),
+    scorecard: rail || widgets.some((w) => (CARD_WIDGET_TYPES as readonly string[]).includes(w.type)),
+    squads: rail || widgets.some((w) => w.type === 'teamCard' || w.type === 'playerCard'),
   };
+}
+
+function railUsesCards(props: Record<string, unknown>): boolean {
+  const slides = (props['slides'] ?? {}) as Record<string, boolean>;
+  return slides['nextBatters'] !== false || slides['bowlersLeft'] !== false;
+}
+
+/**
+ * After a wicket the batting order and bowling figures change, so a scorecard
+ * that is in use is refreshed once (1 API call), a little later so the API has
+ * caught up. Nothing is fetched when no card or rail needs it.
+ */
+let wicketRefresh: ReturnType<typeof setTimeout> | null = null;
+function refreshCardsAfterWicket(): void {
+  if (!cardsOnAir().scorecard) return;
+  if (wicketRefresh) clearTimeout(wicketRefresh);
+  wicketRefresh = setTimeout(() => void cards.fetch('scorecard', true), 20_000);
 }
 
 const poller = new Poller(
@@ -54,7 +73,10 @@ const poller = new Poller(
       // cards only fetch when they have nothing yet; reloads are manual (⟳)
       if (state) cards.ensure(cardsOnAir());
     },
-    onEvent: (event) => hub.broadcast({ type: 'match:event', event }),
+    onEvent: (event) => {
+      hub.broadcast({ type: 'match:event', event });
+      if (event.type === 'WICKET' && !event.manual) refreshCardsAfterWicket();
+    },
     onStatus: (status) => hub.broadcast({ type: 'poll:status', status }),
     onMatches: (matches) => hub.broadcast({ type: 'matches:list', matches }),
   },

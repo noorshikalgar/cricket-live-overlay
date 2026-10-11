@@ -134,7 +134,7 @@ Every widget's look (colours, font, radius, blur, title, enter / exit motion suc
 - **Full scorecard** → *How out*: own column, under the name (more room at big sizes) or hidden.
 - **Video**: upload MP4 / WebM / MOV or paste a URL; ▶ / ⏸, ⏮ Restart and mute buttons in its settings.
 - **Player spotlight**: a big card for **Batter 1**, **Batter 2** (the two at the crease, in the order they came in) or the **current bowler**: picture on the left over the team colour, name, figures and stat tiles on the right; the bowler card also shows this over's balls. A new batter swings the card round.
-- **Info rail**: the TV-style bottom bar. The score stays on the left while the right side flips through this over, run rates, batters, bowler, partnership, chase / toss, last overs and series & venue (pick which, and how many seconds each). On a FOUR / SIX it jumps to the batters, on a WICKET to the bowler.
+- **Info rail**: the TV-style bottom bar. The score stays on the left while the right side flips through this over, run rates, batters, bowler, **last wicket** (who, how, at what score), **next batters**, **bowlers' overs left**, partnership, chase / toss, last overs and series & venue (pick which, and how many seconds each). On a FOUR / SIX it jumps to the batters, on a WICKET to the last wicket. Next batters and overs left use the scorecard and playing XIs; while a rail is on air the scorecard is refreshed once after each wicket (1 API call).
 
 ### Overlay language and player images
 Scene settings → **Overlay (all scenes)** (also **Labels** in the canvas toolbar):
