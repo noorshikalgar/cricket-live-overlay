@@ -67,6 +67,10 @@ const MR: Record<string, string> = {
   Chase: 'पाठलाग',
   'Batter {n}': 'फलंदाज {n}',
   'On strike': 'स्ट्राइकवर',
+  'Last wicket': 'शेवटचा बळी',
+  'Next batters': 'पुढील फलंदाज',
+  'Overs left': 'उरलेली षटके',
+  Score: 'धावसंख्या',
   "P'SHIP": 'भागीदारी',
   Target: 'लक्ष्य',
   TARGET: 'लक्ष्य',
@@ -137,7 +141,8 @@ const MR: Record<string, string> = {
 const DEFAULT_TEXTS = new Set(['LIVE COMMENTARY', 'LIVE SCORES', 'STARTING IN', 'STARTING NOW', 'BACK IN', 'Commentary', 'Your Name']);
 
 /** ball-chip notation (W, wd, 2nb, 1lb, 4b) in Marathi */
-const MR_CHIP: Record<string, string> = { W: 'बाद', wd: 'वा', nb: 'नो', lb: 'लेबा', b: 'बा' };
+/** kept to one or two letters so a chip stays chip-sized: वा wide, नो no-ball, ले leg bye, बा bye */
+const MR_CHIP: Record<string, string> = { W: 'बाद', wd: 'वा', nb: 'नो', lb: 'ले', b: 'बा' };
 
 /** fragments of player roles and styles from the API */
 const MR_STYLE: [RegExp, string][] = [

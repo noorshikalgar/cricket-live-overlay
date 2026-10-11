@@ -8,13 +8,27 @@ import { OdometerDirective } from '../../motion/odometer.directive';
 import { MarqueeDirective } from '../../motion/marquee.directive';
 import { WidgetBase } from '../widget-base';
 
-export type RailSlide = 'thisOver' | 'rates' | 'batters' | 'bowler' | 'partnership' | 'chase' | 'recent' | 'info';
+export type RailSlide =
+  | 'thisOver'
+  | 'rates'
+  | 'batters'
+  | 'bowler'
+  | 'lastWicket'
+  | 'nextBatters'
+  | 'bowlersLeft'
+  | 'partnership'
+  | 'chase'
+  | 'recent'
+  | 'info';
 
 export const RAIL_SLIDES: { value: RailSlide; label: string }[] = [
   { value: 'thisOver', label: 'This over' },
   { value: 'rates', label: 'Run rates' },
   { value: 'batters', label: 'Batters' },
   { value: 'bowler', label: 'Bowler' },
+  { value: 'lastWicket', label: 'Last wicket' },
+  { value: 'nextBatters', label: 'Next batters' },
+  { value: 'bowlersLeft', label: 'Overs left' },
   { value: 'partnership', label: 'Partnership' },
   { value: 'chase', label: 'Chase / toss' },
   { value: 'recent', label: 'Last overs' },
@@ -37,7 +51,7 @@ const EVENT_SLIDE: Partial<Record<MatchEventType, RailSlide>> = {
   SIX: 'batters',
   FIFTY: 'batters',
   HUNDRED: 'batters',
-  WICKET: 'bowler',
+  WICKET: 'lastWicket',
   MAIDEN: 'bowler',
   OVER_END: 'rates',
 };
@@ -106,6 +120,34 @@ function chipClass(c: BallChip): string {
                   </span>
                   <span class="pair"><span class="k">{{ t('Econ') }}</span><b class="v">{{ w.economy.toFixed(2) }}</b></span>
                   <span class="pair"><span class="k">{{ t('Mdns') }}</span><b class="v">{{ w.maidens }}</b></span>
+                }
+              }
+              @case ('lastWicket') {
+                @if (m()?.lastWicket; as w) {
+                  @if (w.batter) {
+                    <span class="pair person"><span class="name" cosMarquee>{{ w.batter }}</span></span>
+                  }
+                  <span class="how" cosMarquee>{{ i18n.dismissal(w.how) }}</span>
+                  @if (w.runs !== null) {
+                    <span class="pair"><b class="v">{{ w.runs }}</b><span class="sub">({{ w.balls }})</span></span>
+                  }
+                  @if (w.score) {
+                    <span class="pair fall"><span class="k">{{ t('Score') }}</span><b class="v small">{{ w.score }}</b>
+                      @if (w.over) {
+                        <span class="sub">({{ w.over }} {{ t('ov') }})</span>
+                      }
+                    </span>
+                  }
+                }
+              }
+              @case ('nextBatters') {
+                @for (b of nextBatters(); track b; let i = $index) {
+                  <span class="pair person"><span class="num-badge">{{ i + 1 }}</span><span class="name" cosMarquee>{{ b }}</span></span>
+                }
+              }
+              @case ('bowlersLeft') {
+                @for (b of bowlersLeft(); track b.name) {
+                  <span class="pair person"><span class="name short" cosMarquee>{{ b.name }}</span><b class="v small">{{ b.left }}</b></span>
                 }
               }
               @case ('partnership') {
@@ -260,6 +302,29 @@ function chipClass(c: BallChip): string {
       background: #facc15;
       box-shadow: 0 0 0.4em #facc15;
     }
+    .how {
+      min-width: 0;
+      max-width: 10em;
+      font-size: 0.75em;
+      font-weight: 600;
+      opacity: 0.85;
+    }
+    .num-badge {
+      align-self: center;
+      display: inline-grid;
+      place-items: center;
+      width: 1.1em;
+      height: 1.1em;
+      border-radius: 50%;
+      font-size: 0.6em;
+      font-weight: 900;
+      color: #0b0f17;
+      background: var(--accent);
+      text-shadow: none;
+    }
+    .person .name.short {
+      max-width: 6em;
+    }
     .sentence {
       flex: 1;
       min-width: 0;
@@ -272,7 +337,7 @@ function chipClass(c: BallChip): string {
       gap: 0.25em;
     }
     .bc-chip {
-      width: 1.25em;
+      min-width: 1.25em;
       height: 1.25em;
       font-size: 0.82em;
     }
@@ -352,6 +417,9 @@ export class InfoRailWidget extends WidgetBase<InfoRailProps> {
       if (k === 'batters' || k === 'partnership') return m.batters.length > 0;
       if (k === 'recent') return m.recentOvers.length > 0;
       if (k === 'info') return !!(m.series || m.venue);
+      if (k === 'lastWicket') return !!m.lastWicket;
+      if (k === 'nextBatters') return this.nextBatters().length > 0;
+      if (k === 'bowlersLeft') return this.bowlersLeft().length > 0;
       return true;
     });
   });
@@ -433,6 +501,56 @@ export class InfoRailWidget extends WidgetBase<InfoRailProps> {
     // animation frames can be paused (hidden OBS source): never get stuck on a slide
     setTimeout(swap, d(0.28) * 1000 + 150);
   }
+
+  /** who comes in next: from the feed when it says, else the scorecard, else the playing XI */
+  protected readonly nextBatters = computed<string[]>(() => {
+    const m = this.match();
+    if (!m) return [];
+    const inn = m.innings.at(-1);
+    const card = this.store.scorecard()?.innings.find((i, idx, all) => idx === all.length - 1 && i.team === inn?.battingTeam);
+    const gone = new Set<string>([
+      ...m.batters.map((b) => b.name),
+      ...(m.lastWicket?.batter ? [m.lastWicket.batter] : []),
+      ...(card?.batters.map((b) => b.name) ?? []),
+    ]);
+    let list = m.yetToBat ?? card?.yetToBat;
+    if (!list?.length) {
+      const team = this.store.squads()?.teams.find((t) => t.code === inn?.battingTeam);
+      list = team?.playingXI.map((p) => p.name) ?? [];
+    }
+    return list.filter((n) => !gone.has(n)).slice(0, 3);
+  });
+
+  /** bowlers with overs left in a T20 (4 each) or ODI (10 each) */
+  protected readonly bowlersLeft = computed<{ name: string; left: string }[]>(() => {
+    const m = this.match();
+    if (!m) return [];
+    const quota = m.format === 'T20' ? 4 : m.format === 'ODI' ? 10 : 0;
+    if (!quota) return [];
+    const inn = m.innings.at(-1);
+    const toBalls = (o: string) => {
+      const [ov, b] = o.split('.').map((x) => Number(x) || 0);
+      return ov * 6 + b;
+    };
+    const used = new Map<string, number>();
+    const card = this.store.scorecard()?.innings.at(-1);
+    if (card && card.team === inn?.battingTeam) for (const b of card.bowlers) used.set(b.name, toBalls(b.overs));
+    if (m.bowler) used.set(m.bowler.name, Math.max(used.get(m.bowler.name) ?? 0, toBalls(m.bowler.overs)));
+    // bowlers in the XI who haven't bowled yet
+    const fielding = this.store.squads()?.teams.find((t) => t.code !== inn?.battingTeam && m.teams.some((x) => x.shortCode === t.code));
+    for (const p of fielding?.playingXI ?? []) {
+      if (!used.has(p.name) && /bowl|all/i.test(p.role)) used.set(p.name, 0);
+    }
+    const max = quota * 6;
+    return [...used.entries()]
+      .filter(([name, balls]) => balls < max && name !== m.bowler?.name)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 5)
+      .map(([name, balls]) => {
+        const left = max - balls;
+        return { name: name.split(' ').at(-1) ?? name, left: left % 6 ? `${Math.floor(left / 6)}.${left % 6}` : String(left / 6) };
+      });
+  });
 
   protected tagText(k: RailSlide): string {
     const m = this.match();

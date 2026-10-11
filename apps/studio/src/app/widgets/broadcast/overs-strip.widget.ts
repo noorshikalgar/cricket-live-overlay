@@ -82,7 +82,7 @@ function cls(c: BallChip): string {
       opacity: 0.85;
     }
     .bc-chip {
-      width: 1.3em;
+      min-width: 1.3em;
       height: 1.3em;
       font-size: 0.9em;
     }

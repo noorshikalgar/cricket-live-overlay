@@ -58,6 +58,8 @@ export interface PollerOptions {
 const STATE_REUSE_MS = 2 * 60_000;
 
 export class Poller {
+  /** last state we had for this match, even an old saved one; fills gaps in a fresh poll */
+  private previous: MatchState | null = null;
   private matchId: string | null = null;
   private timer: NodeJS.Timeout | null = null;
   private staleTimer: NodeJS.Timeout | null = null;
@@ -193,6 +195,7 @@ export class Poller {
     log.info(`POLL  match ${matchId} selected`);
     // a recently saved state (restart, re-selecting the same match) is shown without a call
     const saved = this.loadState(matchId);
+    this.previous = saved;
     if (saved && Date.now() - saved.lastUpdated < STATE_REUSE_MS) {
       log.cacheHit(`match state ${matchId}`, Date.now() - saved.lastUpdated);
       this.last = saved;
@@ -275,12 +278,13 @@ export class Poller {
     this.inFlight = true;
     try {
       this.acquire(`match ${id}`);
-      const next = await this.provider.getMatchState(id);
+      const next = keepKnown(await this.provider.getMatchState(id), this.last ?? this.previous);
       if (this.matchId !== id) return; // selection changed while awaiting
       this.saveJson(this.stateFile(id), next);
       if (this.last && next.phase !== this.last.phase) log.info(`POLL  match ${id} is now ${next.phase}`);
       const events = detectEvents(this.last, next, this.fired);
       this.last = next;
+      this.previous = next;
       this.lastGoodAt = Date.now();
       this.backoff = 1;
       this.hooks.onState(next);
@@ -358,4 +362,16 @@ export class Poller {
 
 function message(err: unknown): string {
   return err instanceof Error ? err.message : String(err);
+}
+
+/**
+ * Keeps facts a poll can lose: the API only reports the last wicket while it
+ * is recent, and a restart starts with no history. Same innings only.
+ */
+export function keepKnown(next: MatchState, prev: MatchState | null): MatchState {
+  if (!prev || prev.matchId !== next.matchId || prev.innings.length !== next.innings.length) return next;
+  const wkts = next.innings.at(-1)?.wickets ?? 0;
+  if (!next.lastWicket && prev.lastWicket && wkts > 0) next.lastWicket = prev.lastWicket;
+  if (!next.recentOvers.length && prev.recentOvers.length) next.recentOvers = prev.recentOvers;
+  return next;
 }

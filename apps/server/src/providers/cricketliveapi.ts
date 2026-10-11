@@ -19,7 +19,7 @@ import { arr, getJson, num, obj, oversToBalls, str, type Json } from './http';
 import { log } from '../log';
 import { BudgetExceededError, type CallBudget } from '../usage';
 import { mapScorecardReal, mapSquadsReal } from './cricketliveapi-cards';
-import { composeFromMiniscore, isMiniscoreResponse } from './cricketliveapi-miniscore';
+import { composeFromMiniscore, isMiniscoreResponse, overRunsSeen } from './cricketliveapi-miniscore';
 import type { CricketProvider } from './types';
 
 /**
@@ -359,6 +359,8 @@ export class CricketLiveApiProvider implements CricketProvider {
   private budget: CallBudget | null = null;
   private liveList: Cached<Json[]> | null = null;
   private readonly cache = new Map<string, MatchCache>();
+  /** "<match>:<innings>" → over number → runs, merged across polls */
+  private readonly overRuns = new Map<string, Map<number, number>>();
 
   constructor(
     private readonly apiKey: string,
@@ -432,7 +434,17 @@ export class CricketLiveApiProvider implements CricketProvider {
       // real API shape: one call has everything; the live list is only read for the
       // venue, from the copy the match picker already fetched (no extra call)
       const item = this.liveList?.value.find((m) => str(m['match_id']) === id);
-      return composeFromMiniscore(id, commentaryRaw, { teamColor, venue: str(item?.['venue']) }, now);
+      const state = composeFromMiniscore(id, commentaryRaw, { teamColor, venue: str(item?.['venue']) }, now);
+      // remember every over total we have seen, so "last 6 overs" fills up over the match
+      const inningsKey = `${id}:${num(obj(obj(obj(commentaryRaw)['data'])['miniscore'])['innings_id'])}`;
+      const seen = this.overRuns.get(inningsKey) ?? new Map<number, number>();
+      for (const [over, runs] of overRunsSeen(commentaryRaw)) seen.set(over, runs);
+      this.overRuns.set(inningsKey, seen);
+      state.recentOvers = [...seen.entries()]
+        .sort((a, b) => a[0] - b[0])
+        .map(([, runs]) => runs)
+        .slice(-6);
+      return state;
     }
 
     // doc shape (flat commentary array): combine with live list, scorecard and facts

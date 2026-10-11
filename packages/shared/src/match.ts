@@ -69,6 +69,19 @@ export interface BallEvent {
   text: string;
 }
 
+/** The most recent dismissal of the current innings. */
+export interface LastWicket {
+  batter: string;
+  /** "c Head b Starc", "lbw b Lyon", "run out (Smith)" */
+  how: string;
+  runs: number | null;
+  balls: number | null;
+  /** team score at the fall, e.g. "15/1" */
+  score: string;
+  /** over of the fall, e.g. "0.4" */
+  over: string;
+}
+
 export interface MatchState {
   matchId: string;
   format: MatchFormat;
@@ -102,6 +115,10 @@ export interface MatchState {
    * because the feed usually updates sooner.
    */
   ballFeed?: BallEvent[];
+  /** latest dismissal in the current innings, when the provider has it */
+  lastWicket?: LastWicket | null;
+  /** batting order still to come, when the provider knows it without an extra call */
+  yetToBat?: string[];
 }
 
 export interface MatchSummary {
