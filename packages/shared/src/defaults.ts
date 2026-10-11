@@ -176,7 +176,7 @@ export const WIDGET_DEFAULTS: Record<WidgetType, WidgetDefaults> = {
     icon: '▬',
     w: 1600,
     h: 230,
-    props: { centerText: '', showEvents: true },
+    props: { centerText: '', showEvents: true, showWin: false, winA: 50, winSplit: 'auto', winB: 50 },
   },
   oversStrip: {
     label: 'Overs strip',

@@ -74,6 +74,7 @@ const MR: Record<string, string> = {
   Session: 'सत्र',
   'Total runs': 'एकूण धावा',
   Winner: 'विजेता',
+  Win: 'विजय',
   'Next batters': 'पुढील फलंदाज',
   'Overs left': 'उरलेली षटके',
   Score: 'धावसंख्या',
