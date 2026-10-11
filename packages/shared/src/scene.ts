@@ -24,6 +24,7 @@ export type WidgetType =
   | 'statBar'
   | 'infoRail'
   | 'playerSpotlight'
+  | 'predictions'
   | 'scorecard'
   | 'teamCard'
   | 'playerCard';

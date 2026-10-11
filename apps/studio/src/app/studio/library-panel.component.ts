@@ -23,8 +23,8 @@ const GROUPS: { id: string; title: string; hint: string; types: WidgetType[] }[]
   {
     id: 'match',
     title: 'Match & cards',
-    hint: 'Match details, full scorecard, team and player cards',
-    types: ['matchInfo', 'scorecard', 'teamCard', 'playerCard'],
+    hint: 'Your predictions, match details, scorecard, team and player cards',
+    types: ['predictions', 'matchInfo', 'scorecard', 'teamCard', 'playerCard'],
   },
   {
     id: 'own',
