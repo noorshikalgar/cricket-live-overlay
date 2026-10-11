@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, DestroyRef, ElementRef, computed, e
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { currentInnings, type BallChip, type MatchEventType, type MatchState } from '@cos/shared';
 import { LiveStore } from '../../core/live.store';
+import { nextBatters } from '../../core/next-batters';
 import { gsap } from '../../motion/gsap';
 import { MotionService } from '../../motion/motion.service';
 import { OdometerDirective } from '../../motion/odometer.directive';
@@ -502,24 +503,10 @@ export class InfoRailWidget extends WidgetBase<InfoRailProps> {
     setTimeout(swap, d(0.28) * 1000 + 150);
   }
 
-  /** who comes in next: from the feed when it says, else the scorecard, else the playing XI */
-  protected readonly nextBatters = computed<string[]>(() => {
-    const m = this.match();
-    if (!m) return [];
-    const inn = m.innings.at(-1);
-    const card = this.store.scorecard()?.innings.find((i, idx, all) => idx === all.length - 1 && i.team === inn?.battingTeam);
-    const gone = new Set<string>([
-      ...m.batters.map((b) => b.name),
-      ...(m.lastWicket?.batter ? [m.lastWicket.batter] : []),
-      ...(card?.batters.map((b) => b.name) ?? []),
-    ]);
-    let list = m.yetToBat ?? card?.yetToBat;
-    if (!list?.length) {
-      const team = this.store.squads()?.teams.find((t) => t.code === inn?.battingTeam);
-      list = team?.playingXI.map((p) => p.name) ?? [];
-    }
-    return list.filter((n) => !gone.has(n)).slice(0, 3);
-  });
+  /** who comes in next (see nextBatters) */
+  protected readonly nextBatters = computed<string[]>(() =>
+    nextBatters(this.match(), this.store.scorecard(), this.store.squads()).slice(0, 3),
+  );
 
   /** bowlers with overs left in a T20 (4 each) or ODI (10 each) */
   protected readonly bowlersLeft = computed<{ name: string; left: string }[]>(() => {

@@ -18,7 +18,7 @@ const UA = 'CricketOverlayStudio/0.1 (https://github.com/noorshikalgar/cricket-l
 /** a failed photo lookup is retried after this long */
 const RETRY_NOT_FOUND_MS = 7 * 86_400_000;
 /** bump when the lookup gets smarter, so earlier misses are tried again */
-const LOOKUP_VERSION = 2;
+const LOOKUP_VERSION = 3;
 const PHOTO_WIDTH = 400;
 
 export type PlayerRole = 'bat' | 'bowl' | 'wk' | 'ar' | '';
@@ -189,6 +189,34 @@ ${role ? ROLE_BADGE[role] : ''}
 </svg>`;
 }
 
+/**
+ * Same person by name: first names equal and surnames equal or within two
+ * letters (Chakaravarthy / Chakravarthy). Wikipedia's "(cricketer)" suffix is ignored.
+ */
+export function sameName(title: string, name: string): boolean {
+  const words = (s: string) =>
+    s
+      .replace(/\(.*?\)/g, '')
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[^a-z\s]/g, '')
+      .split(/\s+/)
+      .filter(Boolean);
+  const a = words(title);
+  const b = words(name);
+  if (!a.length || !b.length || a[0] !== b[0]) return false;
+  return editDistance(a.at(-1)!, b.at(-1)!) <= 2;
+}
+
+function editDistance(a: string, b: string): number {
+  const d = Array.from({ length: a.length + 1 }, (_, i) => [i, ...Array<number>(b.length).fill(0)]);
+  for (let j = 1; j <= b.length; j++) d[0][j] = j;
+  for (let i = 1; i <= a.length; i++)
+    for (let j = 1; j <= b.length; j++)
+      d[i][j] = Math.min(d[i - 1][j] + 1, d[i][j - 1] + 1, d[i - 1][j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+  return d[a.length][b.length];
+}
+
 function stripHtml(s: string): string {
   return s
     .replace(/<[^>]+>/g, '')
@@ -241,8 +269,10 @@ export class PlayerImageService {
   /** Cached photo meta, or a fresh Wikimedia lookup (deduped, queued). */
   async photo(name: string): Promise<PhotoMeta> {
     const cached = this.cachedPhoto(name);
-    const freshMiss = cached && cached.v === LOOKUP_VERSION && Date.now() - cached.checkedAt < RETRY_NOT_FOUND_MS;
-    if (cached && (cached.found || freshMiss)) return cached;
+    // results from an older lookup are checked again once (v2 could match the wrong person)
+    const current = cached?.v === LOOKUP_VERSION;
+    const freshMiss = cached && current && Date.now() - cached.checkedAt < RETRY_NOT_FOUND_MS;
+    if (cached && ((cached.found && current) || freshMiss)) return cached;
     const key = slugify(name);
     let p = this.inFlight.get(key);
     if (!p) {
@@ -278,6 +308,8 @@ export class PlayerImageService {
     );
     const page = Object.values(obj(obj(res['query'])['pages'])).map(obj)[0];
     if (!page || !/cricket/i.test(String(page['description'] ?? ''))) return null;
+    // search is fuzzy ("Rahul Varma cricketer" finds Tilak Varma): the article must be this person
+    if (!sameName(String(page['title'] ?? ''), name)) return null;
     const lead = String(page['pageimage'] ?? '');
     if (lead) return lead;
     const qid = String(obj(page['pageprops'])['wikibase_item'] ?? '');
@@ -325,6 +357,7 @@ export class PlayerImageService {
       writeFileSync(path.join(this.dir, file), Buffer.from(await img.arrayBuffer()));
       const result: PhotoMeta = {
         found: true,
+        v: LOOKUP_VERSION,
         checkedAt: Date.now(),
         file,
         contentType,
