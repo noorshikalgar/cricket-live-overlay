@@ -199,6 +199,24 @@ export const WIDGET_DEFAULTS: Record<WidgetType, WidgetDefaults> = {
     h: 64,
     props: { showStatus: true },
   },
+  overChart: {
+    label: 'Worm / Manhattan',
+    icon: '📈',
+    w: 760,
+    h: 380,
+    props: { chart: 'worm', showWickets: true, title: '' },
+  },
+  compare: {
+    label: 'Innings compare',
+    icon: '⇔',
+    w: 640,
+    h: 380,
+    props: {
+      rows: { stage: true, powerplay: true, middle: false, death: false, early: true, last6: true, boundaries: true, runRate: true },
+      earlyOvers: 5,
+      title: '',
+    },
+  },
   predictions: {
     label: 'Match predictions',
     icon: '◆',

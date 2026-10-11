@@ -10,6 +10,7 @@ import {
   type MatchFormat,
   type MatchPhase,
   type MatchState,
+  type OverPoint,
   type Team,
 } from '@cos/shared';
 import { arr, num, obj, oversToBalls, str, type Json } from './http';
@@ -174,16 +175,52 @@ function chipFromBall(b: BallEvent): BallChip {
  * single response holds two or three overs at most.
  */
 export function overRunsSeen(raw: unknown): Map<number, number> {
+  return new Map([...overEndsSeen(raw).ends].map(([over, e]) => [over, e.runs]));
+}
+
+/** What an over separator tells us: runs in the over and the score at its end ("32-0"). */
+export interface OverEnd {
+  runs: number;
+  total: number | null;
+  totalWickets: number | null;
+}
+
+/**
+ * Over number → its end-of-over facts, for the current innings (0-based
+ * `innings`), from the separators in this response's short feed.
+ */
+export function overEndsSeen(raw: unknown): { innings: number; ends: Map<number, OverEnd> } {
   const data = obj(obj(raw)['data']);
-  const inn = num(obj(data['miniscore'])['innings_id']);
-  const out = new Map<number, number>();
+  const inningsId = num(obj(data['miniscore'])['innings_id']);
+  const ends = new Map<number, OverEnd>();
   const seps = arr(data['commentary'])
     .map(obj)
-    .filter((e) => num(e['innings_id']) === inn && e['over_separator'])
+    .filter((e) => num(e['innings_id']) === inningsId && e['over_separator'])
     .map((e) => obj(e['over_separator']))
-    .map((sep) => [num(sep['over_number']), num(sep['over_runs'])] as const)
-    .sort((x, y) => x[0] - y[0]);
-  for (const [over, runs] of seps) out.set(over, runs);
+    .sort((x, y) => num(x['over_number']) - num(y['over_number']));
+  for (const sep of seps) {
+    const m = /(\d+)\s*[-/]\s*(\d+)/.exec(str(sep['bat_team_score']));
+    ends.set(num(sep['over_number']), {
+      runs: num(sep['over_runs']),
+      total: m ? Number(m[1]) : null,
+      totalWickets: m ? Number(m[2]) : null,
+    });
+  }
+  return { innings: Math.max(0, inningsId - 1), ends };
+}
+
+/** Over ends (merged across polls) → completed overs with wickets per over where the score says. */
+export function toOverPoints(ends: Map<number, OverEnd>): OverPoint[] {
+  const out: OverPoint[] = [];
+  let prev: OverEnd | undefined;
+  let prevOver = 0;
+  for (const [over, e] of [...ends.entries()].sort((a, b) => a[0] - b[0])) {
+    const known = e.totalWickets !== null && (over === 1 ? true : prevOver === over - 1 && prev?.totalWickets != null);
+    const wickets = known ? (e.totalWickets ?? 0) - (over === 1 ? 0 : (prev?.totalWickets ?? 0)) : 0;
+    out.push({ over, runs: e.runs, wickets: Math.max(0, wickets), total: e.total ?? 0, totalWickets: e.totalWickets ?? 0 });
+    prev = e;
+    prevOver = over;
+  }
   return out;
 }
 

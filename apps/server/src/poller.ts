@@ -369,7 +369,17 @@ function message(err: unknown): string {
  * is recent, and a restart starts with no history. Same innings only.
  */
 export function keepKnown(next: MatchState, prev: MatchState | null): MatchState {
-  if (!prev || prev.matchId !== next.matchId || prev.innings.length !== next.innings.length) return next;
+  if (!prev || prev.matchId !== next.matchId) return next;
+  // over-by-over history: keep every over we ever saw, the newer poll wins on overlap
+  if (prev.overHistory?.length) {
+    const len = Math.max(prev.overHistory.length, next.overHistory?.length ?? 0);
+    next.overHistory = Array.from({ length: len }, (_, i) => {
+      const byOver = new Map((prev.overHistory?.[i] ?? []).map((p) => [p.over, p]));
+      for (const p of next.overHistory?.[i] ?? []) byOver.set(p.over, p);
+      return [...byOver.values()].sort((a, b) => a.over - b.over);
+    });
+  }
+  if (prev.innings.length !== next.innings.length) return next;
   const wkts = next.innings.at(-1)?.wickets ?? 0;
   if (!next.lastWicket && prev.lastWicket && wkts > 0) next.lastWicket = prev.lastWicket;
   if (!next.recentOvers.length && prev.recentOvers.length) next.recentOvers = prev.recentOvers;

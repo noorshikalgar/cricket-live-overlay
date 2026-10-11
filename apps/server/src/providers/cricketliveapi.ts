@@ -11,6 +11,7 @@ import {
   type MatchPhase,
   type MatchState,
   type MatchSummary,
+  type OverPoint,
   type Scorecard,
   type Squads,
   type Team,
@@ -19,7 +20,7 @@ import { arr, getJson, num, obj, oversToBalls, str, type Json } from './http';
 import { log } from '../log';
 import { BudgetExceededError, type CallBudget } from '../usage';
 import { mapScorecardReal, mapSquadsReal } from './cricketliveapi-cards';
-import { composeFromMiniscore, isMiniscoreResponse, overRunsSeen } from './cricketliveapi-miniscore';
+import { composeFromMiniscore, isMiniscoreResponse, overEndsSeen, toOverPoints, type OverEnd } from './cricketliveapi-miniscore';
 import type { CricketProvider } from './types';
 
 /**
@@ -359,8 +360,8 @@ export class CricketLiveApiProvider implements CricketProvider {
   private budget: CallBudget | null = null;
   private liveList: Cached<Json[]> | null = null;
   private readonly cache = new Map<string, MatchCache>();
-  /** "<match>:<innings>" → over number → runs, merged across polls */
-  private readonly overRuns = new Map<string, Map<number, number>>();
+  /** "<match>:<innings>" → over number → end-of-over facts, merged across polls */
+  private readonly overEnds = new Map<string, Map<number, OverEnd>>();
 
   constructor(
     private readonly apiKey: string,
@@ -435,15 +436,19 @@ export class CricketLiveApiProvider implements CricketProvider {
       // venue, from the copy the match picker already fetched (no extra call)
       const item = this.liveList?.value.find((m) => str(m['match_id']) === id);
       const state = composeFromMiniscore(id, commentaryRaw, { teamColor, venue: str(item?.['venue']) }, now);
-      // remember every over total we have seen, so "last 6 overs" fills up over the match
-      const inningsKey = `${id}:${num(obj(obj(obj(commentaryRaw)['data'])['miniscore'])['innings_id'])}`;
-      const seen = this.overRuns.get(inningsKey) ?? new Map<number, number>();
-      for (const [over, runs] of overRunsSeen(commentaryRaw)) seen.set(over, runs);
-      this.overRuns.set(inningsKey, seen);
-      state.recentOvers = [...seen.entries()]
-        .sort((a, b) => a[0] - b[0])
-        .map(([, runs]) => runs)
-        .slice(-6);
+      // remember every over end we have seen (the feed only holds ~20 balls), per innings
+      const seen = overEndsSeen(commentaryRaw);
+      const key = `${id}:${seen.innings}`;
+      const ends = this.overEnds.get(key) ?? new Map<number, OverEnd>();
+      for (const [over, e] of seen.ends) ends.set(over, e);
+      this.overEnds.set(key, ends);
+      const history: OverPoint[][] = [];
+      for (const [k, v] of this.overEnds) {
+        const [mid, inn] = k.split(':');
+        if (mid === id) history[Number(inn)] = toOverPoints(v);
+      }
+      state.overHistory = Array.from({ length: history.length }, (_, i) => history[i] ?? []);
+      state.recentOvers = (history[seen.innings] ?? []).map((p) => p.runs).slice(-6);
       return state;
     }
 

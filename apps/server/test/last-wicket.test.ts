@@ -72,3 +72,31 @@ describe('sameName (photo lookup)', () => {
     expect(sameName('List of Odisha cricketers', 'Manoj Raju')).toBe(false);
   });
 });
+
+describe('over history', () => {
+  const rec = generateRecording();
+  it('mock: completed overs with running totals add up', () => {
+    const s = buildState(rec, rec.deliveries.length, 0);
+    const h = s.overHistory?.[0] ?? [];
+    expect(h.length).toBeGreaterThan(10);
+    expect(h.reduce((a, p) => a + p.runs, 0)).toBe(h.at(-1)!.total);
+    expect(h.reduce((a, p) => a + p.wickets, 0)).toBe(h.at(-1)!.totalWickets);
+  });
+  it('real feed: end-of-over scores give wickets per over', async () => {
+    const { overEndsSeen, toOverPoints } = await import('../src/providers/cricketliveapi-miniscore');
+    const raw = JSON.parse(readFileSync(new URL('./fixtures/commentary-real.json', import.meta.url), 'utf8'));
+    const seen = overEndsSeen(raw);
+    expect(seen.innings).toBe(1);
+    expect(toOverPoints(seen.ends).map((p) => [p.over, p.runs, p.total, p.totalWickets])).toEqual([
+      [1, 14, 14, 0],
+      [2, 6, 20, 0],
+      [3, 12, 32, 0],
+    ]);
+  });
+  it('keepKnown keeps overs a later poll no longer carries', async () => {
+    const { keepKnown } = await import('../src/poller');
+    const prev = buildState(rec, 60, 0);
+    const next = { ...buildState(rec, 66, 0), overHistory: [[]] };
+    expect(keepKnown(next, prev).overHistory?.[0].length).toBe(prev.overHistory?.[0].length);
+  });
+});

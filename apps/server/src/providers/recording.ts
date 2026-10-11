@@ -10,6 +10,7 @@ import {
   type Squads,
   type Bowler,
   type Innings,
+  type OverPoint,
   type MatchFormat,
   type MatchPhase,
   type MatchState,
@@ -315,6 +316,8 @@ export function buildState(rec: Recording, count: number, now: number, withCard 
     rrr = ballsRemaining > 0 && need > 0 ? round2((need / ballsRemaining) * 6) : null;
   }
 
+  const overHistory = accs.map(overPoints);
+
   // last wicket and who's still to bat, from the scorecard at this point of the replay
   const card = n > 0 && withCard ? buildScorecard(rec, n, now).innings.at(-1) : undefined;
   const fall = card?.fallOfWickets.at(-1);
@@ -337,6 +340,7 @@ export function buildState(rec: Recording, count: number, now: number, withCard 
     phase,
     lastWicket,
     yetToBat,
+    overHistory,
     teams: rec.meta.teams,
     innings: accs.map(toInnings),
     batters,
@@ -403,6 +407,34 @@ export function toSummary(state: MatchState, title: string): MatchSummary {
     statusText: state.statusText,
     scoreLine: summaryLine(state),
   };
+}
+
+/** Completed overs of one innings: runs and wickets in each, and the score at its end. */
+function overPoints(inn: InningsAcc): OverPoint[] {
+  const out: OverPoint[] = [];
+  let legal = 0;
+  let runs = 0;
+  let wkts = 0;
+  let overRuns = 0;
+  let overWkts = 0;
+  for (const d of inn.deliveries) {
+    const r = d.runs + d.extras;
+    runs += r;
+    overRuns += r;
+    if (d.wicket) {
+      wkts += 1;
+      overWkts += 1;
+    }
+    if (isLegal(d)) {
+      legal += 1;
+      if (legal % 6 === 0) {
+        out.push({ over: legal / 6, runs: overRuns, wickets: overWkts, total: runs, totalWickets: wkts });
+        overRuns = 0;
+        overWkts = 0;
+      }
+    }
+  }
+  return out;
 }
 
 /** Dismissal text in scorecard style; the fielder is picked deterministically from the bowling side. */
