@@ -24,6 +24,7 @@ import { ScoreHeaderWidget } from './broadcast/score-header.widget';
 import { StatBarWidget } from './broadcast/stat-bar.widget';
 import { InfoRailWidget, RAIL_SLIDES } from './broadcast/info-rail.widget';
 import { PlayerSpotlightWidget } from './broadcast/player-spotlight.widget';
+import { PredictionsWidget } from './predictions/predictions.widget';
 import { VideoWidget } from './video/video.widget';
 
 export interface SelectOption {
@@ -331,6 +332,25 @@ export const WIDGET_REGISTRY: Record<WidgetType, WidgetDef> = {
   ]),
   statBar: def('statBar', StatBarWidget, 'CRR, RRR, partnership and the chase sentence on one line', [
     { kind: 'toggle', key: 'showStatus', label: 'Status sentence' },
+  ]),
+  predictions: def('predictions', PredictionsWidget, 'Your calls for the session, total runs, winner and this over; type them in, hide any line', [
+    { kind: 'text', key: 'title', label: 'Title (empty = Match predictions)', placeholder: 'Match predictions' },
+    { kind: 'text', key: 'session', label: 'Session', placeholder: 'e.g. 52 in powerplay' },
+    { kind: 'toggle', key: 'showSession', label: 'Show session' },
+    { kind: 'text', key: 'total', label: 'Total runs', placeholder: 'e.g. 185–195' },
+    { kind: 'toggle', key: 'showTotal', label: 'Show total runs' },
+    { kind: 'select', key: 'winner', label: 'Winner', options: opts(['none', 'Not set'], ['team0', 'First team'], ['team1', 'Second team'], ['text', 'Type it']) },
+    { kind: 'text', key: 'winnerText', label: 'Winner (typed)', showIf: (p) => p['winner'] === 'text' },
+    { kind: 'toggle', key: 'showWinner', label: 'Show winner' },
+    { kind: 'text', key: 'thisOver', label: 'This over', placeholder: 'e.g. 8+ runs, wicket' },
+    { kind: 'toggle', key: 'showThisOver', label: 'Show this over' },
+    {
+      kind: 'select',
+      key: 'layout',
+      group: 'Appearance',
+      label: 'Layout',
+      options: opts(['auto', 'Auto (fits the box shape)'], ['card', 'Card'], ['row', 'Single row']),
+    },
   ]),
   playerSpotlight: def('playerSpotlight', PlayerSpotlightWidget, 'Big card: picture on the left, name, figures and stat tiles; Batter 1, Batter 2 or the bowler', [
     { kind: 'select', key: 'slot', label: 'Shows', options: opts(['batter1', 'Batter 1'], ['batter2', 'Batter 2'], ['bowler', 'Current bowler']) },
