@@ -18,7 +18,7 @@ const GROUPS: { id: string; title: string; hint: string; types: WidgetType[] }[]
     hint: 'Batters and bowler at the crease',
     types: ['playerSpotlight', 'playerPanel', 'batters', 'bowler', 'partnership'],
   },
-  { id: 'overs', title: 'Overs', hint: 'Ball by ball and over by over', types: ['thisOver', 'oversStrip', 'recentOvers'] },
+  { id: 'overs', title: 'Overs', hint: 'Ball by ball, over by over, and both innings compared', types: ['thisOver', 'oversStrip', 'recentOvers', 'compare', 'overChart'] },
   { id: 'moments', title: 'Moments', hint: 'FOUR, SIX, WICKET and a news-style ticker', types: ['banner', 'ticker'] },
   {
     id: 'match',

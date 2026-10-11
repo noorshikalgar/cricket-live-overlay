@@ -25,6 +25,8 @@ import { StatBarWidget } from './broadcast/stat-bar.widget';
 import { InfoRailWidget, RAIL_SLIDES } from './broadcast/info-rail.widget';
 import { PlayerSpotlightWidget } from './broadcast/player-spotlight.widget';
 import { PredictionsWidget } from './predictions/predictions.widget';
+import { COMPARE_ROWS, CompareWidget } from './compare/compare.widget';
+import { OverChartWidget } from './compare/over-chart.widget';
 import { VideoWidget } from './video/video.widget';
 
 export interface SelectOption {
@@ -342,6 +344,16 @@ export const WIDGET_REGISTRY: Record<WidgetType, WidgetDef> = {
   ]),
   statBar: def('statBar', StatBarWidget, 'CRR, RRR, partnership and the chase sentence on one line', [
     { kind: 'toggle', key: 'showStatus', label: 'Status sentence' },
+  ]),
+  overChart: def('overChart', OverChartWidget, 'Both innings over by over: Worm (running total) or Manhattan (runs per over), wickets marked', [
+    { kind: 'select', key: 'chart', label: 'Chart', options: opts(['worm', 'Worm (running total)'], ['manhattan', 'Manhattan (runs per over)']) },
+    { kind: 'toggle', key: 'showWickets', label: 'Mark wickets' },
+    { kind: 'text', key: 'title', label: 'Title (empty = automatic)' },
+  ]),
+  compare: def('compare', CompareWidget, 'Both innings side by side: at this stage, powerplay, early wickets, last 6 overs, boundaries, run rate', [
+    { kind: 'checks', key: 'rows', label: 'Compare', options: COMPARE_ROWS },
+    { kind: 'number', key: 'earlyOvers', label: 'Wickets in the first … overs', min: 1, max: 20, step: 1 },
+    { kind: 'text', key: 'title', label: 'Title (empty = Innings compare)' },
   ]),
   predictions: def('predictions', PredictionsWidget, 'Your calls for the session, total runs, winner and this over; type them in, hide any line', [
     { kind: 'text', key: 'title', label: 'Title (empty = Match predictions)', placeholder: 'Match predictions' },

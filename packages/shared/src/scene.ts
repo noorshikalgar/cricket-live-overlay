@@ -25,6 +25,8 @@ export type WidgetType =
   | 'infoRail'
   | 'playerSpotlight'
   | 'predictions'
+  | 'compare'
+  | 'overChart'
   | 'scorecard'
   | 'teamCard'
   | 'playerCard';

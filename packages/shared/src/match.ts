@@ -69,6 +69,19 @@ export interface BallEvent {
   text: string;
 }
 
+/** One completed over of an innings. */
+export interface OverPoint {
+  /** 1-based over number */
+  over: number;
+  /** runs in this over */
+  runs: number;
+  /** wickets in this over */
+  wickets: number;
+  /** team score at the end of the over */
+  total: number;
+  totalWickets: number;
+}
+
 /** The most recent dismissal of the current innings. */
 export interface LastWicket {
   batter: string;
@@ -115,6 +128,8 @@ export interface MatchState {
    * because the feed usually updates sooner.
    */
   ballFeed?: BallEvent[];
+  /** completed overs of each innings (index = innings), as far as the provider knows them */
+  overHistory?: OverPoint[][];
   /** latest dismissal in the current innings, when the provider has it */
   lastWicket?: LastWicket | null;
   /** batting order still to come, when the provider knows it without an extra call */
