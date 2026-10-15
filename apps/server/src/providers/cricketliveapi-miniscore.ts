@@ -290,7 +290,10 @@ export function composeFromMiniscore(id: string, raw: unknown, extras: Miniscore
   const target = typeof targetRaw === 'number' && targetRaw > 0 ? targetRaw : null;
   const ballsRemaining = target !== null && cur && maxBalls ? Math.max(0, maxBalls - cur.balls) : null;
   const need = target !== null && cur ? target - cur.runs : null;
-  const phase = phaseFrom(str(ms['state'] ?? hd['state']));
+  const statedPhase = phaseFrom(str(ms['state'] ?? hd['state']));
+  // an unknown state text ("Toss", "Preview"…) while runs are on the board is still live play
+  const started = innings.some((x) => x.runs > 0 || oversToBalls(x.overs) > 0);
+  const phase: MatchPhase = statedPhase === 'upcoming' && started ? 'live' : statedPhase;
 
   const chasing = teams.find((t) => t.shortCode === cur?.battingTeam)?.name ?? cur?.battingTeam ?? '';
   const statusText =

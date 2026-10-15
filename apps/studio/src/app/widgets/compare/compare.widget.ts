@@ -68,6 +68,27 @@ function phase(h: OverPoint[], a: number, b: number): { runs: number; wkts: numb
 }
 
 /**
+ * Score at the end of over n estimated from the scorecard, for an innings the
+ * server didn't follow ball by ball: wickets are exact (fall of wickets), runs
+ * are interpolated between the nearest known scores (each fall, and the total).
+ */
+function estimateAt(c: CardInnings | undefined, n: number): { runs: number; wkts: number } | null {
+  if (!c) return null;
+  const ball = n * 6;
+  const end = toBalls(c.overs);
+  if (ball > end) return null;
+  if (ball === end) return { runs: c.runs, wkts: c.wickets };
+  const known = [{ balls: 0, runs: 0 }, ...c.fallOfWickets.map((f) => ({ balls: toBalls(f.over), runs: f.runs })), { balls: end, runs: c.runs }].sort(
+    (a, b) => a.balls - b.balls,
+  );
+  const after = known.find((k) => k.balls >= ball) ?? known.at(-1)!;
+  const before = [...known].reverse().find((k) => k.balls <= ball) ?? known[0];
+  const runs =
+    after.balls === before.balls ? before.runs : before.runs + ((after.runs - before.runs) * (ball - before.balls)) / (after.balls - before.balls);
+  return { runs: Math.round(runs), wkts: c.fallOfWickets.filter((f) => toBalls(f.over) <= ball).length };
+}
+
+/**
  * Head-to-head of the two innings: at this stage, powerplay, middle and death
  * overs, early wickets, last six overs, boundaries and run rate, each with a
  * split bar in the team colours.
@@ -294,7 +315,16 @@ export class CompareWidget extends WidgetBase<CompareProps> {
     const inn = (i: 0 | 1) => m.innings[i] ?? null;
     const h = (i: 0 | 1) => hist[i] ?? [];
     const cardInn = (i: 0 | 1): CardInnings | undefined => card?.innings[i];
-    const score = (s: { runs: number; wkts: number }) => `${s.runs}/${s.wkts}`;
+    const score = (s: { runs: number; wkts: number }, est = false) => `${est ? '≈' : ''}${s.runs}/${s.wkts}`;
+    /** exact from the over history, else estimated from the scorecard (marked ≈) */
+    const at = (i: 0 | 1, over: number): { s: { runs: number; wkts: number }; est: boolean } | null => {
+      const exact = scoreAt(h(i), over);
+      if (exact) return { s: exact, est: false };
+      // never past what the live score says has been bowled in this innings
+      const bowled = m.innings[i] ? toBalls(m.innings[i].overs) : 0;
+      const e = over * 6 <= bowled ? estimateAt(cardInn(i), over) : null;
+      return e ? { s: e, est: over > 0 } : null;
+    };
 
     // at this stage: the first innings after as many overs as the chase has faced
     if (m.innings.length >= 2) {
@@ -304,8 +334,8 @@ export class CompareWidget extends WidgetBase<CompareProps> {
           const now = scoreAt(h(1), n) ?? { runs: m.innings[1].runs, wkts: m.innings[1].wickets };
           return { text: score(now), value: now.runs };
         }
-        const s = scoreAt(h(0), n);
-        return s ? { text: score(s), value: s.runs } : null;
+        const s = at(0, n);
+        return s ? { text: score(s.s, s.est), value: s.s.runs } : null;
       });
     }
 
@@ -315,7 +345,13 @@ export class CompareWidget extends WidgetBase<CompareProps> {
         add(key, `${this.t(label)} (${a}–${b})`, (i) => {
           if (!inn(i)) return null;
           const p = phase(h(i), a, b);
-          return p ? { text: score(p), value: p.runs } : null;
+          if (p) return { text: score(p), value: p.runs };
+          // innings not followed ball by ball: from the scorecard
+          const end = at(i, b);
+          const start = at(i, a - 1);
+          if (!end || !start) return null;
+          const runs = end.s.runs - start.s.runs;
+          return { text: score({ runs, wkts: end.s.wkts - start.s.wkts }, end.est || start.est), value: runs };
         });
       phaseRow('powerplay', 'Powerplay', ph.powerplay);
       phaseRow('middle', 'Middle overs', ph.middle);

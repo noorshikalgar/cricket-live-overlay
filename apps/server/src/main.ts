@@ -39,7 +39,10 @@ function cardsOnAir(): { scorecard: boolean; squads: boolean } {
   const id = scenes.getSettings().activeSceneId;
   const widgets = (id ? scenes.get(id)?.widgets : undefined)?.filter((w) => w.visible) ?? [];
   // the info rail's "next batters" / "overs left" slides read the scorecard and XIs
-  const rail = widgets.some((w) => w.type === 'infoRail' && railUsesCards(w.props));
+  const rail =
+    widgets.some((w) => w.type === 'infoRail' && railUsesCards(w.props)) ||
+    // innings compare: boundaries, and estimates for an innings we didn't follow
+    widgets.some((w) => w.type === 'compare');
   return {
     scorecard: rail || widgets.some((w) => (CARD_WIDGET_TYPES as readonly string[]).includes(w.type)),
     squads: rail || widgets.some((w) => w.type === 'teamCard' || w.type === 'playerCard'),
