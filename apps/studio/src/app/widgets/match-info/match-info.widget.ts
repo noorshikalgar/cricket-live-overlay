@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed } from '@angular/core';
 import { MarqueeDirective } from '../../motion/marquee.directive';
+import { FitDirective } from '../../motion/fit.directive';
 import { WidgetBase } from '../widget-base';
 
 type Layout = 'stack' | 'grid' | 'row';
@@ -23,11 +24,12 @@ interface Line {
 /** Teams, series, venue, toss and status, as a stacked list, a grid or a single row. */
 @Component({
   selector: 'cos-match-info',
-  imports: [MarqueeDirective],
+  imports: [FitDirective, MarqueeDirective],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div
       class="panel box"
+      cosFit
       [class]="'panel box ' + layout() + ' lbl-' + p().labels + ' al-' + p().align"
       [style.--mi-fs.px]="fontPx()"
       [style.--mi-cols]="cols()"
@@ -71,7 +73,7 @@ interface Line {
       flex-direction: column;
       justify-content: center;
       gap: 0.35em;
-      font-size: var(--mi-fs);
+      font-size: calc(var(--mi-fs) * var(--fit, 1));
       min-width: 0;
     }
     .teams {

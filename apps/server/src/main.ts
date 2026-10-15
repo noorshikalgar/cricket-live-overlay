@@ -2,7 +2,7 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import Fastify from 'fastify';
 import fastifyStatic from '@fastify/static';
-import { CARD_WIDGET_TYPES, newId, type AppSettings, type MatchEventType } from '@cos/shared';
+import { CARD_WIDGET_TYPES, newId, type AppSettings, type MatchEventType, type MatchState } from '@cos/shared';
 import { CardService } from './cards';
 import { manualEvent } from './events';
 import { DATA_DIR, SCENES_DIR, STUDIO_DIST, UPLOADS_DIR, loadConfig } from './config';
@@ -55,6 +55,24 @@ function railUsesCards(props: Record<string, unknown>): boolean {
 }
 
 /**
+ * A full scorecard on air must not show a different score from the rest of
+ * the overlay. When the live score has moved on from the card's, the card is
+ * refreshed, at most once a minute (1 API call). Only for a visible scorecard
+ * widget; nothing is fetched otherwise.
+ */
+const SCORECARD_SYNC_MS = 60_000;
+function keepScorecardInStep(state: MatchState): void {
+  const id = scenes.getSettings().activeSceneId;
+  const onAir = (id ? scenes.get(id)?.widgets : undefined)?.some((w) => w.visible && w.type === 'scorecard' && w.props['minimized'] !== true);
+  const card = cards.current.scorecard;
+  if (!onAir || !card) return;
+  const live = state.innings.at(-1);
+  const shown = card.innings[state.innings.length - 1];
+  const differs = !shown || !live || shown.runs !== live.runs || shown.wickets !== live.wickets || shown.overs !== live.overs;
+  if (differs && Date.now() - card.updatedAt >= SCORECARD_SYNC_MS) void cards.fetch('scorecard', true);
+}
+
+/**
  * After a wicket the batting order and bowling figures change, so a scorecard
  * that is in use is refreshed once (1 API call), a little later so the API has
  * caught up. Nothing is fetched when no card or rail needs it.
@@ -73,8 +91,11 @@ const poller = new Poller(
   {
     onState: (state) => {
       hub.broadcast({ type: 'match:state', state });
-      // cards only fetch when they have nothing yet; reloads are manual (⟳)
-      if (state) cards.ensure(cardsOnAir());
+      // cards fetch when they have nothing yet; a scorecard on air also keeps up with the score
+      if (state) {
+        cards.ensure(cardsOnAir());
+        keepScorecardInStep(state);
+      }
     },
     onEvent: (event) => {
       hub.broadcast({ type: 'match:event', event });
