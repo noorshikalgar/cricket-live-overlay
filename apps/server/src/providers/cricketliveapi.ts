@@ -563,8 +563,12 @@ export function composeState(id: string, c: MatchCache, feed: BallEvent[], now: 
   const need = target !== null && curInn ? target - curInn.runs : null;
 
   // a match that drops off the live list after being live has finished
-  const phase: MatchPhase = live
-    ? phaseFrom(str(live['state'] ?? live['status']))
+  const stated = live ? phaseFrom(str(live['state'] ?? live['status'])) : null;
+  // an unknown state text while runs are on the board is still live play
+  const phase: MatchPhase = stated
+    ? stated === 'upcoming' && innings.some((x) => x.runs > 0 || x.balls > 0)
+      ? 'live'
+      : stated
     : c.everLive
       ? 'complete'
       : feed.length

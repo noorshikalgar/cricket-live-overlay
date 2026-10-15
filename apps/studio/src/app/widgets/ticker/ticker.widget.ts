@@ -100,7 +100,8 @@ export class TickerWidget extends WidgetBase<TickerProps> {
       .matches()
       .filter((m) => m.id !== current)
       .map((m) => `${this.i18n.lang() === 'mr' ? m.scoreLine.replace(/ v /, ' वि. ') : m.scoreLine}  ${this.i18n.apiText(m.statusText)}`.trim());
-    if (source === 'custom') return custom.length ? custom : ['Add ticker text in settings'];
+    // the hint is for the Studio only; on air an empty ticker shows nothing
+    if (source === 'custom') return custom.length ? custom : this.editing() ? ['Add ticker text in settings'] : [];
     if (source === 'both') return [...scores, ...custom];
     return scores.length ? scores : custom.length ? custom : [this.t('No other live matches')];
   });

@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, ElementRef, computed, effect, injec
 import { gsap } from '../../motion/gsap';
 import { MarqueeDirective } from '../../motion/marquee.directive';
 import { MotionService } from '../../motion/motion.service';
+import { FitDirective } from '../../motion/fit.directive';
 import { WidgetBase } from '../widget-base';
 
 export interface PredictionsProps {
@@ -33,10 +34,10 @@ interface Row {
  */
 @Component({
   selector: 'cos-predictions',
-  imports: [MarqueeDirective],
+  imports: [FitDirective, MarqueeDirective],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <div class="pred" [class.row]="isRow()" [style.--fsz.px]="fontPx()">
+    <div class="pred" cosFit [class.row]="isRow()" [style.--fsz.px]="fontPx()">
       <div class="head">
         <span class="spark" aria-hidden="true">◆</span>
         <span class="title" cosMarquee>{{ titleText() }}</span>
@@ -73,7 +74,7 @@ interface Row {
       overflow: hidden;
       border-radius: var(--radius);
       color: #fff;
-      font-size: var(--fsz);
+      font-size: calc(var(--fsz) * var(--fit, 1));
       background:
         linear-gradient(180deg, rgba(255, 255, 255, 0.08), transparent 40%),
         linear-gradient(135deg, #111827, #0b0f17);

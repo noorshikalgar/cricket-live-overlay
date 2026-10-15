@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/c
 import type { CardInnings, MatchState, OverPoint, Team } from '@cos/shared';
 import { LiveStore } from '../../core/live.store';
 import { OdometerDirective } from '../../motion/odometer.directive';
+import { FitDirective } from '../../motion/fit.directive';
 import { WidgetBase } from '../widget-base';
 
 export type CompareRow = 'stage' | 'powerplay' | 'middle' | 'death' | 'early' | 'last6' | 'boundaries' | 'runRate';
@@ -74,11 +75,11 @@ function phase(h: OverPoint[], a: number, b: number): { runs: number; wkts: numb
  */
 @Component({
   selector: 'cos-compare',
-  imports: [OdometerDirective],
+  imports: [FitDirective, OdometerDirective],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     @if (sides(); as tm) {
-      <div class="cmp" [style.--a]="tm[0]?.primaryColor ?? '#64748b'" [style.--b]="tm[1]?.primaryColor ?? '#64748b'" [style.--fsz.px]="fontPx()">
+      <div class="cmp" cosFit [style.--a]="tm[0]?.primaryColor ?? '#64748b'" [style.--b]="tm[1]?.primaryColor ?? '#64748b'" [style.--fsz.px]="fontPx()">
         <div class="head">
           <span class="team a"><i></i>{{ tm[0]?.shortCode ?? '—' }}</span>
           <span class="title">{{ titleText() }}</span>
@@ -132,7 +133,7 @@ function phase(h: OverPoint[], a: number, b: number): { runs: number; wkts: numb
       overflow: hidden;
       border-radius: var(--radius);
       color: #fff;
-      font-size: var(--fsz);
+      font-size: calc(var(--fsz) * var(--fit, 1));
       background:
         linear-gradient(180deg, rgba(255, 255, 255, 0.07), transparent 40%),
         linear-gradient(135deg, #111827, #0b0f17);
