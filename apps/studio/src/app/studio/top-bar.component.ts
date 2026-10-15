@@ -416,7 +416,10 @@ export class TopBarComponent {
     const next = this.live.poll()?.nextPollAt;
     if (!next || this.mode() !== 'auto' || this.paused()) return null;
     const s = Math.max(0, Math.round((next - this.now()) / 1000));
-    return s >= 60 ? `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}` : `${s}s`;
+    const t = s >= 60 ? `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}` : `${s}s`;
+    // the chosen interval is stretched to save calls during breaks and after errors: say so
+    const phase = this.live.poll()?.phase;
+    return phase === 'break' ? `${t} · break (1 call/min)` : phase === 'error' ? `${t} · retrying` : t;
   });
 
   /** a match is selected and the last poll wasn't in the last 5 s (their cache is 10 s anyway) */
