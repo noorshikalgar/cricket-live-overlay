@@ -7,6 +7,10 @@ export const DATA_DIR = path.join(SERVER_ROOT, 'data');
 export const SCENES_DIR = path.join(DATA_DIR, 'scenes');
 export const RECORDINGS_DIR = path.join(DATA_DIR, 'recordings');
 export const UPLOADS_DIR = path.join(DATA_DIR, 'uploads');
+/** the project folder (two levels above apps/server) */
+export const PROJECT_ROOT = path.resolve(SERVER_ROOT, '..', '..');
+/** where users put their own player photos; PLAYER_PHOTOS_DIR in .env moves it */
+export const PLAYER_PHOTOS_DIR = path.resolve(PROJECT_ROOT, process.env['PLAYER_PHOTOS_DIR'] || 'player-photos');
 export const STUDIO_DIST = path.resolve(SERVER_ROOT, '..', 'studio', 'dist', 'studio', 'browser');
 
 function num(name: string, fallback: number): number {

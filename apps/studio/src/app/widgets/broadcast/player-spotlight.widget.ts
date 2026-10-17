@@ -2,7 +2,8 @@ import { ChangeDetectionStrategy, Component, ElementRef, computed, effect, injec
 import type { BallChip } from '@cos/shared';
 import { LiveStore } from '../../core/live.store';
 import { lastWicketLine, nextBatters } from '../../core/next-batters';
-import { playerImageUrl, playerRole, sideColor } from '../../core/player-image';
+import { PlayerPhotos } from '../../core/player-photo';
+import { playerRole, sideColor } from '../../core/player-image';
 import { gsap } from '../../motion/gsap';
 import { MarqueeDirective } from '../../motion/marquee.directive';
 import { MotionService } from '../../motion/motion.service';
@@ -51,7 +52,16 @@ function chipClass(c: BallChip): string {
         @if (p().showImage) {
           <div class="pic">
             <span class="watermark">{{ teamCode() }}</span>
-            <img [src]="img()" alt="" [class.photo]="isPhoto()" [style.visibility]="loadedSrc() === img() ? 'visible' : 'hidden'" (load)="loadedSrc.set(img())" />
+            <img
+              [src]="pic()?.src"
+              alt=""
+              [class.photo]="!pic()?.cutout"
+              [style.visibility]="loadedFor() === c.name ? 'visible' : 'hidden'"
+              (load)="loadedFor.set(c.name)"
+            />
+            @if (pic()?.credit) {
+              <span class="pcredit">{{ pic()!.credit }}</span>
+            }
           </div>
         }
         <div class="info">
@@ -151,6 +161,18 @@ function chipClass(c: BallChip): string {
       height: 96%;
       transform: translateX(-54%);
       filter: drop-shadow(0 8px 14px rgba(0, 0, 0, 0.45));
+    }
+    .pcredit {
+      position: absolute;
+      left: 0.5em;
+      right: 14%;
+      bottom: 0.3em;
+      font: 500 11px/1.2 Inter, Mukta, sans-serif;
+      color: rgba(255, 255, 255, 0.8);
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.9);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
     .pic img.photo {
       left: 0;
@@ -409,13 +431,19 @@ export class PlayerSpotlightWidget extends WidgetBase<PlayerSpotlightProps> {
     return (this.p().slot === 'bowler' ? bowl : bat)?.shortCode ?? '';
   });
 
-  protected readonly isPhoto = computed(() => this.store.settings().playerImages === 'photo');
+  private readonly photos = inject(PlayerPhotos);
 
-  protected readonly img = computed(() => {
+  /** own transparent photos and drawn avatars stand as cut-outs; other photos are cropped to fill */
+  protected readonly pic = computed(() => {
     const c = this.card();
-    if (!c) return '';
-    const role = playerRole(this.store.squads(), c.name, c.kind);
-    return playerImageUrl(c.name, this.color().startsWith('#') ? this.color() : null, role, this.store.settings().playerImages ?? 'avatar', 'cutout');
+    if (!c) return null;
+    return this.photos.picture({
+      name: c.name,
+      team: this.teamCode() || null,
+      color: this.color().startsWith('#') ? this.color() : null,
+      role: playerRole(this.store.squads(), c.name, c.kind),
+      style: 'cutout',
+    })();
   });
 
   protected readonly overBalls = computed(() => this.match()?.thisOver ?? []);
@@ -426,8 +454,8 @@ export class PlayerSpotlightWidget extends WidgetBase<PlayerSpotlightProps> {
 
   /** a new player in this slot: the card swings in fresh */
   private readonly shownName = signal<string | null>(null);
-  /** the picture currently loaded; a new player's picture stays hidden until it arrives */
-  protected readonly loadedSrc = signal('');
+  /** the player whose picture has loaded; a new player's picture stays hidden until it arrives */
+  protected readonly loadedFor = signal<string | null>(null);
 
   constructor() {
     super();

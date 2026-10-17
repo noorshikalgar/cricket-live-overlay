@@ -12,6 +12,8 @@ export interface ObsStatus {
 
 /** Messages the server pushes to every client. */
 export type ServerMessage =
+  /** the player-photos folder or photo sources changed: pictures should be looked up again */
+  | { type: 'players:changed' }
   | {
       type: 'hello';
       clientId: string;

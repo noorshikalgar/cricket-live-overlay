@@ -232,13 +232,27 @@ export interface AppSettings {
   blackout: boolean;
   blackoutText: string;
   blackoutSubtext: string;
-  /** player images on cards and panels: our own SVG avatars, or free Wikimedia photos (with credit) */
+  /** @deprecated replaced by playerPhotoSources; kept so older settings files still load */
   playerImages: 'avatar' | 'photo';
+  /**
+   * Where player pictures may come from, tried in this order; the drawn avatar
+   * is always the last resort.
+   */
+  playerPhotoSources: PlayerPhotoSources;
   /** language of the overlay's own labels (FOUR, Batter, Venue…); names and API text stay as they come */
   language: OverlayLanguage;
 }
 
 export type OverlayLanguage = 'en' | 'mr';
+
+export interface PlayerPhotoSources {
+  /** files the user put in the player-photos folder */
+  own: boolean;
+  /** the cricket API's player images (1 call per player, once) */
+  api: boolean;
+  /** free-licence photos from Wikimedia Commons, credited */
+  wikimedia: boolean;
+}
 
 export const DEFAULT_SETTINGS: AppSettings = {
   activeSceneId: null,
@@ -253,6 +267,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   blackoutText: "We'll be right back",
   blackoutSubtext: '',
   playerImages: 'avatar',
+  playerPhotoSources: { own: true, api: false, wikimedia: false },
   language: 'en',
 };
 

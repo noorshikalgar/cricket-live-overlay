@@ -67,6 +67,8 @@ function responseTtl(path: string): number {
 }
 /** optional sources leave this many calls for the next ball-feed request */
 const OPTIONAL_KEEP_FREE = 1;
+/** player photos are nice to have: they never use the last calls of the day */
+const PHOTO_KEEP_FREE = 15;
 
 interface LiveInnings {
   id: number;
@@ -402,6 +404,32 @@ export class CricketLiveApiProvider implements CricketProvider {
     const value = await getJson(this.baseUrl + path, { authorization: `Bearer ${this.apiKey}` });
     this.responses.set(path, { at: Date.now(), value });
     return value;
+  }
+
+  /**
+   * A player photo from the API's own image URL (the squads list carries one per
+   * player). One call each, through the budget and keeping calls free for the
+   * ball feed; the caller caches the file so a player is downloaded once.
+   */
+  async fetchPlayerImage(url: string): Promise<{ body: Buffer; contentType: string }> {
+    // only the API's own host gets our key
+    if (!url.startsWith(this.baseUrl)) throw new Error('not an image URL from this API');
+    const b = this.budget;
+    if (b && !b.tryAcquire(PHOTO_KEEP_FREE)) {
+      const reason = b.blockedReason() ?? 'API budget reserved for the ball feed';
+      log.apiBlocked(url, reason);
+      throw new BudgetExceededError(reason);
+    }
+    const t0 = Date.now();
+    const res = await fetch(url, { headers: { authorization: `Bearer ${this.apiKey}`, accept: 'image/*' }, signal: AbortSignal.timeout(15000) });
+    const contentType = res.headers.get('content-type') ?? '';
+    if (!res.ok || !contentType.startsWith('image/')) {
+      log.apiError(url, res.status, Date.now() - t0, res.ok ? `not an image (${contentType || 'no type'})` : res.statusText);
+      throw new Error(`player image: HTTP ${res.status}`);
+    }
+    const body = Buffer.from(await res.arrayBuffer());
+    log.apiOk(url, res.status, Date.now() - t0, body.length);
+    return { body, contentType };
   }
 
   private async fetchLiveList(optional: boolean): Promise<Json[]> {

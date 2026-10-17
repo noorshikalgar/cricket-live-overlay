@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { LiveStore } from '../../core/live.store';
+import { PlayerPhotos } from '../../core/player-photo';
 import { MarqueeDirective } from '../../motion/marquee.directive';
 import { WidgetBase } from '../widget-base';
 import { findPlayer, playerFigures, sameName, teamColorFor } from './card-data';
@@ -32,8 +33,8 @@ export interface PlayerCardProps {
       </div>
       @if (!min()) {
         <div class="card-body pc">
-          @if (p().showPhoto && info()?.player?.imageUrl) {
-            <img class="photo" [src]="info()!.player.imageUrl" alt="" referrerpolicy="no-referrer" />
+          @if (p().showPhoto && pic(); as ph) {
+            <img class="photo" [class.cutout]="ph.cutout" [src]="ph.src" alt="" [title]="ph.credit ?? ''" />
           }
           <div class="cols">
             @if (info(); as i) {
@@ -94,6 +95,13 @@ export interface PlayerCardProps {
       object-fit: cover;
       border-radius: calc(var(--radius) * 0.8);
       background: var(--chip);
+      object-position: top center;
+    }
+    /* a transparent cut-out stands on the team colour instead of being cropped */
+    .photo.cutout {
+      object-fit: contain;
+      object-position: bottom center;
+      background: linear-gradient(180deg, color-mix(in srgb, var(--team, var(--accent)) 35%, transparent), var(--team, var(--accent)));
     }
     .cols {
       flex: 1;
@@ -195,6 +203,16 @@ export class PlayerCardWidget extends WidgetBase<PlayerCardProps> {
     if (b) return `${b.runs}${b.status !== 'out' ? '*' : ''} (${b.balls})`;
     const w = this.bowling();
     return w ? `${w.wickets}-${w.runs}` : '';
+  });
+
+  private readonly photos = inject(PlayerPhotos);
+
+  /** the player's picture from the user's photo sources (own folder → API → Wikimedia → avatar) */
+  protected readonly pic = computed(() => {
+    const i = this.info();
+    const name = i?.player.name ?? this.p().playerName;
+    if (!name) return null;
+    return this.photos.picture({ name, team: i?.team.code ?? null, color: this.color(), role: i?.player.keeper ? 'wk' : (i?.player.role ?? ''), style: 'tile' })();
   });
 
   protected readonly color = computed(() => teamColorFor(this.match(), this.info()?.team.code ?? this.info()?.team.name ?? ''));

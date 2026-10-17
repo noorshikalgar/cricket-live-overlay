@@ -20,6 +20,8 @@ export interface CricketProvider {
   readonly callsPerPoll?: number;
   /** optional hook: a match was (re)selected, e.g. so the mock can restart its replay */
   onSelect?(id: string): void;
+  /** a player photo from an image URL the provider gave us (budgeted; cached by the caller) */
+  fetchPlayerImage?(url: string): Promise<{ body: Buffer; contentType: string }>;
   /** full scorecard for the cards (one call) */
   getScorecard?(id: string): Promise<Scorecard>;
   /** playing XIs for team and player cards (one call) */

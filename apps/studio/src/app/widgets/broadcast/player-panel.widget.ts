@@ -1,7 +1,8 @@
 import { ChangeDetectionStrategy, Component, computed, effect, inject, signal, untracked } from '@angular/core';
 import { LiveStore } from '../../core/live.store';
 import { lastWicketLine, nextBatters } from '../../core/next-batters';
-import { playerImageUrl, playerRole, sideColor } from '../../core/player-image';
+import { PlayerPhotos } from '../../core/player-photo';
+import { playerRole, sideColor } from '../../core/player-image';
 import { OdometerDirective } from '../../motion/odometer.directive';
 import { playerFigures, sameName } from '../cards/card-data';
 import { MarqueeDirective } from '../../motion/marquee.directive';
@@ -39,9 +40,15 @@ interface Shown {
       @if (shown(); as s) {
         @if (p().showImage) {
           <div class="img">
-            <img [src]="imgUrl()" alt="" (load)="imgLoaded.set(true); loadCredit()" (error)="imgFailed.set(true)" [class.hide]="imgFailed() || !imgLoaded()" />
-            @if (credit()) {
-              <span class="credit">{{ credit() }}</span>
+            <img
+              [src]="pic()?.src"
+              alt=""
+              (load)="loadedFor.set(s.name)"
+              (error)="imgFailed.set(true)"
+              [class.hide]="imgFailed() || loadedFor() !== s.name"
+            />
+            @if (pic()?.credit) {
+              <span class="credit">{{ pic()!.credit }}</span>
             }
           </div>
         }
@@ -232,8 +239,9 @@ export class PlayerPanelWidget extends WidgetBase<PlayerPanelProps> {
   private readonly store = inject(LiveStore);
   protected readonly imgFailed = signal(false);
   /** hide the previous player's picture until the new one has arrived */
-  protected readonly imgLoaded = signal(false);
-  protected readonly credit = signal<string | null>(null);
+  /** the player whose picture has loaded: a new player's picture stays hidden until it arrives */
+  protected readonly loadedFor = signal<string | null>(null);
+  private readonly photos = inject(PlayerPhotos);
 
   protected readonly shown = computed<Shown | null>(() => {
     const m = this.match();
@@ -321,33 +329,31 @@ export class PlayerPanelWidget extends WidgetBase<PlayerPanelProps> {
 
   protected readonly color = computed(() => sideColor(this.match(), this.shown()?.kind === 'bowl' ? 'bowling' : 'batting'));
 
-  private readonly source = computed(() => this.store.settings().playerImages ?? 'avatar');
+  /** the batting side's code for batters, the fielding side's for the bowler (for same-name photos) */
+  private readonly team = computed(() => {
+    const m = this.match();
+    const bat = m?.innings.at(-1)?.battingTeam ?? null;
+    if (this.shown()?.kind !== 'bowl') return bat;
+    return m?.teams.find((t) => t.shortCode !== bat)?.shortCode ?? null;
+  });
 
-  protected readonly imgUrl = computed(() => {
+  protected readonly pic = computed(() => {
     const s = this.shown();
-    if (!s) return '';
-    return playerImageUrl(s.name, this.color(), playerRole(this.store.squads(), s.name, s.kind), this.source());
+    if (!s) return null;
+    return this.photos.picture({
+      name: s.name,
+      team: this.team(),
+      color: this.color(),
+      role: playerRole(this.store.squads(), s.name, s.kind),
+      style: 'tile',
+    })();
   });
 
   constructor() {
     super();
     effect(() => {
-      this.imgUrl();
-      untracked(() => {
-        this.imgFailed.set(false);
-        this.imgLoaded.set(false);
-        this.credit.set(null);
-      });
+      this.pic()?.src;
+      untracked(() => this.imgFailed.set(false));
     });
-  }
-
-  /** credit line for Wikimedia photos (required by their licenses), once the image has loaded */
-  protected loadCredit(): void {
-    const name = this.shown()?.name;
-    if (!name || this.source() !== 'photo') return;
-    void fetch(`/api/players/credit?name=${encodeURIComponent(name)}`)
-      .then((r) => r.json() as Promise<{ credit?: string }>)
-      .then((c) => this.credit.set(c.credit ?? null))
-      .catch(() => undefined);
   }
 }

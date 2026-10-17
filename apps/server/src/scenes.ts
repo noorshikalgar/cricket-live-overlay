@@ -120,7 +120,12 @@ export class SceneStore {
     }
     if (existsSync(this.settingsFile)) {
       try {
-        this.settings = { ...DEFAULT_SETTINGS, ...(JSON.parse(readFileSync(this.settingsFile, 'utf8')) as Partial<AppSettings>) };
+        const saved = JSON.parse(readFileSync(this.settingsFile, 'utf8')) as Partial<AppSettings>;
+        this.settings = { ...DEFAULT_SETTINGS, ...saved };
+        // settings from before photo sources: keep their Wikimedia choice
+        if (!saved.playerPhotoSources) {
+          this.settings.playerPhotoSources = { own: true, api: false, wikimedia: saved.playerImages === 'photo' };
+        }
       } catch {
         // keep defaults
       }
@@ -151,6 +156,13 @@ export class SceneStore {
     next.blackoutText = String(next.blackoutText ?? '').slice(0, 120);
     next.blackoutSubtext = String(next.blackoutSubtext ?? '').slice(0, 160);
     next.playerImages = next.playerImages === 'photo' ? 'photo' : 'avatar';
+    // older settings only had avatars / Wikimedia: carry that choice over once
+    const src = (p.playerPhotoSources ?? this.settings.playerPhotoSources) as Partial<AppSettings['playerPhotoSources']> | undefined;
+    next.playerPhotoSources = {
+      own: src?.own !== false,
+      api: src?.api === true,
+      wikimedia: src ? src.wikimedia === true : next.playerImages === 'photo',
+    };
     next.language = next.language === 'mr' ? 'mr' : 'en';
     // null = .env default, 0 = budget-based, otherwise 5 s – 1 h
     const ps = next.pollSeconds;

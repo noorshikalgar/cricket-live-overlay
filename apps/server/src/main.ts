@@ -1,18 +1,20 @@
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { spawn } from 'node:child_process';
+import { existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import Fastify from 'fastify';
 import fastifyStatic from '@fastify/static';
 import { CARD_WIDGET_TYPES, newId, type AppSettings, type MatchEventType, type MatchState } from '@cos/shared';
 import { CardService } from './cards';
 import { manualEvent } from './events';
-import { DATA_DIR, SCENES_DIR, STUDIO_DIST, UPLOADS_DIR, loadConfig } from './config';
+import { DATA_DIR, PLAYER_PHOTOS_DIR, SCENES_DIR, STUDIO_DIST, UPLOADS_DIR, loadConfig } from './config';
 import { Hub } from './hub';
 import { ObsBridge } from './obs';
 import { Poller } from './poller';
 import { createProvider } from './providers';
 import { SceneStore, validateScene } from './scenes';
 import { log } from './log';
-import { PlayerImageService, roleOf } from './players';
+import { ApiPhotoCache, OwnPhotoFolder, PHOTO_EXTENSIONS, type PhotoSource } from './photo-sources';
+import { PlayerImageService, roleOf, sameName, type AvatarStyle, type PlayerRole } from './players';
 import { CallBudget } from './usage';
 
 const cfg = loadConfig();
@@ -154,20 +156,109 @@ app.post<{ Body: { on?: boolean; text?: string; subtext?: string } }>('/api/blac
 
 // ---- player images: our own SVG avatars, or cached free Wikimedia photos (never the cricket API) ----
 const players = new PlayerImageService(path.join(DATA_DIR, 'players'));
+const ownPhotos = new OwnPhotoFolder(PLAYER_PHOTOS_DIR, () => hub.broadcast({ type: 'players:changed' }));
+const apiPhotos = new ApiPhotoCache(
+  path.join(DATA_DIR, 'players', 'api'),
+  provider.fetchPlayerImage ? (url) => provider.fetchPlayerImage!(url) : null,
+);
+log.info(`PHOTO your photos folder: ${PLAYER_PHOTOS_DIR} (${ownPhotos.count} photo${ownPhotos.count === 1 ? '' : 's'})`);
 
+/** the API's image URL for a player, from the playing XIs the app already has */
+function apiImageUrl(name: string, team: string | null): string | null {
+  const teams = cards.current.squads?.teams ?? [];
+  const ordered = team ? [...teams].sort((a, b) => Number(b.code === team) - Number(a.code === team)) : teams;
+  for (const t of ordered) {
+    const p = [...t.playingXI, ...t.bench].find((x) => x.name === name) ?? [...t.playingXI, ...t.bench].find((x) => sameName(x.name, name));
+    if (p?.imageUrl) return p.imageUrl;
+  }
+  return null;
+}
+
+interface Resolved {
+  source: PhotoSource;
+  src: string;
+  /** see-through background: draw as a cut-out figure, not a cropped photo */
+  cutout: boolean;
+  credit?: string;
+  /** dry run only: a source that would be used once downloaded */
+  pending?: boolean;
+}
+
+/** a version for picture URLs so a changed file is fetched again */
+const stamp = (file: string) => {
+  try {
+    const st = statSync(file);
+    return `${st.size}-${Math.round(st.mtimeMs)}`;
+  } catch {
+    return '0';
+  }
+};
+
+/**
+ * Which picture a player gets, by the user's sources in priority order:
+ * own folder → API → Wikimedia → drawn avatar. `dryRun` reports what would be
+ * used without downloading anything (for the Studio's check list).
+ */
+async function resolvePhoto(
+  q: { name: string; team: string | null; color: string; role: PlayerRole; style: AvatarStyle },
+  dryRun = false,
+): Promise<Resolved> {
+  const src = scenes.getSettings().playerPhotoSources;
+  if (src.own) {
+    const e = ownPhotos.find(q.name, q.team);
+    if (e) {
+      const f = ownPhotos.read(e);
+      const rel = path.relative(PLAYER_PHOTOS_DIR, e.file).split(path.sep).join('/');
+      return { source: 'own', src: `/api/players/file/own?f=${encodeURIComponent(rel)}&v=${stamp(e.file)}`, cutout: f.cutout };
+    }
+  }
+  if (src.api && apiPhotos.available) {
+    const url = apiImageUrl(q.name, q.team);
+    const hit = apiPhotos.cached(q.name);
+    if (hit) return { source: 'api', src: `/api/players/file/api?f=${encodeURIComponent(path.basename(hit.file))}&v=${stamp(hit.file)}`, cutout: hit.cutout };
+    if (url && dryRun) return { source: 'api', src: '', cutout: false, pending: true };
+    if (url) {
+      const got = await apiPhotos.get(q.name, url);
+      if (got) return { source: 'api', src: `/api/players/file/api?f=${encodeURIComponent(path.basename(got.file))}&v=${stamp(got.file)}`, cutout: got.cutout };
+    }
+  }
+  if (src.wikimedia) {
+    const cached = players.cachedPhoto(q.name);
+    const meta = dryRun
+      ? cached
+      : await Promise.race([players.photo(q.name), new Promise<null>((r) => setTimeout(() => r(null), 6000))]);
+    if (meta?.found && meta.file) {
+      const file = path.join(DATA_DIR, 'players', meta.file);
+      return { source: 'wikimedia', src: `/api/players/file/wiki?f=${encodeURIComponent(meta.file)}&v=${stamp(file)}`, cutout: false, credit: meta.credit };
+    }
+    if (dryRun && !cached) return { source: 'wikimedia', src: '', cutout: false, pending: true };
+  }
+  const avatar = new URLSearchParams({ name: q.name, color: q.color.replace('#', ''), role: q.role, style: q.style, v: '3' });
+  return { source: 'avatar', src: `/api/players/image?${avatar.toString()}`, cutout: q.style === 'cutout' };
+}
+
+function photoQuery(qs: { name?: string; team?: string; color?: string; role?: string; style?: string }) {
+  const name = String(qs.name ?? '').slice(0, 80).trim();
+  const color = /^#?[0-9a-f]{6}$/i.test(qs.color ?? '') ? `#${String(qs.color).replace('#', '')}` : '#1D4ED8';
+  return {
+    name,
+    team: qs.team ? String(qs.team).slice(0, 8).toUpperCase() : null,
+    color,
+    role: roleOf(String(qs.role ?? '')),
+    style: (qs.style === 'cutout' ? 'cutout' : 'tile') as AvatarStyle,
+  };
+}
+
+// our drawn avatar (always available); `source=photo` is the older Wikimedia-or-avatar link
 app.get<{ Querystring: { name?: string; color?: string; role?: string; source?: string; style?: string } }>(
   '/api/players/image',
   async (req, reply) => {
-    const name = String(req.query.name ?? '').slice(0, 80).trim();
-    if (!name) return reply.code(400).send({ error: 'name required' });
-    const color = /^#?[0-9a-f]{6}$/i.test(req.query.color ?? '') ? `#${String(req.query.color).replace('#', '')}` : '#1D4ED8';
-    const role = roleOf(String(req.query.role ?? ''));
+    const q = photoQuery(req.query);
+    if (!q.name) return reply.code(400).send({ error: 'name required' });
     if (req.query.source === 'photo') {
-      // wait briefly for a first-time lookup; otherwise show the avatar now and the photo next time
-      const meta = await Promise.race([players.photo(name), new Promise<null>((r) => setTimeout(() => r(null), 6000))]);
+      const meta = await Promise.race([players.photo(q.name), new Promise<null>((r) => setTimeout(() => r(null), 6000))]);
       if (meta?.found && meta.file) {
         return reply
-          // short: a re-checked lookup can change the picture
           .header('cache-control', 'public, max-age=600')
           .type(meta.contentType ?? 'image/jpeg')
           .send(readFileSync(path.join(DATA_DIR, 'players', meta.file)));
@@ -176,7 +267,7 @@ app.get<{ Querystring: { name?: string; color?: string; role?: string; source?: 
     return reply
       .header('cache-control', 'public, max-age=600')
       .type('image/svg+xml')
-      .send(readFileSync(players.avatarFile(name, color, role, req.query.style === 'cutout' ? 'cutout' : 'tile')));
+      .send(readFileSync(players.avatarFile(q.name, q.color, q.role, q.style)));
   },
 );
 
@@ -185,10 +276,76 @@ app.get<{ Querystring: { name?: string } }>('/api/players/credit', async (req) =
   return meta?.found ? { credit: meta.credit, sourcePage: meta.sourcePage } : {};
 });
 
+// which picture a player gets (JSON); widgets show the drawn avatar until this answers
+app.get<{ Querystring: { name?: string; team?: string; color?: string; role?: string; style?: string } }>(
+  '/api/players/resolve',
+  async (req, reply) => {
+    const q = photoQuery(req.query);
+    if (!q.name) return reply.code(400).send({ error: 'name required' });
+    return resolvePhoto(q);
+  },
+);
+
+// the picture files themselves; revalidated (ETag) so a replaced photo shows at once
+app.get<{ Params: { kind: string }; Querystring: { f?: string } }>('/api/players/file/:kind', async (req, reply) => {
+  const roots: Record<string, string> = {
+    own: PLAYER_PHOTOS_DIR,
+    api: path.join(DATA_DIR, 'players', 'api'),
+    wiki: path.join(DATA_DIR, 'players'),
+  };
+  const root = roots[req.params.kind];
+  const rel = String(req.query.f ?? '');
+  if (!root || !rel) return reply.code(404).send({ error: 'Not found' });
+  const file = path.resolve(root, rel);
+  // never outside its folder
+  if (!file.startsWith(root + path.sep) || !existsSync(file)) return reply.code(404).send({ error: 'Not found' });
+  const type = PHOTO_EXTENSIONS[path.extname(file).toLowerCase()];
+  if (!type) return reply.code(404).send({ error: 'Not found' });
+  const etag = `"${stamp(file)}"`;
+  if (req.headers['if-none-match'] === etag) return reply.code(304).send();
+  return reply.header('cache-control', 'no-cache').header('etag', etag).type(type).send(readFileSync(file));
+});
+
+// the Studio's photo panel: folder, counts, what each source can do
+app.get('/api/players/sources', async () => ({
+  folder: PLAYER_PHOTOS_DIR,
+  ownCount: ownPhotos.count,
+  apiAvailable: apiPhotos.available,
+  provider: provider.name,
+}));
+
+// "Check this match's players": who gets which picture, without downloading anything
+app.get('/api/players/check', async () => {
+  const state = poller.state;
+  const squads = cards.current.squads?.teams ?? [];
+  const list: { team: string; name: string }[] = squads.length
+    ? squads.flatMap((t) => t.playingXI.map((p) => ({ team: t.code, name: p.name })))
+    : state
+      ? [...state.batters.map((b) => ({ team: state.innings.at(-1)?.battingTeam ?? '', name: b.name })), ...(state.bowler ? [{ team: '', name: state.bowler.name }] : [])]
+      : [];
+  const rows = [];
+  for (const p of list) {
+    const r = await resolvePhoto({ name: p.name, team: p.team || null, color: '#1D4ED8', role: '', style: 'cutout' }, true);
+    rows.push({ ...p, source: r.source, pending: r.pending ?? false, cutout: r.cutout });
+  }
+  return { fromSquads: squads.length > 0, rows };
+});
+
+// open the photos folder in Explorer / Finder (the server runs on the user's own computer)
+app.post('/api/players/open-folder', async (req, reply) => {
+  const ip = req.ip;
+  if (!/^(127\.|::1$|::ffff:127\.)/.test(ip)) return reply.code(403).send({ error: 'Only from this computer' });
+  const cmd = process.platform === 'win32' ? 'explorer' : process.platform === 'darwin' ? 'open' : 'xdg-open';
+  spawn(cmd, [PLAYER_PHOTOS_DIR], { detached: true, stdio: 'ignore' }).unref();
+  return { ok: true, folder: PLAYER_PHOTOS_DIR };
+});
+
+// look up pictures for many players ahead of time (e.g. both XIs before going live)
 app.post<{ Body: { names?: unknown } }>('/api/players/prefetch', async (req) => {
-  const names = (Array.isArray(req.body?.names) ? req.body.names : []).map(String).filter(Boolean).slice(0, 60);
-  log.info(`PHOTO looking up ${names.length} players on Wikimedia (cached ones are skipped)`);
-  for (const n of names) void players.photo(n);
+  const names = Array.isArray(req.body?.names) ? req.body.names.map(String).slice(0, 40) : [];
+  void (async () => {
+    for (const name of names) await resolvePhoto({ name, team: null, color: '#1D4ED8', role: '', style: 'cutout' });
+  })();
   return { queued: names.length };
 });
 
