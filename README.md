@@ -109,6 +109,14 @@ In OBS:
 
 ## Using the Studio
 
+### Design and Live workspaces
+The top bar switches the Studio between two layouts, each remembering its own panel sizes:
+
+- **✎ Design** — build layouts: widget library, canvas, layers, settings. **▣ Program** opens a small floating window with exactly what's on air (drag it by its title, resize from the corner).
+- **● Live** — run the stream on one screen: a big **Program monitor** of what viewers see, the **scenes** list (**Take** puts one on air, or **Alt+1…9**), the on-air scene's **layers** (show / hide), the **event pad** and settings. In Live the Studio edits whatever is on air.
+
+The Program monitor is the real Output page (what OBS shows), drawn read-only; it doesn't count as an OBS output. **⧉** opens it in its own window for a second screen. Side panels hide with « / » and come back from the canvas edge; drag a panel's edge to resize it (double-click resets). Below 900 px wide the panels become slide-in drawers.
+
 ### Scenes and going on air
 - The scene dropdown picks which scene you are **editing**. **Put on air** sends it to the Output; **● ON AIR** shows it's live.
 - **⋯** creates, duplicates, renames, deletes, exports and imports scenes. **New broadcast layout** makes a ready TV-style scene (score header, stat bar, overs strip, chase box, three player panels, event banner); every piece stays editable.

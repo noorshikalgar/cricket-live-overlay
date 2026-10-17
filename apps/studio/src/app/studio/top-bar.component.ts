@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, DestroyRef, computed, inject, signa
 import type { Scene } from '@cos/shared';
 import { LiveStore } from '../core/live.store';
 import { EditorStore } from './editor.store';
+import { WorkspaceStore } from './workspace.store';
 import { PromptService } from './prompt-dialog.component';
 
 /** Scene switcher, match picker, poll status, undo/redo and the Output-connected indicator. */
@@ -10,6 +11,42 @@ import { PromptService } from './prompt-dialog.component';
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="brand"><img class="logo" src="/logo.svg" alt="" width="26" height="26" /> <span class="brand-name">Overlay Studio</span></div>
+
+    <!-- Design: build layouts · Live: run the stream with the Program monitor -->
+    <div class="group ws" role="radiogroup" aria-label="Workspace">
+      <button
+        type="button"
+        role="radio"
+        [attr.aria-checked]="ws.workspace() === 'design'"
+        [class.on]="ws.workspace() === 'design'"
+        (click)="ws.setWorkspace('design')"
+        title="Design: build and edit layouts"
+      >
+        ✎ Design
+      </button>
+      <button
+        type="button"
+        role="radio"
+        [attr.aria-checked]="ws.workspace() === 'live'"
+        [class.on]="ws.workspace() === 'live'"
+        (click)="ws.setWorkspace('live')"
+        title="Live: watch what's on air and run the stream"
+      >
+        ● Live
+      </button>
+    </div>
+    @if (ws.workspace() === 'design') {
+      <button
+        type="button"
+        class="program"
+        [class.on]="ws.floating()"
+        [attr.aria-pressed]="ws.floating()"
+        (click)="ws.setFloating(!ws.floating())"
+        title="A small window with what's on air, over the canvas"
+      >
+        ▣ Program
+      </button>
+    }
 
     <div class="group bo" [class.active]="live.settings().blackout">
       <button
@@ -372,11 +409,38 @@ import { PromptService } from './prompt-dialog.component';
         row-gap: 6px;
       }
     }
+    .ws {
+      gap: 0;
+      border: 1px solid var(--ui-border);
+      border-radius: 7px;
+      overflow: hidden;
+    }
+    .ws button {
+      border: 0;
+      border-radius: 0;
+      background: transparent;
+      color: var(--ui-muted);
+    }
+    .ws button.on {
+      background: var(--ui-accent-soft);
+      color: var(--ui-accent);
+      font-weight: 700;
+    }
+    .ws button:last-child.on {
+      background: rgba(239, 68, 68, 0.14);
+      color: #f87171;
+    }
+    .program.on {
+      background: var(--ui-accent-soft);
+      border-color: var(--ui-accent);
+      color: var(--ui-accent);
+    }
   `,
 })
 export class TopBarComponent {
   protected readonly live = inject(LiveStore);
   protected readonly editor = inject(EditorStore);
+  protected readonly ws = inject(WorkspaceStore);
   private readonly prompt = inject(PromptService);
   protected readonly menuOpen = signal(false);
 
