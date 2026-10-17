@@ -9,147 +9,91 @@ import { PromptService } from './prompt-dialog.component';
 @Component({
   selector: 'cos-top-bar',
   changeDetection: ChangeDetectionStrategy.OnPush,
+  host: { '(document:click)': 'closeMenuOutside($event)', '(document:keydown.escape)': 'openMenu.set(null)' },
   template: `
-    <div class="brand"><img class="logo" src="/logo.svg" alt="" width="26" height="26" /> <span class="brand-name">Overlay Studio</span></div>
-
-    <!-- Design: build layouts · Live: run the stream with the Program monitor -->
-    <div class="group ws" role="radiogroup" aria-label="Workspace">
-      <button
-        type="button"
-        role="radio"
-        [attr.aria-checked]="ws.workspace() === 'design'"
-        [class.on]="ws.workspace() === 'design'"
-        (click)="ws.setWorkspace('design')"
-        title="Design: build and edit layouts"
-      >
-        ✎ Design
-      </button>
-      <button
-        type="button"
-        role="radio"
-        [attr.aria-checked]="ws.workspace() === 'live'"
-        [class.on]="ws.workspace() === 'live'"
-        (click)="ws.setWorkspace('live')"
-        title="Live: watch what's on air and run the stream"
-      >
-        ● Live
-      </button>
-    </div>
-    @if (ws.workspace() === 'design') {
-      <button
-        type="button"
-        class="program"
-        [class.on]="ws.floating()"
-        [attr.aria-pressed]="ws.floating()"
-        (click)="ws.setFloating(!ws.floating())"
-        title="A small window with what's on air, over the canvas"
-      >
-        ▣ Program
-      </button>
-    }
-
-    <div class="group bo" [class.active]="live.settings().blackout">
-      <button
-        type="button"
-        class="bo-btn"
-        (click)="toggleBlackout()"
-        [title]="live.settings().blackout ? 'Restore the Output (Ctrl/⌘+Shift+B)' : 'Emergency: cover the Output in black with your message (Ctrl/⌘+Shift+B)'"
-      >
-        {{ live.settings().blackout ? '⛔ BLACKOUT ON · Restore' : '⛔ Blackout' }}
-      </button>
-      <button type="button" class="icon" title="Edit the blackout message" (click)="editBlackout()">✎</button>
-    </div>
-
-    <div class="group scene">
-      <select [value]="editor.sceneId() ?? ''" (change)="pickScene($event)" aria-label="Scene being edited">
-        @for (s of live.sceneList(); track s.id) {
-          <option [value]="s.id" [selected]="s.id === editor.sceneId()">
-            {{ s.name }}{{ s.id === live.settings().activeSceneId ? '  ● on air' : '' }}
-          </option>
-        }
-      </select>
-      <div class="menu-wrap">
-        <button type="button" class="icon" title="Scene actions" (click)="menuOpen.set(!menuOpen())">⋯</button>
-        @if (menuOpen()) {
-          <div class="menu" (click)="menuOpen.set(false)">
-            <button type="button" (click)="newScene()">New scene</button>
-            <button type="button" (click)="newBroadcast()" title="Score header, stat bar, overs strip, chase box, player panels and the event banner, ready to go">
-              New broadcast layout
+    <!-- row 1: menu bar (rarely used commands) + status -->
+    <div class="menubar">
+      <span class="brand"><img class="logo" src="/logo.svg" alt="" width="18" height="18" /> <span class="brand-name">Overlay Studio</span></span>
+      <nav class="menus" role="menubar">
+        @for (m of menus; track m) {
+          <div class="menu-wrap">
+            <button
+              type="button"
+              class="menu-btn"
+              role="menuitem"
+              [class.open]="openMenu() === m"
+              (click)="toggleMenu(m, $event)"
+              (mouseenter)="hoverMenu(m)"
+            >
+              {{ m }}
             </button>
-            <button type="button" (click)="duplicateScene()">Duplicate</button>
-            <button type="button" (click)="renameScene()">Rename</button>
-            <hr />
-            <button type="button" (click)="exportScene()">Export as file</button>
-            <label class="as-btn">
-              Import file…
-              <input type="file" accept=".json,application/json" hidden (change)="importScene($event)" />
-            </label>
-            <hr />
-            <button type="button" class="danger-text" (click)="deleteScene()" [disabled]="live.sceneList().length < 2">Delete</button>
+            @if (openMenu() === m) {
+              <div class="dropdown" role="menu" (click)="openMenu.set(null)">
+                @switch (m) {
+                  @case ('File') {
+                    <button type="button" (click)="newScene()">New scene…</button>
+                    <button type="button" (click)="newBroadcast()">New broadcast layout…</button>
+                    <button type="button" (click)="duplicateScene()">Duplicate scene…</button>
+                    <button type="button" (click)="renameScene()">Rename scene…</button>
+                    <hr />
+                    <label class="as-btn" (click)="$event.stopPropagation()">
+                      Import scene from file…
+                      <input type="file" accept=".json,application/json" hidden (change)="importScene($event); openMenu.set(null)" />
+                    </label>
+                    <button type="button" (click)="exportScene()">Export scene to file</button>
+                    <hr />
+                    <a class="as-btn" [href]="outputUrl()" target="_blank" rel="noopener">Open Output page (OBS URL) ↗</a>
+                    <button type="button" (click)="popOutput()">Open Output in its own window</button>
+                    <hr />
+                    <button type="button" class="danger-text" (click)="deleteScene()" [disabled]="live.sceneList().length < 2">Delete scene…</button>
+                  }
+                  @case ('Edit') {
+                    <button type="button" [disabled]="!editor.canUndo()" (click)="editor.undo()">Undo <kbd>Ctrl/⌘ Z</kbd></button>
+                    <button type="button" [disabled]="!editor.canRedo()" (click)="editor.redo()">Redo <kbd>Ctrl/⌘ ⇧ Z</kbd></button>
+                    <hr />
+                    <button type="button" (click)="editBlackout()">Blackout message…</button>
+                  }
+                  @case ('View') {
+                    <button type="button" [class.check]="ws.workspace() === 'design'" (click)="ws.setWorkspace('design')">Design workspace</button>
+                    <button type="button" [class.check]="ws.workspace() === 'live'" (click)="ws.setWorkspace('live')">Live workspace</button>
+                    <hr />
+                    <button type="button" [class.check]="ws.floating()" (click)="ws.setFloating(!ws.floating())">Program monitor floating</button>
+                    <button type="button" [class.check]="ws.poppedOut()" (click)="ws.poppedOut() ? ws.bringBack() : ws.popOut()">Program monitor in its own window</button>
+                    <hr />
+                    <button type="button" [class.check]="ws.layout().left" (click)="ws.toggle('left')">{{ ws.workspace() === 'live' ? 'Scenes & layers' : 'Widget library' }} panel</button>
+                    <button type="button" [class.check]="ws.layout().right" (click)="ws.toggle('right')">Settings panel</button>
+                    @if (ws.workspace() === 'design') {
+                      <button type="button" [class.check]="ws.layout().bottom" (click)="ws.toggle('bottom')">Layers &amp; event pad</button>
+                    }
+                    <button type="button" (click)="ws.patchLayout({ leftW: null, rightW: null })">Reset panel sizes</button>
+                  }
+                  @case ('Match') {
+                    <button type="button" (click)="live.send({ type: 'matches:refresh' })">Refresh live matches <small>1 call</small></button>
+                    <hr />
+                    <button type="button" [class.check]="mode() === 'auto'" (click)="setMode('auto')">Update automatically</button>
+                    <button type="button" [class.check]="mode() === 'manual'" (click)="setMode('manual')">Update only when I ask</button>
+                    <button type="button" [class.check]="paused()" (click)="togglePause()">Pause all API calls</button>
+                    <button type="button" [disabled]="!canPollNow()" (click)="pollNow()">Update now <small>1 call</small></button>
+                  }
+                  @case ('Help') {
+                    <a class="as-btn" href="https://github.com/noorshikalgar/cricket-live-overlay#readme" target="_blank" rel="noopener">Guide (README) ↗</a>
+                    <a class="as-btn" href="https://github.com/noorshikalgar/cricket-live-overlay/issues" target="_blank" rel="noopener">Report a problem ↗</a>
+                    <hr />
+                    <span class="head">Keyboard shortcuts</span>
+                    @for (k of shortcuts; track k[0]) {
+                      <span class="kb"><span>{{ k[1] }}</span><kbd>{{ k[0] }}</kbd></span>
+                    }
+                  }
+                }
+              </div>
+            }
           </div>
         }
-      </div>
-      @if (editor.isOnAir()) {
-        <span class="onair">● ON AIR</span>
-      } @else {
-        <button type="button" class="primary" (click)="goLive()" title="Show this scene on /output">Put on air</button>
+      </nav>
+      <span class="spacer"></span>
+      @if (!live.connected()) {
+        <span class="offline">Server offline · reconnecting…</span>
       }
-    </div>
-
-    <div class="group match">
-      <select [value]="live.settings().selectedMatchId ?? ''" (change)="pickMatch($event)" aria-label="Match">
-        <option value="">No match (design mode)</option>
-        @if (selectedMissing(); as sel) {
-          <option [value]="sel.id" selected>{{ sel.label }}</option>
-        }
-        @for (m of live.matches(); track m.id) {
-          <option [value]="m.id" [selected]="m.id === live.settings().selectedMatchId">
-            {{ m.title }} · {{ m.scoreLine }}
-          </option>
-        }
-      </select>
-      <button type="button" class="icon" title="Refresh the list of live matches (1 API call)" (click)="live.send({ type: 'matches:refresh' })">↻</button>
-    </div>
-
-    <div class="group pollctl" role="group" aria-label="Score updates">
-      <div class="seg">
-        <button type="button" [class.on]="mode() === 'auto'" (click)="setMode('auto')" title="Update the score on a timer">Auto</button>
-        <button type="button" [class.on]="mode() === 'manual'" (click)="setMode('manual')" title="Update only when you press Update now">Manual</button>
-      </div>
-      <button
-        type="button"
-        class="pause"
-        [class.on]="paused()"
-        [attr.aria-pressed]="paused()"
-        (click)="togglePause()"
-        [title]="paused() ? 'Resume automatic score updates' : 'Pause all automatic API calls (e.g. during a break)'"
-      >
-        {{ paused() ? '▶ Resume' : '⏸ Pause' }}
-      </button>
-      @if (mode() === 'auto' && !paused()) {
-        <select [value]="intervalValue()" (change)="setInterval($event)" aria-label="Update interval" title="How often the score is fetched">
-          @for (o of intervals; track o.value) {
-            <option [value]="o.value" [selected]="o.value === intervalValue()">{{ o.label }}</option>
-          }
-        </select>
-      }
-      <button
-        type="button"
-        class="primary update"
-        [disabled]="!canPollNow()"
-        (click)="pollNow()"
-        title="Fetch the latest score now (1 API call)"
-      >
-        ⟳ Update now
-      </button>
-      @if (paused()) {
-        <span class="paused-chip">paused · no API calls</span>
-      } @else if (countdown(); as c) {
-        <span class="next">next {{ c }}</span>
-      }
-    </div>
-
-    <div class="group">
       @if (live.poll(); as p) {
         <span class="poll" [class.warn]="usageWarn()" [class.err]="p.phase === 'error' || p.stale" [title]="p.lastError ?? ''">
           @switch (p.phase) {
@@ -162,123 +106,324 @@ import { PromptService } from './prompt-dialog.component';
           <span class="calls">{{ p.callsToday }}/{{ p.dailyLimit }} calls · {{ p.provider }}</span>
         </span>
       }
+      <a class="out" [class.on]="live.clients().outputs > 0" [href]="outputUrl()" target="_blank" rel="noopener" title="The Output page OBS loads (Browser Source URL)">
+        <i class="dot" [class.live]="live.clients().outputs > 0"></i>
+        OBS {{ live.clients().outputs > 0 ? 'connected' + (live.clients().outputs > 1 ? ' ×' + live.clients().outputs : '') : 'not connected' }}
+      </a>
     </div>
 
-    <div class="spacer"></div>
+    <!-- row 2: the tools used all the time, in labelled groups -->
+    <div class="toolbar">
+      <div class="tgroup">
+        <div class="tools">
+          <div class="seg" role="radiogroup" aria-label="Workspace">
+            <button type="button" role="radio" [attr.aria-checked]="ws.workspace() === 'design'" [class.on]="ws.workspace() === 'design'" (click)="ws.setWorkspace('design')" title="Build and edit layouts">
+              ✎ Design
+            </button>
+            <button type="button" role="radio" [attr.aria-checked]="ws.workspace() === 'live'" [class.on]="ws.workspace() === 'live'" class="live" (click)="ws.setWorkspace('live')" title="Preview and Program side by side, Take to air">
+              ● Live
+            </button>
+          </div>
+          @if (ws.workspace() === 'design') {
+            <button type="button" class="tbtn" [class.on]="ws.floating()" [attr.aria-pressed]="ws.floating()" (click)="ws.setFloating(!ws.floating())" title="A floating window with what's on air">
+              ▣ Program
+            </button>
+          }
+        </div>
+        <span class="cap">Workspace</span>
+      </div>
 
+      <div class="tgroup">
+        <div class="tools">
+          <select class="wide" [value]="editor.sceneId() ?? ''" (change)="pickScene($event)" aria-label="Scene being edited">
+            @for (s of live.sceneList(); track s.id) {
+              <option [value]="s.id" [selected]="s.id === editor.sceneId()">
+                {{ s.name }}{{ s.id === live.settings().activeSceneId ? '  ● on air' : '' }}
+              </option>
+            }
+          </select>
+          @if (editor.isOnAir()) {
+            <span class="onair">● ON AIR</span>
+          } @else {
+            <button type="button" class="tbtn primary" (click)="goLive()" title="Show this scene on the Output">Put on air</button>
+          }
+        </div>
+        <span class="cap">Scene</span>
+      </div>
 
+      <div class="tgroup">
+        <div class="tools">
+          <select class="wide" [value]="live.settings().selectedMatchId ?? ''" (change)="pickMatch($event)" aria-label="Match">
+            <option value="">No match (design mode)</option>
+            @if (selectedMissing(); as sel) {
+              <option [value]="sel.id" selected>{{ sel.label }}</option>
+            }
+            @for (m of live.matches(); track m.id) {
+              <option [value]="m.id" [selected]="m.id === live.settings().selectedMatchId">{{ m.title }} · {{ m.scoreLine }}</option>
+            }
+          </select>
+          <button type="button" class="tbtn icon" title="Refresh the list of live matches (1 API call)" (click)="live.send({ type: 'matches:refresh' })">↻</button>
+        </div>
+        <span class="cap">Match</span>
+      </div>
 
-    <div class="group">
-      <button type="button" class="icon" title="Undo (Ctrl/⌘+Z)" [disabled]="!editor.canUndo()" (click)="editor.undo()">↶</button>
-      <button type="button" class="icon" title="Redo (Ctrl/⌘+Shift+Z)" [disabled]="!editor.canRedo()" (click)="editor.redo()">↷</button>
+      <div class="tgroup">
+        <div class="tools">
+          <div class="seg">
+            <button type="button" [class.on]="mode() === 'auto'" (click)="setMode('auto')" title="Update the score on a timer">Auto</button>
+            <button type="button" [class.on]="mode() === 'manual'" (click)="setMode('manual')" title="Update only when you press Update">Manual</button>
+          </div>
+          @if (mode() === 'auto' && !paused()) {
+            <select [value]="intervalValue()" (change)="setInterval($event)" aria-label="Update interval" title="How often the score is fetched">
+              @for (o of intervals; track o.value) {
+                <option [value]="o.value" [selected]="o.value === intervalValue()">{{ o.label }}</option>
+              }
+            </select>
+          }
+          <button type="button" class="tbtn" [class.warn]="paused()" [attr.aria-pressed]="paused()" (click)="togglePause()" [title]="paused() ? 'Resume automatic score updates' : 'Pause all automatic API calls (e.g. during a break)'">
+            {{ paused() ? '▶ Resume' : '⏸ Pause' }}
+          </button>
+          <button type="button" class="tbtn primary" [disabled]="!canPollNow()" (click)="pollNow()" title="Fetch the latest score now (1 API call)">⟳ Update</button>
+          @if (paused()) {
+            <span class="note warn">paused · no API calls</span>
+          } @else if (countdown(); as c) {
+            <span class="note">next {{ c }}</span>
+          }
+        </div>
+        <span class="cap">Score updates</span>
+      </div>
+
+      <span class="spacer"></span>
+
+      <div class="tgroup">
+        <div class="tools">
+          <button type="button" class="tbtn icon" title="Undo (Ctrl/⌘+Z)" [disabled]="!editor.canUndo()" (click)="editor.undo()">↶</button>
+          <button type="button" class="tbtn icon" title="Redo (Ctrl/⌘+Shift+Z)" [disabled]="!editor.canRedo()" (click)="editor.redo()">↷</button>
+        </div>
+        <span class="cap">Edit</span>
+      </div>
+
+      <div class="tgroup">
+        <div class="tools">
+          <button
+            type="button"
+            class="tbtn blackout"
+            [class.on]="live.settings().blackout"
+            (click)="toggleBlackout()"
+            [title]="live.settings().blackout ? 'Restore the Output (Ctrl/⌘+Shift+B)' : 'Emergency: cover the Output in black with your message (Ctrl/⌘+Shift+B)'"
+          >
+            {{ live.settings().blackout ? '⛔ BLACKOUT ON · Restore' : '⛔ Blackout' }}
+          </button>
+        </div>
+        <span class="cap">Emergency</span>
+      </div>
     </div>
-
-    <a class="out" [class.on]="live.clients().outputs > 0" [href]="outputUrl()" target="_blank" rel="noopener" title="Open the Output page (OBS Browser Source URL)">
-      <i class="dot" [class.live]="live.clients().outputs > 0"></i>
-      Output {{ live.clients().outputs > 0 ? 'connected' + (live.clients().outputs > 1 ? ' ×' + live.clients().outputs : '') : 'not connected' }}
-    </a>
-    <button
-      type="button"
-      class="icon"
-      (click)="popOutput()"
-      title="Open the Output in its own window to place beside the Studio (browsers pause animation in hidden tabs, so a separate visible window shows the live pointer and motion)"
-    >
-      ⧉
-    </button>
-    @if (!live.connected()) {
-      <span class="offline">Server offline · reconnecting…</span>
-    }
   `,
   styles: `
     :host {
       display: flex;
-      align-items: center;
-      gap: 14px;
-      padding: 0 14px;
-      min-height: 52px;
-      border-bottom: 1px solid var(--ui-border);
+      flex-direction: column;
       background: var(--ui-panel);
-      font-size: 13px;
-      white-space: nowrap;
-      /* narrower windows: controls wrap onto another row instead of being cut off */
-      flex-wrap: wrap;
-      row-gap: 8px;
-      padding-top: 8px;
-      padding-bottom: 8px;
+      border-bottom: 1px solid var(--ui-border);
+      font-size: 12.5px;
+      user-select: none;
     }
-    .brand {
-      font-weight: 700;
-      letter-spacing: 0.01em;
+    /* ---- menu bar ---- */
+    .menubar {
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 4px;
+      height: 32px;
+      padding: 0 10px;
+      background: var(--ui-bg);
+      border-bottom: 1px solid var(--ui-border);
     }
-    .logo {
-      display: block;
-      border-radius: 7px;
-    }
-    .group {
+    .brand {
       display: flex;
       align-items: center;
       gap: 6px;
-    }
-    .scene select {
-      max-width: 220px;
-    }
-    .match select {
-      max-width: 300px;
-    }
-    .spacer {
-      flex: 1;
-    }
-    .onair {
-      color: #f87171;
       font-weight: 700;
-      font-size: 11px;
-      letter-spacing: 0.08em;
-      padding: 4px 8px;
-      border-radius: 6px;
-      background: rgba(239, 68, 68, 0.14);
+      margin-right: 10px;
+      white-space: nowrap;
+    }
+    .logo {
+      border-radius: 4px;
+    }
+    .menus {
+      display: flex;
+      gap: 0;
     }
     .menu-wrap {
       position: relative;
     }
-    .menu {
-      position: fixed;
-      margin-top: 4px;
-      z-index: 50;
-      min-width: 170px;
+    .menu-btn {
+      background: transparent !important;
+      border: 0 !important;
+      padding: 5px 10px !important;
+      border-radius: 5px !important;
+      color: var(--ui-text);
+      font-weight: 500;
+    }
+    .menu-btn:hover,
+    .menu-btn.open {
+      background: var(--ui-chip) !important;
+    }
+    .dropdown {
+      position: absolute;
+      top: calc(100% + 2px);
+      left: 0;
+      z-index: 70;
+      min-width: 260px;
+      padding: 5px;
       display: flex;
       flex-direction: column;
-      padding: 6px;
-      background: var(--ui-panel);
+      background: #151b26;
       border: 1px solid var(--ui-border);
       border-radius: 8px;
-      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.45);
+      box-shadow: 0 14px 40px rgba(0, 0, 0, 0.55);
     }
-    .menu button,
-    .menu .as-btn {
-      text-align: left;
-      background: none;
+    .dropdown > button,
+    .dropdown > .as-btn {
+      justify-content: space-between;
+      width: 100%;
+      background: transparent;
       border: 0;
-      padding: 7px 10px;
       border-radius: 5px;
-      cursor: pointer;
+      padding: 7px 10px 7px 28px;
+      text-align: left;
       color: var(--ui-text);
-      font: inherit;
+      text-decoration: none;
+      font: 500 12.5px/1.2 Inter, Mukta, sans-serif;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      position: relative;
     }
-    .menu button:hover:not(:disabled),
-    .menu .as-btn:hover {
-      background: var(--ui-chip);
+    .dropdown > button:hover:not(:disabled),
+    .dropdown > .as-btn:hover {
+      background: var(--ui-accent-soft);
     }
-    .menu hr {
+    .dropdown > button.check::before {
+      content: '✓';
+      position: absolute;
+      left: 10px;
+      color: var(--ui-accent);
+    }
+    .dropdown > hr {
+      width: 100%;
       border: 0;
       border-top: 1px solid var(--ui-border);
       margin: 4px 0;
-      width: 100%;
+    }
+    .dropdown small,
+    .dropdown kbd {
+      color: var(--ui-muted);
+      font: 11px Inter, sans-serif;
+    }
+    .dropdown .head {
+      padding: 6px 10px 4px;
+      font-size: 10.5px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--ui-muted);
+    }
+    .dropdown .kb {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 3px 10px;
+      font-size: 12px;
     }
     .danger-text {
-      color: #f87171 !important;
+      color: #fca5a5 !important;
+    }
+    .spacer {
+      flex: 1;
+    }
+    .offline {
+      color: #fca5a5;
+      font-weight: 600;
+    }
+    .poll,
+    .out {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 3px 9px;
+      border-radius: 99px;
+      background: var(--ui-chip);
+      color: var(--ui-muted);
+      font-size: 11.5px;
+      white-space: nowrap;
+      text-decoration: none;
+    }
+    .poll.warn {
+      color: #fbbf24;
+    }
+    .poll.err {
+      color: #fca5a5;
+    }
+    .out.on {
+      color: var(--ui-text);
+    }
+    .dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--ui-muted);
+      display: inline-block;
+    }
+    .dot.live {
+      background: var(--ui-accent);
+      box-shadow: 0 0 6px var(--ui-accent);
+    }
+    .dot.brk {
+      background: #fbbf24;
+    }
+    .dot.bad {
+      background: #ef4444;
+    }
+    /* ---- toolbar: labelled groups ---- */
+    .toolbar {
+      display: flex;
+      align-items: stretch;
+      flex-wrap: wrap;
+      padding: 4px 6px 2px;
+    }
+    .tgroup {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 2px;
+      padding: 2px 10px;
+      border-right: 1px solid var(--ui-border);
+    }
+    .tgroup:last-child {
+      border-right: 0;
+    }
+    .toolbar > .spacer + .tgroup {
+      border-left: 1px solid var(--ui-border);
+    }
+    .tools {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      min-height: 30px;
+    }
+    .cap {
+      font-size: 10px;
+      text-align: center;
+      color: var(--ui-muted);
+      letter-spacing: 0.04em;
+      white-space: nowrap;
+    }
+    select {
+      padding: 5px 8px !important;
+      font-size: 12px !important;
+    }
+    select.wide {
+      max-width: 240px;
     }
     .seg {
       display: inline-flex;
@@ -287,153 +432,87 @@ import { PromptService } from './prompt-dialog.component';
       overflow: hidden;
     }
     .seg button {
-      border: 0;
-      border-radius: 0;
-      padding: 5px 10px;
-      background: transparent;
+      border: 0 !important;
+      border-radius: 0 !important;
+      background: transparent !important;
+      color: var(--ui-muted) !important;
+      padding: 5px 10px !important;
     }
     .seg button.on {
-      background: var(--ui-accent-soft);
-      color: var(--ui-accent);
-      font-weight: 600;
-    }
-    .pollctl select {
-      max-width: 120px;
-    }
-    .bo-btn {
-      background: #3b0d0d;
-      border-color: #7f1d1d;
-      color: #fecaca;
+      background: var(--ui-accent-soft) !important;
+      color: var(--ui-accent) !important;
       font-weight: 700;
     }
-    .bo-btn:hover:not(:disabled) {
-      background: #7f1d1d;
+    .seg button.live.on {
+      background: rgba(239, 68, 68, 0.15) !important;
+      color: #f87171 !important;
     }
-    .bo.active .bo-btn {
-      background: #dc2626;
-      border-color: #ef4444;
-      color: #fff;
-      box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.35);
+    .tbtn {
+      padding: 5px 10px !important;
+      white-space: nowrap;
     }
-    .pause.on {
-      background: #f59e0b;
-      border-color: #f59e0b;
-      color: #1f1300;
-      font-weight: 600;
+    .tbtn.icon {
+      width: 30px;
+      padding: 5px 0 !important;
+      justify-content: center;
     }
-    .paused-chip {
-      color: #fbbf24;
-      font-size: 12px;
+    .tbtn.on {
+      background: var(--ui-accent-soft) !important;
+      border-color: var(--ui-accent) !important;
+      color: var(--ui-accent) !important;
     }
-    .next {
-      color: var(--ui-muted);
-      font-variant-numeric: tabular-nums;
-      min-width: 56px;
+    .tbtn.warn {
+      background: #b45309 !important;
+      border-color: #f59e0b !important;
+      color: #fff !important;
     }
-    .poll {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      color: var(--ui-muted);
-      font-variant-numeric: tabular-nums;
+    .tbtn.blackout {
+      background: rgba(127, 29, 29, 0.6) !important;
+      border-color: #991b1b !important;
+      color: #fecaca !important;
+      font-weight: 700;
+    }
+    .tbtn.blackout.on {
+      background: #dc2626 !important;
+      color: #fff !important;
+      animation: bo-pulse 1s ease-in-out infinite;
+    }
+    @keyframes bo-pulse {
+      50% {
+        box-shadow: 0 0 0 4px rgba(220, 38, 38, 0.35);
+      }
+    }
+    .onair {
+      color: #f87171;
+      font-weight: 700;
+      font-size: 11px;
+      letter-spacing: 0.06em;
       padding: 4px 8px;
       border-radius: 6px;
-      background: var(--ui-chip);
-    }
-    .poll.warn .calls {
-      color: #fbbf24;
-    }
-    .poll.err {
-      color: #f87171;
-      background: rgba(239, 68, 68, 0.12);
-    }
-    .calls {
-      opacity: 0.8;
-    }
-    .dot {
-      display: inline-block;
-      width: 7px;
-      height: 7px;
-      border-radius: 50%;
-      background: #64748b;
-    }
-    .dot.live {
-      background: #22c55e;
-    }
-    .dot.brk {
-      background: #fbbf24;
-    }
-    .dot.bad {
-      background: #ef4444;
-    }
-    .out {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      color: var(--ui-muted);
-      text-decoration: none;
-      padding: 5px 9px;
-      border-radius: 6px;
-      border: 1px solid var(--ui-border);
-    }
-    .out.on {
-      color: var(--ui-text);
-      border-color: rgba(34, 197, 94, 0.4);
-    }
-    .offline {
-      color: #fbbf24;
-    }
-    /* tablets and phones: controls wrap onto extra rows instead of scrolling off-screen */
-    @media (max-width: 900px) {
-      :host {
-        height: auto;
-        flex-wrap: wrap;
-        row-gap: 8px;
-        padding: 8px 12px;
-        overflow-x: visible;
-      }
-      .spacer {
-        display: none;
-      }
-      .scene select,
-      .match select {
-        max-width: 60vw;
-      }
-    }
-    @media (max-width: 600px) {
-      .brand-name {
-        display: none;
-      }
-      .group {
-        flex-wrap: wrap;
-        row-gap: 6px;
-      }
-    }
-    .ws {
-      gap: 0;
-      border: 1px solid var(--ui-border);
-      border-radius: 7px;
-      overflow: hidden;
-    }
-    .ws button {
-      border: 0;
-      border-radius: 0;
-      background: transparent;
-      color: var(--ui-muted);
-    }
-    .ws button.on {
-      background: var(--ui-accent-soft);
-      color: var(--ui-accent);
-      font-weight: 700;
-    }
-    .ws button:last-child.on {
       background: rgba(239, 68, 68, 0.14);
-      color: #f87171;
+      white-space: nowrap;
     }
-    .program.on {
-      background: var(--ui-accent-soft);
-      border-color: var(--ui-accent);
-      color: var(--ui-accent);
+    .note {
+      font-size: 11.5px;
+      color: var(--ui-muted);
+      white-space: nowrap;
+      font-variant-numeric: tabular-nums;
+    }
+    .note.warn {
+      color: #fbbf24;
+    }
+    @media (max-width: 900px) {
+      .cap,
+      .brand-name,
+      .calls {
+        display: none;
+      }
+      .tgroup {
+        padding: 2px 6px;
+      }
+      select.wide {
+        max-width: 46vw;
+      }
     }
   `,
 })
@@ -442,7 +521,35 @@ export class TopBarComponent {
   protected readonly editor = inject(EditorStore);
   protected readonly ws = inject(WorkspaceStore);
   private readonly prompt = inject(PromptService);
-  protected readonly menuOpen = signal(false);
+  /** which menu of the menu bar is open */
+  protected readonly openMenu = signal<string | null>(null);
+  protected readonly menus = ['File', 'Edit', 'View', 'Match', 'Help'];
+  protected readonly shortcuts: [string, string][] = [
+    ['Ctrl/⌘ Z · ⇧ Z', 'Undo · Redo'],
+    ['Ctrl/⌘ D', 'Duplicate widget'],
+    ['Delete', 'Delete widget'],
+    ['Arrows · ⇧ Arrows', 'Nudge 1 px · 10 px'],
+    ['Alt 1…9', 'Put scene 1…9 on air'],
+    ['4 · 6 · W', 'Four · Six · Wicket banner'],
+    ['D · K · B', 'DRS · Drinks · Break'],
+    ['Ctrl/⌘ ⇧ B', 'Blackout on / off'],
+    ['Esc', 'Deselect · close menus'],
+  ];
+
+  protected toggleMenu(m: string, e: Event): void {
+    e.stopPropagation();
+    this.openMenu.set(this.openMenu() === m ? null : m);
+  }
+
+  /** like a desktop menu bar: once one menu is open, hovering opens the others */
+  protected hoverMenu(m: string): void {
+    if (this.openMenu() && this.openMenu() !== m) this.openMenu.set(m);
+  }
+
+  protected closeMenuOutside(e: Event): void {
+    if (!this.openMenu()) return;
+    if (!(e.target as HTMLElement).closest('.menus')) this.openMenu.set(null);
+  }
 
   constructor() {
     inject(DestroyRef).onDestroy(() => clearInterval(this.clock));

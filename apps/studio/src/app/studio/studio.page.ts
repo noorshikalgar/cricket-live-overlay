@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, DestroyRef, ViewEncapsulation, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, ViewEncapsulation, computed, inject, signal } from '@angular/core';
 import { LiveStore } from '../core/live.store';
 import { CanvasToolbarComponent } from './canvas-toolbar.component';
 import { CanvasComponent } from './canvas.component';
@@ -64,7 +64,7 @@ function typingInField(e: KeyboardEvent): boolean {
           <button type="button" [class.on]="drawer() === 'right'" (click)="toggleDrawer('right')">⚙ Settings</button>
         </div>
         <!-- Studio mode: prepare a scene in Preview, Take puts it on air -->
-        <div class="monitors" [class.solo]="ws.liveProgram() === 'float'">
+        <div class="monitors" [class.solo]="!programDocked()">
           <section class="preview" [class.same]="editor.isOnAir()">
             <header>
               <span class="dot"></span>
@@ -76,20 +76,24 @@ function typingInField(e: KeyboardEvent): boolean {
             </header>
             <cos-canvas class="canvas" />
           </section>
-          <div class="take-col">
-            <button
-              type="button"
-              class="take"
-              (click)="take()"
-              [disabled]="editor.isOnAir() || !editor.sceneId()"
-              [title]="editor.isOnAir() ? 'Preview is already on air' : 'Put the Preview scene on air (Enter on the scenes list, or Alt+1…9)'"
-            >
-              Take<br />▶
-            </button>
-          </div>
-          @if (ws.liveProgram() === 'split') {
+          @if (programDocked()) {
             <cos-program-monitor class="monitor" mode="dock" />
           }
+        </div>
+        <!-- transition bar: what goes on air next -->
+        <div class="take-bar">
+          <span class="tb-side"><i class="dot pv"></i>{{ editor.scene()?.name ?? '—' }}</span>
+          <button
+            type="button"
+            class="take"
+            (click)="take()"
+            [disabled]="editor.isOnAir() || !editor.sceneId()"
+            [title]="editor.isOnAir() ? 'Preview is already on air' : 'Put the Preview scene on air'"
+          >
+            TAKE ▶
+          </button>
+          <span class="tb-side"><i class="dot pg"></i>{{ onAirName() || 'nothing on air' }}</span>
+          <span class="tb-tr" [title]="'Transition of ' + (editor.scene()?.name ?? '') + ' (scene settings)'">{{ transitionLabel() }}</span>
         </div>
         <cos-event-pad class="pad" />
         @if (!ws.layout().left) {
@@ -379,7 +383,7 @@ function typingInField(e: KeyboardEvent): boolean {
       flex: 1;
       min-height: 0;
       display: grid;
-      grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
       gap: 8px;
       align-items: stretch;
     }
@@ -438,23 +442,61 @@ function typingInField(e: KeyboardEvent): boolean {
       flex: 1;
       min-height: 0;
     }
-    .studio-root.ws-live > .center > .monitors > .take-col {
+    .studio-root.ws-live > .center > .take-bar {
+      flex: none;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 12px;
+      padding: 6px 10px;
+      border: 1px solid var(--ui-border);
+      border-radius: 8px;
+      background: var(--ui-panel);
+      font-size: 12px;
+    }
+    .studio-root.ws-live > .center > .take-bar .tb-side {
       display: flex;
       align-items: center;
+      gap: 6px;
+      min-width: 0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      color: var(--ui-muted);
     }
-    .studio-root.ws-live > .center > .monitors > .take-col > .take {
-      padding: 14px 10px;
-      line-height: 1.4;
+    .studio-root.ws-live > .center > .take-bar .tb-side:first-child {
+      justify-content: flex-end;
+    }
+    .studio-root.ws-live > .center > .take-bar .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      flex: none;
+    }
+    .studio-root.ws-live > .center > .take-bar .dot.pv {
+      background: var(--ui-accent);
+    }
+    .studio-root.ws-live > .center > .take-bar .dot.pg {
+      background: #ef4444;
+    }
+    .studio-root.ws-live > .center > .take-bar .take {
+      padding: 7px 26px;
       font-weight: 800;
-      text-transform: uppercase;
-      letter-spacing: 0.06em;
-      text-align: center;
+      letter-spacing: 0.08em;
       background: #b91c1c;
       border-color: #ef4444;
       color: #fff;
     }
-    .studio-root.ws-live > .center > .monitors > .take-col > .take:hover:not(:disabled) {
+    .studio-root.ws-live > .center > .take-bar .take:hover:not(:disabled) {
       background: #dc2626;
+    }
+    .studio-root.ws-live > .center > .take-bar .tb-tr {
+      font-size: 11px;
+      color: var(--ui-muted);
+      padding: 2px 8px;
+      border-radius: 99px;
+      background: var(--ui-chip);
+      white-space: nowrap;
     }
     .studio-root.ws-live > .center > .monitors > .monitor {
       min-width: 0;
@@ -462,7 +504,7 @@ function typingInField(e: KeyboardEvent): boolean {
     }
     /* Program floating (by choice, or a narrow window): Preview takes the whole space */
     .studio-root.ws-live > .center > .monitors.solo {
-      grid-template-columns: minmax(0, 1fr) auto;
+      grid-template-columns: minmax(0, 1fr);
     }
     .studio-root.ws-live > .center > .pad {
       flex: none;
@@ -678,6 +720,18 @@ export default class StudioPage {
   private readonly prompt = inject(PromptService);
   protected readonly ws = inject(WorkspaceStore);
   protected readonly editor = inject(EditorStore);
+
+  /** Program beside Preview; otherwise (floating or in its own window) Preview takes the whole width */
+  protected readonly programDocked = computed(() => this.ws.liveProgram() === 'split' && !this.ws.poppedOut());
+  protected readonly onAirName = computed(() => {
+    const id = this.live.settings().activeSceneId;
+    return id ? (this.live.scenes()[id]?.name ?? '') : '';
+  });
+  protected readonly transitionLabel = computed(() => {
+    const t = this.editor.scene()?.transition;
+    const kind = t?.kind ?? 'glide';
+    return kind === 'cut' ? 'Cut' : `${kind[0].toUpperCase()}${kind.slice(1)} ${t?.duration ?? 0.8}s`;
+  });
 
   /** Studio mode: the Preview scene goes on air */
   protected take(): void {
