@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, DestroyRef, ViewEncapsulation, effect, inject, signal, untracked } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, ViewEncapsulation, inject, signal } from '@angular/core';
 import { LiveStore } from '../core/live.store';
 import { CanvasToolbarComponent } from './canvas-toolbar.component';
 import { CanvasComponent } from './canvas.component';
@@ -63,7 +63,34 @@ function typingInField(e: KeyboardEvent): boolean {
           <button type="button" [class.on]="drawer() === 'left'" (click)="toggleDrawer('left')">☰ Scenes</button>
           <button type="button" [class.on]="drawer() === 'right'" (click)="toggleDrawer('right')">⚙ Settings</button>
         </div>
-        <cos-program-monitor class="monitor" mode="dock" />
+        <!-- Studio mode: prepare a scene in Preview, Take puts it on air -->
+        <div class="monitors" [class.solo]="ws.liveProgram() === 'float'">
+          <section class="preview" [class.same]="editor.isOnAir()">
+            <header>
+              <span class="dot"></span>
+              <span class="title">Preview</span>
+              <span class="scene">{{ editor.scene()?.name ?? '' }}</span>
+              @if (editor.isOnAir()) {
+                <span class="warn" title="This scene is on air: every change shows to viewers straight away">on air · edits show live</span>
+              }
+            </header>
+            <cos-canvas class="canvas" />
+          </section>
+          <div class="take-col">
+            <button
+              type="button"
+              class="take"
+              (click)="take()"
+              [disabled]="editor.isOnAir() || !editor.sceneId()"
+              [title]="editor.isOnAir() ? 'Preview is already on air' : 'Put the Preview scene on air (Enter on the scenes list, or Alt+1…9)'"
+            >
+              Take<br />▶
+            </button>
+          </div>
+          @if (ws.liveProgram() === 'split') {
+            <cos-program-monitor class="monitor" mode="dock" />
+          }
+        </div>
         <cos-event-pad class="pad" />
         @if (!ws.layout().left) {
           <button type="button" class="edge left" (click)="ws.toggle('left')" title="Show scenes and layers">Scenes ›</button>
@@ -112,9 +139,9 @@ function typingInField(e: KeyboardEvent): boolean {
           <button type="button" class="edge right" (click)="ws.toggle('right')" title="Show settings">‹ Settings</button>
         }
       </main>
-      @if (ws.floating()) {
-        <cos-program-monitor mode="float" />
-      }
+    }
+    @if (ws.floating()) {
+      <cos-program-monitor mode="float" />
     }
     <aside class="right" [class.open]="drawer() === 'right'">
       <button type="button" class="collapse" (click)="ws.toggle('right')" title="Hide this panel">»</button>
@@ -348,9 +375,94 @@ function typingInField(e: KeyboardEvent): boolean {
       padding: 10px;
       gap: 10px;
     }
-    .studio-root.ws-live > .center > .monitor {
+    .studio-root.ws-live > .center > .monitors {
       flex: 1;
-      min-height: 200px;
+      min-height: 0;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+      gap: 8px;
+      align-items: stretch;
+    }
+    .studio-root.ws-live > .center > .monitors > .preview {
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+      min-height: 0;
+      border: 1px solid var(--ui-border);
+      border-radius: 8px;
+      overflow: hidden;
+      background: #05070b;
+    }
+    .studio-root.ws-live > .center > .monitors > .preview.same {
+      border-color: rgba(239, 68, 68, 0.55);
+    }
+    .studio-root.ws-live > .center > .monitors > .preview > header {
+      flex: none;
+      height: 30px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 0 10px;
+      background: var(--ui-panel);
+      border-bottom: 1px solid var(--ui-border);
+      font-size: 12px;
+    }
+    .studio-root.ws-live > .center > .monitors > .preview > header .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--ui-accent);
+      box-shadow: 0 0 6px var(--ui-accent);
+    }
+    .studio-root.ws-live > .center > .monitors > .preview > header .title {
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-size: 11px;
+    }
+    .studio-root.ws-live > .center > .monitors > .preview > header .scene {
+      flex: 1;
+      min-width: 0;
+      color: var(--ui-muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .studio-root.ws-live > .center > .monitors > .preview > header .warn {
+      font-size: 11px;
+      font-weight: 600;
+      color: #f87171;
+      white-space: nowrap;
+    }
+    .studio-root.ws-live > .center > .monitors > .preview > .canvas {
+      flex: 1;
+      min-height: 0;
+    }
+    .studio-root.ws-live > .center > .monitors > .take-col {
+      display: flex;
+      align-items: center;
+    }
+    .studio-root.ws-live > .center > .monitors > .take-col > .take {
+      padding: 14px 10px;
+      line-height: 1.4;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      text-align: center;
+      background: #b91c1c;
+      border-color: #ef4444;
+      color: #fff;
+    }
+    .studio-root.ws-live > .center > .monitors > .take-col > .take:hover:not(:disabled) {
+      background: #dc2626;
+    }
+    .studio-root.ws-live > .center > .monitors > .monitor {
+      min-width: 0;
+      min-height: 0;
+    }
+    /* Program floating (by choice, or a narrow window): Preview takes the whole space */
+    .studio-root.ws-live > .center > .monitors.solo {
+      grid-template-columns: minmax(0, 1fr) auto;
     }
     .studio-root.ws-live > .center > .pad {
       flex: none;
@@ -563,9 +675,15 @@ function typingInField(e: KeyboardEvent): boolean {
 })
 export default class StudioPage {
   private readonly live = inject(LiveStore);
-  private readonly editor = inject(EditorStore);
   private readonly prompt = inject(PromptService);
   protected readonly ws = inject(WorkspaceStore);
+  protected readonly editor = inject(EditorStore);
+
+  /** Studio mode: the Preview scene goes on air */
+  protected take(): void {
+    const id = this.editor.sceneId();
+    if (id) this.live.send({ type: 'scene:switch', sceneId: id });
+  }
 
   protected readonly leftTab = signal<'widgets' | 'cards'>('widgets');
   /** which side panel is slid in on narrow screens */
@@ -602,14 +720,6 @@ export default class StudioPage {
   }
 
   constructor() {
-    // Live: the Studio edits whatever is on air, so layers and settings control what viewers see
-    effect(() => {
-      const live = this.ws.workspace() === 'live';
-      const onAir = this.live.settings().activeSceneId;
-      untracked(() => {
-        if (live && onAir && onAir !== this.editor.sceneId()) this.editor.editScene(onAir);
-      });
-    });
     this.live.connect('studio');
     // closing or reloading the Studio must not leave the pointer stuck on air
     const hide = () => this.live.send({ type: 'pointer', x: 0, y: 0, visible: false });

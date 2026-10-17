@@ -1,10 +1,10 @@
 import { ChangeDetectionStrategy, Component, ElementRef, computed, effect, inject } from '@angular/core';
 import { LiveStore } from '../core/live.store';
+import { EditorStore } from './editor.store';
 
 /**
- * Live workspace: every scene, which one is on air, and Take to put another
- * on air (with its transition). The Studio follows the on-air scene, so the
- * layers and settings beside it control what viewers see.
+ * Live workspace: every scene. Click one to load it into Preview (edit it
+ * without viewers seeing); Take puts a scene on air (with its transition).
  */
 @Component({
   selector: 'cos-scenes-panel',
@@ -13,13 +13,22 @@ import { LiveStore } from '../core/live.store';
     <h3>Scenes</h3>
     <ul>
       @for (s of scenes(); track s.id; let i = $index) {
-        <li [class.on]="s.id === onAir()" [attr.data-scene]="s.id">
+        <li
+          [class.on]="s.id === onAir()"
+          [class.prev]="s.id === preview()"
+          [attr.data-scene]="s.id"
+          (click)="editor.editScene(s.id)"
+          [title]="'Load ' + s.name + ' into Preview'"
+        >
           <span class="num">{{ i + 1 }}</span>
-          <span class="name" [title]="s.name">{{ s.name }}</span>
+          <span class="name">{{ s.name }}</span>
+          @if (s.id === preview() && s.id !== onAir()) {
+            <span class="badge pv">Preview</span>
+          }
           @if (s.id === onAir()) {
             <span class="badge">● On air</span>
           } @else {
-            <button type="button" class="take" (click)="take(s.id)" [title]="'Put ' + s.name + ' on air (Alt+' + (i + 1) + ')'">Take</button>
+            <button type="button" class="take" (click)="$event.stopPropagation(); take(s.id)" [title]="'Put ' + s.name + ' on air (Alt+' + (i + 1) + ')'">Take</button>
           }
         </li>
       }
@@ -55,6 +64,19 @@ import { LiveStore } from '../core/live.store';
       background: var(--ui-chip);
       border: 1px solid transparent;
     }
+    li {
+      cursor: pointer;
+    }
+    li:hover {
+      border-color: var(--ui-border);
+    }
+    li.prev {
+      border-color: rgba(34, 197, 94, 0.6);
+      background: rgba(34, 197, 94, 0.08);
+    }
+    .badge.pv {
+      color: var(--ui-accent);
+    }
     li.on {
       border-color: rgba(239, 68, 68, 0.6);
       background: rgba(239, 68, 68, 0.1);
@@ -87,6 +109,8 @@ import { LiveStore } from '../core/live.store';
 })
 export class ScenesPanelComponent {
   private readonly live = inject(LiveStore);
+  protected readonly editor = inject(EditorStore);
+  protected readonly preview = computed(() => this.editor.sceneId());
   protected readonly scenes = computed(() => this.live.sceneList());
   protected readonly onAir = computed(() => this.live.settings().activeSceneId);
 

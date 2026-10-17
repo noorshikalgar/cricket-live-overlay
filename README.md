@@ -113,7 +113,8 @@ In OBS:
 The top bar switches the Studio between two layouts, each remembering its own panel sizes:
 
 - **✎ Design** — build layouts: widget library, canvas, layers, settings. **▣ Program** opens a small floating window with exactly what's on air (drag it by its title, resize from the corner).
-- **● Live** — run the stream on one screen: a big **Program monitor** of what viewers see, the **scenes** list (**Take** puts one on air, or **Alt+1…9**), the on-air scene's **layers** (show / hide), the **event pad** and settings. In Live the Studio edits whatever is on air.
+- **● Live** — Studio mode, like OBS: **Preview** (the scene you're editing) and **Program** (what's on air) side by side, with **TAKE ▶** between them to put Preview on air. Click a scene in the list to load it into Preview (green) and get it ready while the current scene stays on air (red); **Take** on a row, or **Alt+1…9**, puts a scene straight on air. Editing the on-air scene shows a warning, because changes reach viewers at once. Below: the event pad; left: scenes and Preview's layers; right: settings.
+- No room for two pictures? **⇱** on Program makes it a small floating window and Preview takes the whole space; **⇲** puts it back. Windows narrower than 1100 px float it automatically.
 
 The Program monitor is the real Output page (what OBS shows), drawn read-only; it doesn't count as an OBS output. **⧉** opens it in its own window for a second screen. Side panels hide with « / » and come back from the canvas edge; drag a panel's edge to resize it (double-click resets). Below 900 px wide the panels become slide-in drawers.
 
