@@ -178,8 +178,10 @@ export class Hub {
         if (c.role !== 'studio') return;
         const { activeSceneId: _a, selectedMatchId: _m, ...rest } = msg.settings;
         const before = this.scenes.getSettings().obsBridge;
+        const photosBefore = JSON.stringify(this.scenes.getSettings().playerPhotoSources);
         const next = this.scenes.updateSettings(rest);
         this.broadcastSettings();
+        if (JSON.stringify(next.playerPhotoSources) !== photosBefore) this.broadcast({ type: 'players:changed' });
         poller?.setControl(next.pollMode, next.pollSeconds, next.pollPaused);
         if (next.obsBridge !== before) {
           void this.obs.setEnabled(next.obsBridge).then(() => {

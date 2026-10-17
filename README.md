@@ -141,10 +141,22 @@ Every widget's look (colours, font, radius, blur, title, enter / exit motion suc
 - **Player spotlight**: a big card for **Batter 1**, **Batter 2** (the two at the crease, in the order they came in) or the **current bowler**: picture on the left over the team colour, name, figures and stat tiles on the right; the bowler card also shows this over's balls. A new batter swings the card round.
 - **Info rail**: the TV-style bottom bar. The score stays on the left while the right side flips through this over, run rates, batters, bowler, **last wicket** (who, how, at what score), **next batters**, **bowlers' overs left**, partnership, chase / toss, last overs and series & venue (pick which, and how many seconds each). On a FOUR / SIX it jumps to the batters, on a WICKET to the last wicket. Next batters and overs left use the scorecard and playing XIs; while a rail is on air the scorecard is refreshed once after each wicket (1 API call).
 
-### Overlay language and player images
-Scene settings → **Overlay (all scenes)** (also **Labels** in the canvas toolbar):
-- **Label language**: English or **मराठी**. Overlay labels (चौकार, षटकार, बाद, फलंदाज, धावगती…) and the chase line switch language; player, team, series and venue names stay as the API sends them.
-- **Player images**: *Avatars* (our own illustrated cricketers in the team's jersey — helmet for batters and keepers, cap for bowlers — not anyone's likeness, so no rights issues) or *Wikimedia photos* — free-licence photos downloaded once to `apps/server/data/players/`, each shown with its author and licence. **⤓ Fetch photos for both XIs** looks them up before you go live. Players without a free photo get the avatar.
+### Overlay language
+Scene settings → **Overlay (all scenes)** (also **Labels** in the canvas toolbar): **Label language** English or **मराठी**. Overlay labels (चौकार, षटकार, बाद, फलंदाज, धावगती…) and the chase line switch language; player, team, series and venue names stay as the API sends them.
+
+### Player photos
+Scene settings → **Player photos**. Each player gets the first picture found, in this order (each can be switched off):
+
+1. **Your photos folder** — `player-photos/` in this project. Drop in a file named after the player and it's used straight away, everywhere a player's picture appears. Works offline, no API needed.
+   - Name = player name as the scoreboard spells it: `Virat Kohli.png`, `rohit-sharma.jpg`, `JASPRIT_BUMRAH.webp` (case, spaces, dashes, underscores don't matter; a near spelling of the surname still matches).
+   - Two players with the same name: put each in a folder named with the team's short code, e.g. `IND/Rahul Sharma.png`.
+   - Best: **PNG or WebP with a transparent background**, head and shoulders, about **600 × 600 px**, under 2 MB — it stands on the team colour like a TV graphic. JPGs are shown as photos, cropped from the top.
+   - **📂 Open folder** opens it; **How to name files** repeats these rules. `PLAYER_PHOTOS_DIR` in `.env` moves the folder.
+2. **Cricket API photos** — the API's own player images from the playing XIs, downloaded once per player and kept (1 call each; never uses your last 15 calls of the day). Check your API plan allows showing them on a stream.
+3. **Wikimedia photos** — free-licence photos of well-known players, shown with their author and licence.
+4. **Drawn avatar** — our own illustrated cricketer in the team colours, for everyone else.
+
+**Check this match's players** lists both XIs and which picture each will get, so naming mistakes show up before you go live. **⤓ Fetch photos now** downloads API / Wikimedia photos ahead of time.
 
 ### Score updates
 Top bar: **Auto** (with an interval) or **Manual**, **⏸ Pause / ▶ Resume**, and **⟳ Update now**. A countdown shows the next automatic update.

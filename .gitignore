@@ -13,3 +13,7 @@ apps/server/data/cards/
 apps/server/data/cache/
 apps/server/data/logs/
 apps/server/data/players/
+
+# your own player photos stay on your computer; only the naming guide is shared
+player-photos/*
+!player-photos/README.md

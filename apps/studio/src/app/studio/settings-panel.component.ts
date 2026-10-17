@@ -27,6 +27,7 @@ import { FIELD_GROUPS, STYLE_SCHEMA, WIDGET_REGISTRY, type ActionContext, type F
 import { exportCameraMask, obsTransformText } from './camera-tools';
 import { EditorStore } from './editor.store';
 import { FieldComponent } from './field.component';
+import { PlayerPhotosSettingsComponent } from './player-photos-settings.component';
 
 type StyleKey = keyof WidgetStyle;
 
@@ -57,7 +58,7 @@ function readOpenState(): Record<string, boolean> {
 /** Right panel: settings for the selected widget (generated from its schema) or the scene. */
 @Component({
   selector: 'cos-settings-panel',
-  imports: [FieldComponent],
+  imports: [FieldComponent, PlayerPhotosSettingsComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     @if (editor.selected(); as w) {
@@ -204,18 +205,10 @@ function readOpenState(): Record<string, boolean> {
       <details class="sec" [open]="isOpen('overlay')" (toggle)="onToggle('overlay', $event)">
         <summary>Overlay (all scenes)</summary>
         <cos-field [def]="langField" [value]="live.settings().language" (changed)="setSetting('language', $event)" />
-        <cos-field [def]="imgField" [value]="live.settings().playerImages" (changed)="setSetting('playerImages', $event)" />
-        @if (live.settings().playerImages === 'photo') {
-          <div class="btn-group">
-            <button type="button" (click)="prefetchPhotos()" [disabled]="prefetching()" title="Look up both playing XIs on Wikimedia now, so panels show photos instantly on air">
-              {{ prefetching() ? 'Fetching…' : '⤓ Fetch photos for both XIs' }}
-            </button>
-          </div>
-          <p class="hint">
-            Free photos from Wikimedia Commons, downloaded once and kept on this computer. Each shows its author and
-            licence, as the licences require. Players without a free photo get the avatar.
-          </p>
-        }
+      </details>
+      <details class="sec" [open]="isOpen('photos')" (toggle)="onToggle('photos', $event)">
+        <summary>Player photos (all scenes)</summary>
+        <cos-player-photos-settings />
       </details>
       <details class="sec" [open]="isOpen('transition-in')" (toggle)="onToggle('transition-in', $event)">
         <summary>Transition in</summary>
@@ -592,38 +585,13 @@ export class SettingsPanelComponent {
       { value: 'mr', label: 'मराठी (Marathi)' },
     ],
   };
-  protected readonly imgField: FieldDef = {
-    kind: 'select',
-    key: 'playerImages',
-    label: 'Player images',
-    options: [
-      { value: 'avatar', label: 'Avatars (drawn, no rights needed)' },
-      { value: 'photo', label: 'Wikimedia photos (with credit)' },
-    ],
-  };
-  protected readonly prefetching = signal(false);
 
-  protected setSetting(key: 'language' | 'playerImages', v: PropValue): void {
+
+  protected setSetting(key: 'language', v: PropValue): void {
     if (key === 'language') this.live.send({ type: 'settings:update', settings: { language: v === 'mr' ? 'mr' : 'en' } });
-    else this.live.send({ type: 'settings:update', settings: { playerImages: v === 'photo' ? 'photo' : 'avatar' } });
   }
 
-  protected async prefetchPhotos(): Promise<void> {
-    const squads = this.live.squads();
-    if (!squads) this.live.send({ type: 'cards:fetch', kind: 'squads', force: false });
-    const names = (squads?.teams ?? []).flatMap((t) => t.playingXI.map((p) => p.name));
-    if (!names.length) return;
-    this.prefetching.set(true);
-    try {
-      await fetch('/api/players/prefetch', {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ names }),
-      });
-    } finally {
-      this.prefetching.set(false);
-    }
-  }
+
 
   protected asStyleKey(k: string): StyleKey {
     return k as StyleKey;

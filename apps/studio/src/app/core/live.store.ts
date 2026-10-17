@@ -42,6 +42,8 @@ export class LiveStore {
   /** detail data for on-air cards */
   readonly scorecard = signal<Scorecard | null>(null);
   readonly squads = signal<Squads | null>(null);
+  /** bumped when player pictures may have changed (photos folder, sources, XIs) */
+  readonly photosVersion = signal(0);
   /** fires for every auto-detected and manual event */
   readonly events = new Subject<MatchEvent>();
   /** live pointer moves from the Studio (high frequency, so a stream rather than a signal) */
@@ -187,6 +189,11 @@ export class LiveStore {
         return;
       case 'cards:squads':
         this.squads.set(m.squads);
+        // the XIs carry the API's photo links: pictures may change
+        this.photosVersion.update((v) => v + 1);
+        return;
+      case 'players:changed':
+        this.photosVersion.update((v) => v + 1);
         return;
       case 'obs:status':
         this.obs.set(m.status);

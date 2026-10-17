@@ -306,7 +306,7 @@ export const WIDGET_REGISTRY: Record<WidgetType, WidgetDef> = {
   ], { actions: CARD_ACTIONS }),
   playerCard: def('playerCard', PlayerCardWidget, 'One player: role, styles and this match’s figures', [
     { kind: 'text', key: 'playerName', label: 'Player (pick from the Cards panel)' },
-    { kind: 'toggle', key: 'showPhoto', label: 'Show photo (check rights for public streams)' },
+    { kind: 'toggle', key: 'showPhoto', label: 'Player picture (from your photo sources)' },
     { kind: 'select', key: 'display', group: 'Window', label: 'Display', options: opts(['window', 'Floating window'], ['widget', 'Widget']) },
     { kind: 'toggle', key: 'minimized', group: 'Window', label: 'Minimized (floating window only)', showIf: (p) => p['display'] !== 'widget' },
   ], { actions: CARD_ACTIONS }),
