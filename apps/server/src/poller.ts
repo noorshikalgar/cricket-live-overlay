@@ -141,6 +141,34 @@ export class Poller {
     }
     this.timer = setTimeout(() => void this.tick(), seconds * 1000);
     this.patchStatus({ nextPollAt: Date.now() + seconds * 1000, intervalSeconds: seconds });
+    this.logInterval(seconds);
+  }
+
+  private loggedInterval = '';
+
+  /**
+   * One log line whenever the gap between updates changes, with the reason, so
+   * the terminal shows whether the Studio's 20 / 30 / 60 s choice is followed.
+   */
+  private logInterval(seconds: number): void {
+    const chosen = this.overrideSeconds ?? this.opts.fixedSeconds;
+    const phase = this.status.phase;
+    const reason =
+      phase === 'error'
+        ? 'retrying after an error'
+        : this.last?.phase === 'break' || this.last?.phase === 'upcoming'
+          ? `${this.last.phase}: at least ${BREAK_INTERVAL_SECONDS}s to save calls`
+          : this.provider.fixedIntervalSeconds
+            ? 'mock replay speed'
+            : chosen > 0
+              ? seconds === chosen
+                ? 'as chosen'
+                : `chosen ${chosen}s, raised to the minimum`
+              : 'spread over the daily budget';
+    const line = `${seconds}s (${reason})`;
+    if (line === this.loggedInterval) return;
+    this.loggedInterval = line;
+    log.info(`POLL  next update every ${line}`);
   }
 
   /** providers that make several calls per state guard each call themselves */

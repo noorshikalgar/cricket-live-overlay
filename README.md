@@ -186,6 +186,14 @@ curl -X POST localhost:4300/api/blackout     # toggles; send {"on":true,"text":"
 
 ## Troubleshooting
 
+**Is the update interval followed?** The server terminal prints a line whenever the gap between updates changes, with the reason, e.g. `POLL  next update every 20s (as chosen)` or `every 60s (break: at least 60s to save calls)`.
+
+**Can the API send overs the app missed?** During a live match run this once (about 7 calls from your plan; the key is never printed):
+```bash
+npm run check:history
+```
+It ends with `RESULT: …` saying whether any way of asking the API returns older overs.
+
 | Problem | Fix |
 | --- | --- |
 | Something new doesn't show on the Output | Reload the Output (Cmd/Ctrl+R, or *Refresh* on the OBS Browser Source). |
