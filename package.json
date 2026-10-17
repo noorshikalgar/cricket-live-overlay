@@ -13,7 +13,8 @@
     "build": "npm run build -w apps/studio && npm run build -w apps/server",
     "start": "npm run start -w apps/server",
     "typecheck": "npm run typecheck -w packages/shared && npm run typecheck -w apps/server",
-    "test": "npm run test -w apps/server"
+    "test": "npm run test -w apps/server",
+    "check:history": "npm run check:history -w apps/server --"
   },
   "devDependencies": {
     "concurrently": "^9.2.0"
