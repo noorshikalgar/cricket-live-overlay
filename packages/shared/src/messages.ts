@@ -2,7 +2,12 @@ import type { MatchEvent, MatchEventType, MatchState, MatchSummary, PollStatus }
 import type { AppSettings, Scene, SceneSummary } from './scene';
 import type { CardKind, Scorecard, Squads } from './cards';
 
-export type ClientRole = 'studio' | 'output';
+/**
+ * studio: the editor (may change things); output: the OBS page; monitor: a
+ * preview of the output inside or beside the Studio (read-only, not counted
+ * as an OBS output).
+ */
+export type ClientRole = 'studio' | 'output' | 'monitor';
 
 export interface ObsStatus {
   enabled: boolean;

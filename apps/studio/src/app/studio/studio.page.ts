@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, DestroyRef, ViewEncapsulation, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, ViewEncapsulation, effect, inject, signal, untracked } from '@angular/core';
 import { LiveStore } from '../core/live.store';
 import { CanvasToolbarComponent } from './canvas-toolbar.component';
 import { CanvasComponent } from './canvas.component';
@@ -9,7 +9,10 @@ import { CardsPanelComponent } from './cards-panel.component';
 import { LibraryPanelComponent } from './library-panel.component';
 import { PromptDialogComponent, PromptService } from './prompt-dialog.component';
 import { SettingsPanelComponent } from './settings-panel.component';
+import { ProgramMonitorComponent } from './program-monitor.component';
+import { ScenesPanelComponent } from './scenes-panel.component';
 import { TopBarComponent } from './top-bar.component';
+import { WorkspaceStore } from './workspace.store';
 
 function typingInField(e: KeyboardEvent): boolean {
   const t = e.target as HTMLElement | null;
@@ -22,6 +25,8 @@ function typingInField(e: KeyboardEvent): boolean {
   selector: 'cos-studio-page',
   imports: [
     TopBarComponent,
+    ProgramMonitorComponent,
+    ScenesPanelComponent,
     CanvasToolbarComponent,
     CanvasComponent,
     LibraryPanelComponent,
@@ -34,36 +39,87 @@ function typingInField(e: KeyboardEvent): boolean {
   providers: [EditorStore, PromptService],
   changeDetection: ChangeDetectionStrategy.OnPush,
   encapsulation: ViewEncapsulation.None,
-  host: { class: 'studio-root', '(document:keydown)': 'onKey($event)' },
+  host: {
+    class: 'studio-root',
+    '[class.ws-live]': "ws.workspace() === 'live'",
+    '[class.no-left]': '!ws.layout().left',
+    '[class.no-right]': '!ws.layout().right',
+    '[style.--lw.px]': 'ws.layout().leftW',
+    '[style.--rw.px]': 'ws.layout().rightW',
+    '(document:keydown)': 'onKey($event)',
+  },
   template: `
     <cos-top-bar class="top" />
-    <aside class="left" [class.open]="drawer() === 'left'">
-      <div class="tabs" role="tablist">
-        <button type="button" role="tab" [class.on]="leftTab() === 'widgets'" (click)="leftTab.set('widgets')">＋ Widgets</button>
-        <button type="button" role="tab" [class.on]="leftTab() === 'cards'" (click)="leftTab.set('cards')">▤ Live cards</button>
-      </div>
-      @if (leftTab() === 'widgets') {
-        <cos-library-panel class="lib" />
-      } @else {
-        <cos-cards-panel class="lib" />
-      }
-    </aside>
-    <main class="center">
-      <!-- narrow screens: the side panels become drawers -->
-      <div class="drawer-bar">
-        <button type="button" [class.on]="drawer() === 'left'" (click)="toggleDrawer('left')">☰ Widgets</button>
-        <button type="button" [class.on]="showLayers()" (click)="showLayers.set(!showLayers())">▤ Layers</button>
-        <button type="button" [class.on]="drawer() === 'right'" (click)="toggleDrawer('right')">⚙ Settings</button>
-      </div>
-      <cos-canvas-toolbar />
-      <cos-canvas class="canvas" />
-      <div class="bottom" [class.layers-on]="showLayers()">
-        <cos-layers-panel class="layers" />
+    @if (ws.workspace() === 'live') {
+      <!-- Live: run the stream. Scenes + layers | Program monitor + event pad | settings -->
+      <aside class="left" [class.open]="drawer() === 'left'">
+        <button type="button" class="collapse" (click)="ws.toggle('left')" title="Hide this panel">«</button>
+        <cos-scenes-panel class="scenes" />
+        <cos-layers-panel class="lib" />
+        <span class="split" (pointerdown)="splitStart('left', $event)" (dblclick)="ws.patchLayout({ leftW: null })" title="Drag to resize · double-click to reset"></span>
+      </aside>
+      <main class="center">
+        <div class="drawer-bar">
+          <button type="button" [class.on]="drawer() === 'left'" (click)="toggleDrawer('left')">☰ Scenes</button>
+          <button type="button" [class.on]="drawer() === 'right'" (click)="toggleDrawer('right')">⚙ Settings</button>
+        </div>
+        <cos-program-monitor class="monitor" mode="dock" />
         <cos-event-pad class="pad" />
-      </div>
-    </main>
+        @if (!ws.layout().left) {
+          <button type="button" class="edge left" (click)="ws.toggle('left')" title="Show scenes and layers">Scenes ›</button>
+        }
+        @if (!ws.layout().right) {
+          <button type="button" class="edge right" (click)="ws.toggle('right')" title="Show settings">‹ Settings</button>
+        }
+      </main>
+    } @else {
+      <!-- Design: build layouts. Library | canvas + layers | settings -->
+      <aside class="left" [class.open]="drawer() === 'left'">
+        <div class="tabs" role="tablist">
+          <button type="button" role="tab" [class.on]="leftTab() === 'widgets'" (click)="leftTab.set('widgets')">＋ Widgets</button>
+          <button type="button" role="tab" [class.on]="leftTab() === 'cards'" (click)="leftTab.set('cards')">▤ Live cards</button>
+          <button type="button" class="collapse-inline" (click)="ws.toggle('left')" title="Hide this panel">«</button>
+        </div>
+        @if (leftTab() === 'widgets') {
+          <cos-library-panel class="lib" />
+        } @else {
+          <cos-cards-panel class="lib" />
+        }
+        <span class="split" (pointerdown)="splitStart('left', $event)" (dblclick)="ws.patchLayout({ leftW: null })" title="Drag to resize · double-click to reset"></span>
+      </aside>
+      <main class="center">
+        <!-- narrow screens: the side panels become drawers -->
+        <div class="drawer-bar">
+          <button type="button" [class.on]="drawer() === 'left'" (click)="toggleDrawer('left')">☰ Widgets</button>
+          <button type="button" [class.on]="showLayers()" (click)="showLayers.set(!showLayers())">▤ Layers</button>
+          <button type="button" [class.on]="drawer() === 'right'" (click)="toggleDrawer('right')">⚙ Settings</button>
+        </div>
+        <cos-canvas-toolbar />
+        <cos-canvas class="canvas" />
+        <button type="button" class="bottom-toggle" (click)="ws.toggle('bottom')" [title]="ws.layout().bottom ? 'Hide layers and event pad' : 'Show layers and event pad'">
+          {{ ws.layout().bottom ? '▾' : '▴' }} Layers &amp; event pad
+        </button>
+        @if (ws.layout().bottom) {
+          <div class="bottom" [class.layers-on]="showLayers()">
+            <cos-layers-panel class="layers" />
+            <cos-event-pad class="pad" />
+          </div>
+        }
+        @if (!ws.layout().left) {
+          <button type="button" class="edge left" (click)="ws.toggle('left')" title="Show the widget library">Widgets ›</button>
+        }
+        @if (!ws.layout().right) {
+          <button type="button" class="edge right" (click)="ws.toggle('right')" title="Show settings">‹ Settings</button>
+        }
+      </main>
+      @if (ws.floating()) {
+        <cos-program-monitor mode="float" />
+      }
+    }
     <aside class="right" [class.open]="drawer() === 'right'">
+      <button type="button" class="collapse" (click)="ws.toggle('right')" title="Hide this panel">»</button>
       <cos-settings-panel class="settings" />
+      <span class="split" (pointerdown)="splitStart('right', $event)" (dblclick)="ws.patchLayout({ rightW: null })" title="Drag to resize · double-click to reset"></span>
     </aside>
     <div class="scrim" [class.on]="drawer() !== null" (click)="drawer.set(null)"></div>
     <cos-prompt-dialog />
@@ -89,7 +145,11 @@ function typingInField(e: KeyboardEvent): boolean {
       position: fixed;
       inset: 0;
       display: grid;
-      grid-template-columns: 236px minmax(0, 1fr) 312px;
+      --lw: 236px;
+      --rw: 312px;
+      --lw-eff: var(--lw);
+      --rw-eff: var(--rw);
+      grid-template-columns: var(--lw-eff) minmax(0, 1fr) var(--rw-eff);
       grid-template-rows: auto minmax(0, 1fr);
       grid-template-areas:
         'top top top'
@@ -118,6 +178,9 @@ function typingInField(e: KeyboardEvent): boolean {
       flex: none;
     }
     .studio-root > .left > .tabs button {
+      white-space: nowrap;
+      padding-left: 6px;
+      padding-right: 6px;
       flex: 1;
       justify-content: center;
       border-radius: 6px 6px 0 0;
@@ -166,6 +229,134 @@ function typingInField(e: KeyboardEvent): boolean {
     .studio-root > .right > .settings {
       flex: 1;
       min-height: 0;
+    }
+
+    /* ---- collapsible, resizable side panels ---- */
+    .studio-root.no-left {
+      --lw-eff: 0px;
+    }
+    .studio-root.no-right {
+      --rw-eff: 0px;
+    }
+    .studio-root.no-left > .left,
+    .studio-root.no-right > .right {
+      display: none;
+    }
+    .studio-root > .left,
+    .studio-root > .right {
+      position: relative;
+    }
+    .studio-root > .left > .split,
+    .studio-root > .right > .split {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      width: 7px;
+      cursor: col-resize;
+      z-index: 5;
+    }
+    .studio-root > .left > .split {
+      right: -4px;
+    }
+    .studio-root > .right > .split {
+      left: -4px;
+    }
+    .studio-root > .left > .split:hover,
+    .studio-root > .right > .split:hover {
+      background: linear-gradient(90deg, transparent 2px, var(--ui-accent) 2px, var(--ui-accent) 4px, transparent 4px);
+    }
+    .studio-root > .left > .collapse,
+    .studio-root > .right > .collapse {
+      position: absolute;
+      top: 6px;
+      z-index: 4;
+      width: 22px;
+      height: 22px;
+      padding: 0;
+      justify-content: center;
+      font-size: 13px;
+      background: transparent;
+      border-color: transparent;
+      color: var(--ui-muted);
+    }
+    .studio-root > .left > .collapse {
+      right: 8px;
+    }
+    .studio-root > .right > .collapse {
+      left: 6px;
+    }
+    .studio-root > .left > .tabs .collapse-inline {
+      flex: none;
+      width: 26px;
+      padding: 0;
+      justify-content: center;
+      border-radius: 6px 6px 0 0;
+      background: transparent;
+      color: var(--ui-muted);
+      border-bottom: 0;
+    }
+    .studio-root > .center {
+      position: relative;
+    }
+    /* reopen a hidden panel from the canvas edge */
+    .studio-root > .center > .edge {
+      position: absolute;
+      top: 50%;
+      z-index: 6;
+      padding: 10px 6px;
+      writing-mode: vertical-rl;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      background: var(--ui-chip-strong);
+      border-color: var(--ui-border);
+    }
+    .studio-root > .center > .edge.left {
+      left: 0;
+      transform: translateY(-50%) rotate(180deg);
+      border-radius: 0 6px 6px 0;
+    }
+    .studio-root > .center > .edge.right {
+      right: 0;
+      transform: translateY(-50%);
+      border-radius: 0 6px 6px 0;
+    }
+    .studio-root > .center > .bottom-toggle {
+      flex: none;
+      align-self: stretch;
+      justify-content: center;
+      border-radius: 0;
+      border-width: 1px 0 0;
+      padding: 3px 10px;
+      font-size: 11px;
+      color: var(--ui-muted);
+      background: var(--ui-panel);
+    }
+
+    /* ---- Live workspace: scenes + layers | Program monitor + event pad | settings ---- */
+    .studio-root.ws-live {
+      /* layer names need the room more than the library does */
+      --lw: 290px;
+    }
+    .studio-root.ws-live > .left > .scenes {
+      flex: none;
+      max-height: 45%;
+      overflow-y: auto;
+      border-bottom: 1px solid var(--ui-border);
+    }
+    .studio-root.ws-live > .center {
+      padding: 10px;
+      gap: 10px;
+    }
+    .studio-root.ws-live > .center > .monitor {
+      flex: 1;
+      min-height: 200px;
+    }
+    .studio-root.ws-live > .center > .pad {
+      flex: none;
+      border: 1px solid var(--ui-border);
+      border-radius: 8px;
+      background: var(--ui-panel);
     }
 
     /* base controls for every studio panel */
@@ -256,13 +447,15 @@ function typingInField(e: KeyboardEvent): boolean {
 
     @media (max-width: 1440px) {
       .studio-root {
-        grid-template-columns: 220px minmax(0, 1fr) 290px;
+        --lw: 220px;
+        --rw: 290px;
       }
     }
 
     @media (max-width: 1100px) {
       .studio-root {
-        grid-template-columns: 200px minmax(0, 1fr) 270px;
+        --lw: 200px;
+        --rw: 270px;
       }
       .studio-root > .center > .bottom {
         grid-template-columns: minmax(0, 1fr);
@@ -276,6 +469,19 @@ function typingInField(e: KeyboardEvent): boolean {
 
     /* tablets and phones: one column; library and settings slide in over the canvas */
     @media (max-width: 900px) {
+      /* panels are drawers here: hiding / resizing them doesn't apply */
+      .studio-root.no-left > .left,
+      .studio-root.no-right > .right {
+        display: flex;
+      }
+      .studio-root > .left > .split,
+      .studio-root > .right > .split,
+      .studio-root > .left > .collapse,
+      .studio-root > .right > .collapse,
+      .studio-root > .left > .tabs .collapse-inline,
+      .studio-root > .center > .edge {
+        display: none;
+      }
       .studio-root {
         grid-template-columns: minmax(0, 1fr);
         grid-template-rows: auto minmax(0, 1fr);
@@ -359,6 +565,7 @@ export default class StudioPage {
   private readonly live = inject(LiveStore);
   private readonly editor = inject(EditorStore);
   private readonly prompt = inject(PromptService);
+  protected readonly ws = inject(WorkspaceStore);
 
   protected readonly leftTab = signal<'widgets' | 'cards'>('widgets');
   /** which side panel is slid in on narrow screens */
@@ -370,7 +577,39 @@ export default class StudioPage {
     this.drawer.set(this.drawer() === side ? null : side);
   }
 
+  /** drag a panel's edge to resize it; widths are remembered per workspace */
+  protected splitStart(side: 'left' | 'right', e: PointerEvent): void {
+    if (e.button !== 0) return;
+    e.preventDefault();
+    const aside = (e.target as HTMLElement).parentElement;
+    if (!aside) return;
+    const startW = aside.getBoundingClientRect().width;
+    const sx = e.clientX;
+    const [min, max] = side === 'left' ? [180, 460] : [240, 520];
+    const move = (ev: PointerEvent) => {
+      const dx = ev.clientX - sx;
+      const w = Math.round(Math.min(max, Math.max(min, side === 'left' ? startW + dx : startW - dx)));
+      this.ws.patchLayout(side === 'left' ? { leftW: w } : { rightW: w });
+    };
+    const up = () => {
+      window.removeEventListener('pointermove', move);
+      window.removeEventListener('pointerup', up);
+      document.body.style.cursor = '';
+    };
+    document.body.style.cursor = 'col-resize';
+    window.addEventListener('pointermove', move);
+    window.addEventListener('pointerup', up);
+  }
+
   constructor() {
+    // Live: the Studio edits whatever is on air, so layers and settings control what viewers see
+    effect(() => {
+      const live = this.ws.workspace() === 'live';
+      const onAir = this.live.settings().activeSceneId;
+      untracked(() => {
+        if (live && onAir && onAir !== this.editor.sceneId()) this.editor.editScene(onAir);
+      });
+    });
     this.live.connect('studio');
     // closing or reloading the Studio must not leave the pointer stuck on air
     const hide = () => this.live.send({ type: 'pointer', x: 0, y: 0, visible: false });
@@ -391,6 +630,16 @@ export default class StudioPage {
       return;
     }
     if (this.prompt.request() || typingInField(e)) return;
+
+    // Alt+1…9: put that scene on air (both workspaces)
+    if (e.altKey && !mod && /^[1-9]$/.test(e.key)) {
+      const scene = this.live.sceneList()[Number(e.key) - 1];
+      if (scene) {
+        e.preventDefault();
+        this.live.send({ type: 'scene:switch', sceneId: scene.id });
+      }
+      return;
+    }
 
     if (mod && key === 'z') {
       e.preventDefault();

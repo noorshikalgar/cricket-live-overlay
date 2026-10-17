@@ -29,7 +29,7 @@ import { SceneRendererComponent } from '../widgets/scene-renderer.component';
   selector: 'cos-output-page',
   imports: [SceneBackgroundComponent, SceneRendererComponent, PointerOverlayComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  host: { '[class.reduce-motion]': 'motion.reduced()', '(window:resize)': 'fit()' },
+  host: { '[class.reduce-motion]': 'motion.reduced()', '[class.monitor]': 'monitor', '(window:resize)': 'fit()' },
   template: `
     <div class="stage" [style.transform]="transform()">
       <div class="layer" #stage>
@@ -65,6 +65,12 @@ import { SceneRendererComponent } from '../widgets/scene-renderer.component';
       overflow: hidden;
       cursor: none;
       background: transparent;
+    }
+    /* the Studio's Program monitor: the same page, with the see-through areas shown as a dark checkerboard */
+    :host(.monitor) {
+      cursor: default;
+      background:
+        repeating-conic-gradient(#1a1f29 0% 25%, #12161e 0% 50%) 0 0 / 32px 32px;
     }
     .stage {
       position: absolute;
@@ -181,10 +187,14 @@ export default class OutputPage {
     this.transform.set(`translate(${x}px, ${y}px) scale(${s})`);
   }
 
+  /** opened as the Studio's Program monitor rather than by OBS */
+  protected readonly monitor = new URLSearchParams(window.location.search).has('monitor');
+
   constructor() {
     document.documentElement.classList.add('is-output');
     this.fit();
-    this.store.connect('output');
+    // ?monitor: a preview inside or beside the Studio: read-only, not counted as an OBS output
+    this.store.connect(this.monitor ? 'monitor' : 'output');
     effect(() => {
       const next = this.target();
       untracked(() => {

@@ -89,7 +89,8 @@ export class Hub {
     const poller = this.poller;
     switch (msg.type) {
       case 'hello': {
-        c.role = msg.role === 'output' ? 'output' : 'studio';
+        // anything unexpected is read-only, never an editor
+        c.role = msg.role === 'studio' ? 'studio' : msg.role === 'monitor' ? 'monitor' : 'output';
         this.send(c, {
           type: 'hello',
           clientId: c.id,
