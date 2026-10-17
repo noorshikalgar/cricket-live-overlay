@@ -25,7 +25,11 @@ const HEADER_H = 30;
       @if (!ws.poppedOut()) {
         <button type="button" class="icon" (click)="ws.popOut()" (pointerdown)="$event.stopPropagation()" title="Open in its own window (second screen)">⧉</button>
       }
-      @if (mode() === 'float') {
+      @if (mode() === 'dock') {
+        <button type="button" class="icon" (click)="ws.setFloating(true)" title="Float: a small window, so Preview gets the whole space">⇱</button>
+      } @else if (ws.workspace() === 'live' && !ws.narrow()) {
+        <button type="button" class="icon" (click)="ws.setFloating(false)" (pointerdown)="$event.stopPropagation()" title="Put Program back beside Preview">⇲</button>
+      } @else if (ws.workspace() === 'design') {
         <button type="button" class="icon" (click)="ws.setFloating(false)" (pointerdown)="$event.stopPropagation()" title="Close the monitor">✕</button>
       }
     </header>

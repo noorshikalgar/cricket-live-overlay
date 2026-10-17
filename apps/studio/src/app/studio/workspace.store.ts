@@ -27,6 +27,8 @@ interface Saved {
   layouts: Record<Workspace, PanelLayout>;
   /** Design: Program monitor floating over the canvas */
   floating: boolean;
+  /** Live: Program beside Preview, or floating so Preview gets the whole space */
+  liveProgram: 'split' | 'float';
   float: FloatRect;
 }
 
@@ -36,6 +38,7 @@ const DEFAULTS: Saved = {
   workspace: 'design',
   layouts: { design: { ...DEFAULT_LAYOUT }, live: { ...DEFAULT_LAYOUT } },
   floating: false,
+  liveProgram: 'split',
   float: { x: -1, y: -1, w: 420 },
 };
 
@@ -50,6 +53,7 @@ function load(): Saved {
         live: { ...DEFAULT_LAYOUT, ...raw.layouts?.live },
       },
       floating: raw.floating === true,
+      liveProgram: raw.liveProgram === 'float' ? 'float' : 'split',
       float: { ...DEFAULTS.float, ...raw.float },
     };
   } catch {
@@ -64,12 +68,20 @@ export class WorkspaceStore {
 
   readonly workspace = computed(() => this.state().workspace);
   readonly layout = computed(() => this.state().layouts[this.state().workspace]);
-  readonly floating = computed(() => this.state().floating && this.state().workspace === 'design');
+  /** window too narrow for Preview and Program side by side */
+  readonly narrow = signal(window.matchMedia('(max-width: 1100px)').matches);
+  /** Live: how Program is shown right now (narrow windows always float it) */
+  readonly liveProgram = computed<'split' | 'float'>(() => (this.narrow() ? 'float' : this.state().liveProgram));
+  /** the Program monitor floats over the Studio */
+  readonly floating = computed(() =>
+    this.state().workspace === 'live' ? this.liveProgram() === 'float' : this.state().floating,
+  );
   readonly float = computed(() => this.state().float);
   /** the Program monitor is open in its own window */
   readonly poppedOut = signal(false);
 
   constructor() {
+    window.matchMedia('(max-width: 1100px)').addEventListener('change', (e) => this.narrow.set(e.matches));
     effect(() => {
       const s = this.state();
       try {
@@ -92,8 +104,9 @@ export class WorkspaceStore {
     this.patchLayout({ [panel]: !this.layout()[panel] });
   }
 
+  /** float or close the monitor (Design); float or put back beside Preview (Live) */
   setFloating(on: boolean): void {
-    this.state.update((s) => ({ ...s, floating: on }));
+    this.state.update((s) => (s.workspace === 'live' ? { ...s, liveProgram: on ? 'float' : 'split' } : { ...s, floating: on }));
   }
 
   setFloat(r: FloatRect): void {
